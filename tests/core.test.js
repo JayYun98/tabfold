@@ -5,7 +5,7 @@ import { buildPreview, classifyTab, findDuplicateCandidates } from '../extension
 const tab = (id, url, extra = {}) => ({ id, windowId: 1, title: '', url, groupId: -1, ...extra });
 
 test('classifier uses a known category before falling back to domain', () => {
-  assert.deepEqual(classifyTab(tab(1, 'https://github.com/openai')), { key: 'work', title: '작업', color: 'blue' });
+  assert.deepEqual(classifyTab(tab(1, 'https://github.com/openai')), { key: 'work', title: 'Work', color: 'blue' });
   assert.deepEqual(classifyTab(tab(2, 'https://example.com/a')).title, 'example.com');
 });
 

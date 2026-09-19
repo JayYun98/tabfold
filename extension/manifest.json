@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Tabfold — 탭을 접고, 생각을 펼치세요",
-  "version": "0.2.0",
-  "description": "열린 탭을 미리 보고 주제별로 묶으세요. 그룹 접기, 정확히 같은 URL의 중복 정리, 그룹 되돌리기를 지원합니다.",
+  "name": "__MSG_extensionName__",
+  "version": "0.3.0",
+  "description": "__MSG_extensionDescription__",
   "minimum_chrome_version": "120",
   "permissions": [
     "tabs",
@@ -15,9 +15,14 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Tabfold 열기"
+    "default_title": "__MSG_actionTitle__"
   },
   "optional_host_permissions": [
     "https://openrouter.ai/*"
-  ]
+  ],
+  "default_locale": "en",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
 }

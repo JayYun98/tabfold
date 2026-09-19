@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — 整理标签页"
+  },
+  "extensionDescription": {
+    "message": "预览、分组并折叠标签页，支持 AI 分类、重复清理和撤销。"
+  },
+  "actionTitle": {
+    "message": "打开 Tabfold"
+  }
+}

@@ -1,24 +1,9 @@
 <!doctype html>
-<html lang="ko">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tabfold</title><link rel="stylesheet" href="popup.css"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tabfold</title><link rel="stylesheet" href="popup.css"></head>
 <body>
-<header><a class="brand" href="#" aria-label="Tabfold 홈"><span class="mark" aria-hidden="true">▰</span>tabfold<span class="beta">preview</span></a><span class="local">로컬 + 선택형 AI</span></header>
-<main>
-<section class="intro"><h1>탭을 접고,<br>생각을 펼치세요.</h1><p>흩어진 탭을 제자리로. 필요한 맥락은 그대로.</p></section>
-<details class="ai-settings"><summary>Jev 1.13으로 분류하기</summary><p>실행 시 탭 제목과 주소(쿼리·해시 제외)를 OpenRouter와 TypeSafe로 전송합니다. API 요금이 발생할 수 있습니다.</p><label for="apiKey">OpenRouter API 키</label><input id="apiKey" type="password" placeholder="sk-or-…" autocomplete="off"><div class="secondary"><button id="saveKey">이번 세션에 저장</button><button id="clearKey">키 지우기</button></div><p id="keyState">키는 브라우저를 종료하면 지워집니다.</p><label class="discovery"><input id="suggestNew" type="checkbox" checked> 기타 탭에 맞는 새 카테고리 제안</label><p>기타 확률이 기존 분류보다 충분히 높을 때, 같은 창의 탭 2개 이상이 맞는 후보를 제안합니다. 추가 API 호출이 발생합니다.</p><button id="aiPreview">Jev로 정리안 만들기</button></details>
-<details class="category-settings"><summary>내 AI 카테고리</summary><p>이름과 포함할 내용을 적어주세요. 최대 12개이며, 기타는 자동으로 추가됩니다. 로컬 규칙 정리에는 적용되지 않습니다.</p><div id="categoryRows"></div><div class="secondary"><button id="addCategory">카테고리 추가</button><button id="saveCategories">저장</button></div><button id="resetCategories" class="text">기본 카테고리 복원</button><p id="categoryState" role="status"></p></details>
-<div class="toolbar"><label><input id="allWindows" type="checkbox"> 모든 창</label><button id="refresh" class="text">새로 살펴보기</button></div>
-<section class="summary" aria-label="정리 요약"><div><strong id="total">—</strong><span>열린 탭</span></div><span class="arrow" aria-hidden="true">↗</span><div><strong id="groupCount">—</strong><span>제안 그룹</span></div><div><strong id="duplicateCount">—</strong><span>중복 후보</span></div></section>
-<section id="suggestionsSection" hidden><h2>새 카테고리는 어떨까요?</h2><p>이름을 수정하고 추가하면 정리안과 내 카테고리에 반영됩니다. 탭 변경은 아래 정리 버튼을 누를 때만 실행됩니다.</p><div id="suggestionRows"></div></section>
-<div class="section-title"><h2>이렇게 묶을게요</h2><span id="protected"></span></div>
-<div id="groups" class="groups"></div>
-<p id="empty" hidden>함께 묶을 탭이 아직 없습니다. 같은 주제의 탭을 열고 다시 살펴보세요.</p>
-<label class="collapse"><input id="collapse" type="checkbox" checked> 정리한 그룹 접기 <span>탭을 닫지 않아요</span></label>
-<button id="apply" class="primary" disabled>그룹으로 정리하기</button>
-<div class="secondary"><button id="undo" disabled>그룹 되돌리기</button><button id="duplicates" disabled>중복 후보 보기</button></div>
-<section id="duplicateReview" hidden><h2>정확히 같은 주소만</h2><p>아래 탭을 닫습니다. 입력 중인 내용은 복구할 수 없어요. 복원은 주소를 새 탭으로 엽니다.</p><ul id="duplicateList"></ul><button id="dedupe" class="danger">확인한 중복 탭 닫기</button></section>
-<button id="restore" class="text restore">마지막 중복 정리 주소 복원</button>
-<p id="status" role="status" aria-live="polite">열린 탭을 살펴보고 있어요…</p>
-</main><footer>로컬 정리는 무료. AI는 필요할 때만.</footer>
-<script type="module" src="popup.js"></script>
-</body></html>
+<header><span class="brand"><span class="mark" aria-hidden="true">▰</span>tabfold</span><button id="settings" class="quiet" data-i18n="Settings">Settings</button></header>
+<section class="controls"><div class="scope-row"><label for="scope" data-i18n="Organize">Organize</label><select id="scope"><option value="current" data-i18n="This window">This window</option><option value="all" data-i18n="All windows">All windows</option></select></div><div class="preview-actions"><button id="refresh" data-i18n="Quick preview">Quick preview</button><button id="aiPreview" data-i18n="AI preview">AI preview</button></div></section>
+<section class="stats"><div><strong id="total">—</strong><span data-i18n="Tabs">Tabs</span></div><div><strong id="groupCount">—</strong><span data-i18n="Groups">Groups</span></div><div><strong id="duplicateCount">—</strong><span data-i18n="Duplicates">Duplicates</span></div></section>
+<main id="results"><div class="section-title"><h1 data-i18n="Preview">Preview</h1><span id="protected"></span></div><div id="groups"></div><p id="empty" hidden data-i18n="No groups to create. Try AI preview or another window.">No groups to create. Try AI preview or another window.</p><section id="suggestionsSection" hidden><h2 data-i18n="Suggested categories">Suggested categories</h2><div id="suggestionRows"></div></section><section id="duplicateReview" hidden><h2 data-i18n="Review duplicates">Review duplicates</h2><p data-i18n="These tabs have identical addresses. Closing them loses unsaved edits.">These tabs have identical addresses. Closing them loses unsaved edits.</p><ul id="duplicateList"></ul><button id="dedupe" class="danger" data-i18n="Close these duplicates">Close these duplicates</button></section></main>
+<footer><label class="collapse"><input id="collapse" type="checkbox" checked><span data-i18n="Collapse groups">Collapse groups</span><span class="hint" data-i18n="No tabs closed">No tabs closed</span></label><button id="apply" class="primary" disabled data-i18n="Apply groups">Apply groups</button><div class="secondary"><button id="undo" disabled data-i18n="Undo grouping">Undo grouping</button><button id="duplicates" disabled data-i18n="Review duplicates">Review duplicates</button></div><button id="restore" class="quiet restore" data-i18n="Restore closed duplicate URLs">Restore closed duplicate URLs</button><p id="status" role="status" aria-live="polite" data-i18n="Reading your tabs…">Reading your tabs…</p></footer>
+<script type="module" src="popup.js"></script></body></html>

@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — 탭 정리"
+  },
+  "extensionDescription": {
+    "message": "탭을 미리 보고 그룹으로 정리하세요. AI 카테고리, 중복 정리, 되돌리기를 지원합니다."
+  },
+  "actionTitle": {
+    "message": "Tabfold 열기"
+  }
+}

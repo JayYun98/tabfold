@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — Menos pestañas"
+  },
+  "extensionDescription": {
+    "message": "Previsualiza, agrupa y pliega pestañas. Categorías con IA, limpieza de duplicados y deshacer."
+  },
+  "actionTitle": {
+    "message": "Abrir Tabfold"
+  }
+}

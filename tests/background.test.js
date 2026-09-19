@@ -142,3 +142,19 @@ test('accepting a stale suggestion cannot change settings', async () => {
   assert.equal(result.ok,false);
   assert.deepEqual(await backend.categories(),saved.categories);
 });
+
+test('settings reports key presence without exposing credentials and preserves custom categories', async () => {
+  const backend = new TabfoldBackend(mockChrome([]));
+  const defaults = await backend.handle({type:'getSettings'});
+  assert.equal(defaults.ok, true);
+  assert.equal(defaults.keyConfigured, false);
+  assert.deepEqual(defaults.preferences, {suggestNew:true});
+  assert.equal(defaults.categories[0].title, 'Development');
+  const categories = [{title:'내 논문', criteria:'Research papers', color:'green'}];
+  await backend.handle({type:'setCategories', categories});
+  await backend.handle({type:'setKey', key:'private-test-key'});
+  await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
+  const configured = await backend.handle({type:'getSettings'});
+  assert.deepEqual(configured, {ok:true, keyConfigured:true, categories, preferences:{suggestNew:false}});
+  assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
+});

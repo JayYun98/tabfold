@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — Less tab noise"
+  },
+  "extensionDescription": {
+    "message": "Preview, group, and fold your tabs. Optional AI categories, duplicate cleanup, and undo."
+  },
+  "actionTitle": {
+    "message": "Open Tabfold"
+  }
+}

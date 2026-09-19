@@ -1,12 +1,14 @@
+import { t } from './i18n.js';
+
 const GROUP_NONE = -1;
 const COLORS = ['blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange', 'grey'];
 
 const KEYWORDS = [
-  ['work', '작업', 'blue', /\b(github|gitlab|notion|figma|docs?|sheets?|slides?|jira|linear|stackoverflow)\b/i],
-  ['video', '동영상', 'red', /\b(youtube|netflix|vimeo|twitch)\b/i],
-  ['shopping', '쇼핑', 'orange', /\b(amazon|ebay|etsy|shopping|store|shop|coupang)\b/i],
-  ['reading', '읽을거리', 'green', /\b(news|medium|substack|blog|article|wiki)\b/i],
-  ['social', '소통', 'purple', /\b(slack|discord|mail|gmail|outlook|reddit|x\.com|twitter)\b/i],
+  ['work', 'Work', 'blue', /\b(github|gitlab|notion|figma|docs?|sheets?|slides?|jira|linear|stackoverflow)\b/i],
+  ['video', 'Video', 'red', /\b(youtube|netflix|vimeo|twitch)\b/i],
+  ['shopping', 'Shopping', 'orange', /\b(amazon|ebay|etsy|shopping|store|shop|coupang)\b/i],
+  ['reading', 'Reading', 'green', /\b(news|medium|substack|blog|article|wiki)\b/i],
+  ['social', 'Social', 'purple', /\b(slack|discord|mail|gmail|outlook|reddit|x\.com|twitter)\b/i],
 ];
 
 export function normalUrl(url) {
@@ -31,7 +33,7 @@ export function classifyTab(tab) {
   if (!url) return null;
   const text = `${tab.title || ''} ${url.hostname}${url.pathname}`;
   const keyword = KEYWORDS.find(([, , , pattern]) => pattern.test(text));
-  if (keyword) return { key: keyword[0], title: keyword[1], color: keyword[2] };
+  if (keyword) return { key: keyword[0], title: t(keyword[1]), color: keyword[2] };
   const host = url.hostname.toLowerCase().replace(/^www\./, '');
   return { key: `domain:${host}`, title: host, color: 'grey' };
 }

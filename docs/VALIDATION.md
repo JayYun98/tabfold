@@ -36,3 +36,12 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - 실제 Jev API로 개발 카테고리 하나와 합성 제목 3개를 검증했습니다. 제빵 제목 2개는 기타 확률 1.0, React 제목은 개발 확률 0.99였으며, 추가 판정에서 `Sourdough bread` 후보를 신뢰도 0.91/0.93으로 제안했습니다. 두 요청 보고 비용 합계는 $0.000046242입니다. 실제 API를 사용한 합성 입력 테스트이며 사용자 탭 재그룹화는 아닙니다.
 - 사용자 Chrome에서 확장 v0.2.0 로드, 카테고리 편집기와 실제 탭 미리보기를 확인했습니다. 기존 그룹과 되돌리기 기록을 보존했습니다.
 - 현재 분류 상한은 500개, 요청당 20개입니다. 후보는 제목의 반복 구절·도메인에서 추출하므로 추상적인 공통 주제를 놓칠 수 있습니다.
+
+## v0.3.0 compact popup and languages
+
+- Frontend designer subagent rebuilt the popup as a fixed 380×560 CSS-pixel surface: only results scroll; apply/undo remain in the footer. Detailed settings use a separate options tab.
+- English is the default, with Korean, Japanese, Simplified Chinese, and Spanish. All UI/runtime translation keys and placeholders are checked. Saved category names are not translated or overwritten.
+- `npm test`: 25 passing checks. `npm run check`: passed.
+- `tests/ui-smoke.mjs`: 10 passing combinations (5 languages × light/dark). An isolated Chromium renders actual UI files with synthetic Chrome API responses, 24 groups, and long titles. It checks horizontal overflow, footer visibility, settings navigation callback, and preserving drafts when changing language. Screenshots are `docs/assets/popup-en.png` and `popup-ko.png`; their data is synthetic.
+- The optional visual test uses an installed Playwright package: `PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node tests/ui-smoke.mjs`. Playwright is not an extension dependency.
+- Live Chrome extension-manager navigation was blocked by the browser tool URL policy. This version has not been reloaded or validated in the native toolbar popup; reload Tabfold once in Chrome's extension manager to activate the manifest/background update. Existing tabs were not regrouped or closed during this update.

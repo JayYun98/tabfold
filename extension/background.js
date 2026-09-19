@@ -1,3 +1,4 @@
+import { t, initI18n } from './i18n.js';
 import { buildPreview, isEligible, sameSnapshot, validGroupColor } from './core.js';
 import { classifyTabs, DEFAULT_CATEGORIES, validateCategories } from './ai.js';
 
@@ -5,14 +6,14 @@ const UNDO_KEY = 'tabfoldUndo';
 const RECOVERY_KEY = 'tabfoldRecovery';
 const PREVIEW_KEY = 'tabfoldPreview';
 const KEY_NAME = 'openrouterKey';
-const STALE = '탭 상태가 바뀌어 계획을 다시 만드세요.';
+const STALE = 'Tabs have changed. Refresh the preview.';
 
 function message(ok, text, extra = {}) {
   return ok ? { ok: true, message: text, ...extra } : { ok: false, error: text };
 }
 
 function safeTitle(title) {
-  return typeof title === 'string' && title.trim() ? title.trim().slice(0, 80) : '정리한 탭';
+  return typeof title === 'string' && title.trim() ? title.trim().slice(0, 80) : t('Organized tabs');
 }
 
 function stableJson(value) {
@@ -60,12 +61,12 @@ export class TabfoldBackend {
     const key = await this.read(KEY_NAME);
     let classifications;
     if (request.ai) {
-      if (!key) return message(false, 'AI 분류를 사용하려면 API 키를 먼저 저장하세요.');
+      if (!key) return message(false, t('Save your API key before using AI classification.'));
       const selectedEligible = tabs.filter((tab) => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab));
       try {
         classifications = await classifyTabs(selectedEligible, key, fetch, {categories: await this.categories(), suggestNew: request.suggestNew !== false});
       } catch (error) {
-        return message(false, error?.message || 'AI 분류를 완료하지 못했습니다.');
+        return message(false, error?.message || t('Unable to complete AI classification.'));
       }
     }
     if (classifications?.suggestions) {
@@ -91,20 +92,20 @@ export class TabfoldBackend {
   }
 
   async acceptSuggestion(request) {
-    if (!await this.matchesSavedPreview(request.plan)) return message(false, STALE);
+    if (!await this.matchesSavedPreview(request.plan)) return message(false, t(STALE));
     const saved = await this.read(PREVIEW_KEY);
-    if (!Number.isInteger(request.index)) return message(false, '제안을 다시 확인하세요.');
+    if (!Number.isInteger(request.index)) return message(false, t('Refresh the suggestions and try again.'));
     const suggestion = saved.suggestions?.[request.index];
-    if (!suggestion) return message(false, '제안을 다시 확인하세요.');
+    if (!suggestion) return message(false, t('Refresh the suggestions and try again.'));
     const categories = await this.categories();
-    if (stableJson(categories) !== stableJson(saved.categories)) return message(false, '카테고리가 바뀌었습니다. 정리안을 다시 만드세요.');
+    if (stableJson(categories) !== stableJson(saved.categories)) return message(false, t('Categories have changed. Refresh the preview.'));
     const next = validateCategories([...categories, {title: request.title, criteria: suggestion.criteria, color: suggestion.color}]);
     const category = next.at(-1);
     const ids = new Set(suggestion.tabIds);
     const candidateTabs = saved.tabs.filter(t => ids.has(t.id));
     const replacements = new Map(candidateTabs.map(t => [t.id, category]));
     const added = buildPreview(candidateTabs, {allWindows:true}, replacements).groups;
-    if (!added.length || !await this.validateGroups({groups:added})) return message(false, STALE);
+    if (!added.length || !await this.validateGroups({groups:added})) return message(false, t(STALE));
     const remaining = saved.plan.groups.map(group => {
       const tabs = group.tabs.filter(t => !ids.has(t.id));
       return {...group, tabs, tabIds: tabs.map(t => t.id)};
@@ -117,7 +118,7 @@ export class TabfoldBackend {
   }
 
   async setKey(key) {
-    if (typeof key !== 'string') return message(false, 'API 키 형식이 올바르지 않습니다.');
+    if (typeof key !== 'string') return message(false, t('Invalid API key format.'));
     if (key.trim()) await this.write(KEY_NAME, key.trim());
     else await this.remove(KEY_NAME);
     return { ok: true, keyConfigured: Boolean(key.trim()) };
@@ -173,32 +174,32 @@ export class TabfoldBackend {
   }
 
   async apply(plan, collapse = true) {
-    if (!await this.matchesSavedPreview(plan)) return message(false, STALE);
+    if (!await this.matchesSavedPreview(plan)) return message(false, t(STALE));
     const groups = await this.validateGroups(plan);
-    if (!groups) return message(false, STALE);
-    if (!groups.length) return message(true, '정리할 탭 그룹이 없습니다.', { undoAvailable: false });
+    if (!groups) return message(false, t(STALE));
+    if (!groups.length) return message(true, t('No tab groups to organize.'), { undoAvailable: false });
 
     // Persist the pre-mutation state before chrome.tabs.group can change it.
     const undo = { groups: [], tabs: groups.flatMap((group) => group.tabs.map((tab) => ({ id: tab.id, windowId: tab.windowId, groupId: tab.groupId }))) };
     await this.write(UNDO_KEY, undo);
     try {
       for (const group of groups) {
-        if (!await this.revalidateGroup(group)) return message(false, STALE);
+        if (!await this.revalidateGroup(group)) return message(false, t(STALE));
         const groupId = await this.chrome.tabs.group({ tabIds: group.tabIds, createProperties: { windowId: group.windowId } });
         const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: safeTitle(group.title), color: validGroupColor(group.color) };
         undo.groups.push(created);
         await this.write(UNDO_KEY, undo);
         await this.chrome.tabGroups.update(groupId, { title: created.title, color: created.color, collapsed: Boolean(collapse) });
       }
-      return message(true, `${groups.length}개 그룹으로 탭을 정리했습니다.`, { undoAvailable: true });
+      return message(true, t('Organized tabs into {count} groups.', { count: groups.length }), { undoAvailable: true });
     } catch {
-      return message(false, '탭 그룹을 만드는 중 문제가 생겼습니다.');
+      return message(false, t('Unable to create tab groups.'));
     }
   }
 
   async undo() {
     const undo = await this.read(UNDO_KEY);
-    if (!undo?.groups?.length) return message(true, '되돌릴 Tabfold 정리가 없습니다.', { undoAvailable: false });
+    if (!undo?.groups?.length) return message(true, t('No Tabfold grouping to undo.'), { undoAvailable: false });
     let ungrouped = 0;
     for (const group of undo.groups) {
       let currentGroup;
@@ -224,7 +225,7 @@ export class TabfoldBackend {
       }
     }
     await this.write(UNDO_KEY, { groups: [], tabs: [] });
-    return message(true, `${ungrouped}개 탭의 Tabfold 그룹을 되돌렸습니다.`, { undoAvailable: false });
+    return message(true, t('Undid grouping for {count} tabs.', { count: ungrouped }), { undoAvailable: false });
   }
 
   async validateDedupe(plan) {
@@ -252,8 +253,8 @@ export class TabfoldBackend {
 
   async dedupe(plan) {
     const duplicates = await this.validateDedupe(plan);
-    if (!duplicates) return message(false, STALE);
-    if (!duplicates.length) return message(true, '닫을 중복 탭이 없습니다.');
+    if (!duplicates) return message(false, t(STALE));
+    if (!duplicates.length) return message(true, t('No duplicate tabs to close.'));
     const recovery = { entries: duplicates.map((tab) => ({ url: tab.url, windowId: tab.windowId, closed: false })) };
     await this.write(RECOVERY_KEY, recovery, 'local');
     let closed = 0;
@@ -273,13 +274,13 @@ export class TabfoldBackend {
         // The tab remains open; its URL was still persisted before this attempt.
       }
     }
-    return message(true, `${closed}개 중복 탭을 닫았습니다.`);
+    return message(true, t('Closed {count} duplicate tabs.', { count: closed }));
   }
 
   async restore() {
     const recovery = await this.read(RECOVERY_KEY, 'local');
     const entries = recovery?.entries?.filter((entry) => entry.closed && typeof entry.url === 'string') || [];
-    if (!entries.length) return message(true, '복원할 탭이 없습니다.');
+    if (!entries.length) return message(true, t('No tabs to restore.'));
     let restored = 0;
     for (const entry of [...entries]) {
       try {
@@ -295,11 +296,13 @@ export class TabfoldBackend {
         // Keep only URLs that still need recovery.
       }
     }
-    return message(true, `${restored}개 탭을 복원했습니다.`);
+    return message(true, t('Restored {count} tabs.', { count: restored }));
   }
 
   async handle(request = {}) {
     try {
+      await initI18n();
+      if (request.type === 'getSettings') return { ok: true, keyConfigured: Boolean(await this.read(KEY_NAME)), categories: await this.categories(), preferences: await this.read('tabfoldPreferences', 'local') || { suggestNew: true } };
       if (request.type === 'preview') return await this.preview(request);
       if (request.type === 'getCategories') return {ok:true, categories:await this.categories()};
       if (request.type === 'setCategories') return await this.mutate(() => this.setCategories(request.categories));
@@ -309,9 +312,9 @@ export class TabfoldBackend {
       if (request.type === 'undo') return await this.mutate(() => this.undo());
       if (request.type === 'dedupe') return await this.mutate(() => this.dedupe(request.plan));
       if (request.type === 'restore') return await this.mutate(() => this.restore());
-      return message(false, '알 수 없는 요청입니다.');
+      return message(false, t('Unknown request.'));
     } catch (error) {
-      return message(false, error.message || '탭 정보를 읽는 중 문제가 생겼습니다.');
+      return message(false, error.message || t('Unable to read tab information.'));
     }
   }
 }

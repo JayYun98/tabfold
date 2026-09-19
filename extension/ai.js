@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 const ENDPOINT = 'https://openrouter.ai/api/alpha/decisions';
 const MODEL = 'typesafe/jev-1.13';
 const BATCH_SIZE = 20;
@@ -7,39 +9,39 @@ const LEGACY_KEYS = ['development', 'research', 'work', 'shopping', 'media', 'tr
 const STOPWORDS = new Set(['the', 'a', 'an', 'home', 'new', 'tab', 'untitled', 'login', '로그인', '홈', '새', '페이지', 'google']);
 
 export const DEFAULT_CATEGORIES = Object.freeze([
-  { title: '개발', criteria: 'Software development, programming, developer tools, documentation, repositories, or technical troubleshooting.', color: 'blue' },
-  { title: '리서치', criteria: 'Research, papers, reference material, analysis, or learning.', color: 'green' },
-  { title: '업무', criteria: 'Work tasks, collaboration, productivity, project management, or business services.', color: 'purple' },
-  { title: '쇼핑', criteria: 'Products, stores, product comparison, orders, or shopping.', color: 'orange' },
-  { title: '미디어', criteria: 'Video, music, news, entertainment, streaming, or social media.', color: 'red' },
-  { title: '여행', criteria: 'Travel planning, maps, transport, accommodation, or destinations.', color: 'cyan' },
-  { title: '금융', criteria: 'Banking, investing, markets, payments, accounting, or personal finance.', color: 'yellow' },
+  { title: 'Development', criteria: 'Software development, programming, developer tools, documentation, repositories, or technical troubleshooting.', color: 'blue' },
+  { title: 'Research', criteria: 'Research, papers, reference material, analysis, or learning.', color: 'green' },
+  { title: 'Work', criteria: 'Work tasks, collaboration, productivity, project management, or business services.', color: 'purple' },
+  { title: 'Shopping', criteria: 'Products, stores, product comparison, orders, or shopping.', color: 'orange' },
+  { title: 'Media', criteria: 'Video, music, news, entertainment, streaming, or social media.', color: 'red' },
+  { title: 'Travel', criteria: 'Travel planning, maps, transport, accommodation, or destinations.', color: 'cyan' },
+  { title: 'Finance', criteria: 'Banking, investing, markets, payments, accounting, or personal finance.', color: 'yellow' },
 ]);
 
 function error(message) { return new Error(message); }
 function normalTitle(title) { return title.trim().replace(/\s+/g, ' '); }
 
 export function validateCategories(value) {
-  if (!Array.isArray(value) || value.length < 1 || value.length > 12) throw error('분류는 1개에서 12개까지 설정할 수 있습니다.');
+  if (!Array.isArray(value) || value.length < 1 || value.length > 12) throw error(t('Set between 1 and 12 categories.'));
   const names = new Set();
   return value.map((category) => {
     if (!category || typeof category !== 'object' || Array.isArray(category)
-      || typeof category.title !== 'string' || typeof category.criteria !== 'string' || typeof category.color !== 'string') throw error('분류 설정 형식이 올바르지 않습니다.');
+      || typeof category.title !== 'string' || typeof category.criteria !== 'string' || typeof category.color !== 'string') throw error(t('Invalid category settings.'));
     const title = normalTitle(category.title);
     const criteria = category.criteria.trim();
     const key = title.toLocaleLowerCase('ko-KR');
     if (!title || title.length > 40 || !criteria || criteria.length > 240 || !COLORS.has(category.color)
-      || key === '기타' || key === 'other' || names.has(key)) throw error('분류 이름, 설명 또는 색상이 올바르지 않습니다.');
+      || key === '기타' || key === 'other' || names.has(key)) throw error(t('Invalid category name, description, or color.'));
     names.add(key);
     return { title, criteria, color: category.color };
   });
 }
 
 function categoryConfig(options) {
-  if (!options || typeof options !== 'object' || Array.isArray(options)) throw error('AI 분류 옵션이 올바르지 않습니다.');
+  if (!options || typeof options !== 'object' || Array.isArray(options)) throw error(t('Invalid AI classification options.'));
   const custom = Object.hasOwn(options, 'categories') && options.categories !== undefined;
   const categories = custom ? validateCategories(options.categories) : DEFAULT_CATEGORIES;
-  if (options.suggestNew !== undefined && typeof options.suggestNew !== 'boolean') throw error('새 분류 제안 옵션이 올바르지 않습니다.');
+  if (options.suggestNew !== undefined && typeof options.suggestNew !== 'boolean') throw error(t('Invalid suggestion option.'));
   return {
     categories: categories.map((category, index) => ({ ...category, id: custom ? `c${index}` : LEGACY_KEYS[index] })),
     suggestNew: options.suggestNew === true,
@@ -51,15 +53,15 @@ function tabUrl(url) {
     const parsed = new URL(url);
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw error('unsupported protocol');
     return { url: `${parsed.origin}${parsed.pathname}`.slice(0, 1000), hostname: parsed.hostname };
-  } catch { throw error('탭 URL을 안전하게 처리할 수 없습니다.'); }
+  } catch { throw error(t('Unable to process the tab URL safely.')); }
 }
 
 function prepareTabs(tabs) {
-  if (!Array.isArray(tabs)) throw error('분류할 탭 목록이 올바르지 않습니다.');
-  if (tabs.length > 500) throw error('AI 분류는 한 번에 최대 500개 탭만 지원합니다. 탭 수를 줄여 다시 시도하세요.');
+  if (!Array.isArray(tabs)) throw error(t('Invalid tab list.'));
+  if (tabs.length > 500) throw error(t('AI classification supports up to 500 tabs at a time. Select fewer tabs and try again.'));
   const ids = new Set();
   return tabs.map((tab) => {
-    if (!Number.isInteger(tab?.id) || ids.has(tab.id)) throw error('탭 ID가 올바르지 않습니다.');
+    if (!Number.isInteger(tab?.id) || ids.has(tab.id)) throw error(t('Invalid tab ID.'));
     ids.add(tab.id);
     const safeUrl = tabUrl(tab.url);
     return { id: tab.id, title: String(tab.title ?? '').slice(0, 240), url: safeUrl.url, hostname: safeUrl.hostname, windowId: Number.isInteger(tab.windowId) ? tab.windowId : 0 };
@@ -85,15 +87,17 @@ async function requestAnswers(tabs, key, fetchImpl, categories) {
       signal: controller.signal,
     });
     if (!response.ok) {
-      const messages = { 401: 'OpenRouter API 키가 올바르지 않거나 만료되었습니다.', 402: 'OpenRouter 잔액 또는 크레딧이 부족합니다.', 403: 'OpenRouter 사용 한도 또는 권한을 확인하세요.', 429: 'OpenRouter 요청 한도에 도달했습니다. 잠시 후 다시 시도하세요.' };
-      throw error(messages[response.status] || `OpenRouter 요청에 실패했습니다 (HTTP ${response.status}).`);
+      const messages = { 401: t('OpenRouter API key is invalid or expired.'), 402: t('OpenRouter has insufficient credits.'), 403: t('Check your OpenRouter usage limit or permissions.'), 429: t('OpenRouter rate limit reached. Try again shortly.') };
+      const failure = error(messages[response.status] || t('OpenRouter request failed (HTTP {status}).', { status: response.status }));
+      failure.isOpenRouterError = true;
+      throw failure;
     }
     return await response.json();
   } catch (cause) {
-    if (controller.signal.aborted) throw error('OpenRouter 응답 시간이 초과되었습니다. 다시 시도하세요.');
-    if (cause?.message?.startsWith('OpenRouter ')) throw cause;
-    if (response?.ok) throw error('OpenRouter 응답 형식이 올바르지 않습니다.');
-    throw error('OpenRouter에 연결하지 못했습니다. 네트워크를 확인하세요.');
+    if (controller.signal.aborted) throw error(t('OpenRouter request timed out. Try again.'));
+    if (cause?.isOpenRouterError) throw cause;
+    if (response?.ok) throw error(t('Invalid OpenRouter response format.'));
+    throw error(t('Unable to connect to OpenRouter. Check your network.'));
   } finally { clearTimeout(timer); }
 }
 
@@ -103,15 +107,15 @@ function checkedAnswers(payload, tabs, categories) {
   const answers = payload?.answers;
   const expected = new Set(tabs.map((tab) => `tab_${tab.id}`));
   const choices = new Set([...categories.map((category) => category.id), 'other']);
-  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) throw error('OpenRouter 응답에 탭 분류 결과가 없습니다.');
-  for (const id of Object.keys(answers)) if (!expected.has(id)) throw error('OpenRouter 응답에 알 수 없는 탭 분류가 있습니다.');
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) throw error(t('OpenRouter response is missing tab classifications.'));
+  for (const id of Object.keys(answers)) if (!expected.has(id)) throw error(t('OpenRouter response contains an unknown tab classification.'));
   return tabs.map((tab) => {
     const answer = answers[`tab_${tab.id}`];
-    if (!answer || answer.type !== 'choice' || !choices.has(answer.choice)) throw error('OpenRouter 응답의 탭 분류 결과가 올바르지 않습니다.');
-    if (Object.hasOwn(answer, 'confidence') && !validNumber(answer.confidence)) throw error('OpenRouter 응답의 탭 분류 결과가 올바르지 않습니다.');
+    if (!answer || answer.type !== 'choice' || !choices.has(answer.choice)) throw error(t('Invalid tab classification in the OpenRouter response.'));
+    if (Object.hasOwn(answer, 'confidence') && !validNumber(answer.confidence)) throw error(t('Invalid tab classification in the OpenRouter response.'));
     if (Object.hasOwn(answer, 'probabilities')) {
-      if (!answer.probabilities || typeof answer.probabilities !== 'object' || Array.isArray(answer.probabilities)) throw error('OpenRouter 응답의 탭 분류 결과가 올바르지 않습니다.');
-      for (const [choice, probability] of Object.entries(answer.probabilities)) if (!choices.has(choice) || !validNumber(probability)) throw error('OpenRouter 응답의 탭 분류 결과가 올바르지 않습니다.');
+      if (!answer.probabilities || typeof answer.probabilities !== 'object' || Array.isArray(answer.probabilities)) throw error(t('Invalid tab classification in the OpenRouter response.'));
+      for (const [choice, probability] of Object.entries(answer.probabilities)) if (!choices.has(choice) || !validNumber(probability)) throw error(t('Invalid tab classification in the OpenRouter response.'));
     }
     return [tab, answer];
   });
@@ -197,8 +201,8 @@ async function suggestCategories(strongTabs, categories, key, fetchImpl) {
 
 /** Classifies HTTP(S) tabs; low confidence uses hostname fallback. Suggestions are local recurring-title candidates validated by Jev and never auto-applied. */
 export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
-  if (typeof key !== 'string' || !key.trim()) throw error('OpenRouter API 키를 입력하세요.');
-  if (typeof fetchImpl !== 'function') throw error('네트워크 요청 기능을 사용할 수 없습니다.');
+  if (typeof key !== 'string' || !key.trim()) throw error(t('Enter your OpenRouter API key.'));
+  if (typeof fetchImpl !== 'function') throw error(t('Network requests are unavailable.'));
   const prepared = prepareTabs(tabs);
   const config = categoryConfig(options);
   const byId = new Map(config.categories.map((category) => [category.id, category]));
@@ -219,7 +223,7 @@ export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
   groups.suggestions = [];
   if (config.suggestNew && strongTabs.length >= 2) {
     try { groups.suggestions = await suggestCategories(strongTabs, config.categories, key.trim(), fetchImpl); }
-    catch (cause) { groups.suggestionError = `AI 새 분류 제안을 검증하지 못했습니다: ${cause.message}`; }
+    catch (cause) { groups.suggestionError = t('Unable to validate new category suggestions: {error}', { error: cause.message }); }
   }
   return groups;
 }

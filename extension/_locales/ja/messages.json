@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — タブを整理"
+  },
+  "extensionDescription": {
+    "message": "タブをプレビューしてグループ化。AI分類、重複整理、元に戻す機能に対応。"
+  },
+  "actionTitle": {
+    "message": "Tabfold を開く"
+  }
+}
