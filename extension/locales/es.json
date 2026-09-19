@@ -113,5 +113,12 @@
   "Defaults restored. Save to keep these changes.": "Valores predeterminados restaurados. Guarda para conservar los cambios.",
   "Saved. Your next AI preview will use these settings.": "Guardado. La próxima vista con IA usará estos ajustes.",
   "API key saved for this session.": "Clave API guardada para esta sesión.",
-  "API key removed.": "Clave API eliminada."
+  "API key removed.": "Clave API eliminada.",
+  "Import JSON": "Importar JSON",
+  "Export JSON": "Exportar JSON",
+  "Edit the exported file with an AI or text editor, then import it. Import replaces the form; save to apply. Files are not automatically synced.": "Edita el archivo exportado con una IA o un editor e impórtalo. La importación reemplaza el formulario; guarda para aplicar. Los archivos no se sincronizan automáticamente.",
+  "Choose a JSON file smaller than 64 KB.": "Elige un archivo JSON de menos de 64 KB.",
+  "Invalid JSON. Your categories have not changed.": "JSON no válido. Tus categorías no han cambiado.",
+  "Imported {count} categories into the form. Save to apply.": "Se importaron {count} categorías al formulario. Guarda para aplicar.",
+  "Exported the categories currently in the form.": "Se exportaron las categorías actuales del formulario."
 }

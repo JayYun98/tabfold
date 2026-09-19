@@ -37,6 +37,12 @@ For AI classification, save an OpenRouter key for the current browser session, t
 
 Jev uses the [OpenRouter Decisions API](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request), not a chat endpoint. Requests contain up to 20 tabs at a time, with up to 500 tabs per preview. Low-confidence classifications fall back to domains.
 
+### Categories as JSON
+
+In **Settings → Your categories**, choose **Export JSON** to download the current form as `tabfold-categories.json`. Ask an AI to edit that file, then choose **Import JSON** and **Save categories and preferences**. Import replaces the draft form; it does not change saved settings until you save. Files are not watched or automatically synced.
+
+Use a JSON array of `{ "title": "Research", "criteria": "Papers and benchmarks", "color": "green" }` objects. See the [editable example](docs/categories.example.json). Keep 1–12 unique categories; title ≤40 characters, criteria ≤240. Supported colors: blue, red, yellow, green, pink, purple, cyan, orange, grey. “Other” is automatic. Invalid files leave the current form unchanged. Exports contain categories only, never API keys or tab data.
+
 ### Suggestions, with a second check
 
 Tabfold first compares your categories with “Other.” If Other has at least 60% probability and leads existing categories by at least 20 percentage points, it looks for recurring title phrases or domains. Jev then validates these candidates. At least two matching tabs in the same window are required.

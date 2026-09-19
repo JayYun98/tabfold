@@ -1,0 +1,12 @@
+[
+  {
+    "title": "Research",
+    "criteria": "Machine learning papers, benchmarks, and experiments.",
+    "color": "green"
+  },
+  {
+    "title": "Development",
+    "criteria": "Code repositories, programming documentation, and developer tools.",
+    "color": "blue"
+  }
+]

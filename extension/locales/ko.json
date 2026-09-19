@@ -108,5 +108,12 @@
   "You can add up to 12 categories.": "카테고리는 최대 12개 추가할 수 있습니다.",
   "Your categories": "내 카테고리",
   "{count} matching tabs": "관련 탭 {count}개",
-  "{count} protected": "보호된 탭 {count}개"
+  "{count} protected": "보호된 탭 {count}개",
+  "Import JSON": "JSON 가져오기",
+  "Export JSON": "JSON 내보내기",
+  "Edit the exported file with an AI or text editor, then import it. Import replaces the form; save to apply. Files are not automatically synced.": "내보낸 파일을 AI나 편집기로 수정한 뒤 가져오세요. 가져오면 폼이 교체되며, 저장해야 적용됩니다. 파일은 자동 동기화되지 않습니다.",
+  "Choose a JSON file smaller than 64 KB.": "64 KB보다 작은 JSON 파일을 선택하세요.",
+  "Invalid JSON. Your categories have not changed.": "올바른 JSON이 아닙니다. 기존 카테고리는 변경되지 않았습니다.",
+  "Imported {count} categories into the form. Save to apply.": "카테고리 {count}개를 폼으로 가져왔습니다. 저장하면 적용됩니다.",
+  "Exported the categories currently in the form.": "현재 폼의 카테고리를 내보냈습니다."
 }

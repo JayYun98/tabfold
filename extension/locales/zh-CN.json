@@ -113,5 +113,12 @@
   "Defaults restored. Save to keep these changes.": "已恢复默认设置。请保存以保留更改。",
   "Saved. Your next AI preview will use these settings.": "已保存。下次 AI 预览将使用这些设置。",
   "API key saved for this session.": "已为本次会话保存 API 密钥。",
-  "API key removed.": "已移除 API 密钥。"
+  "API key removed.": "已移除 API 密钥。",
+  "Import JSON": "导入 JSON",
+  "Export JSON": "导出 JSON",
+  "Edit the exported file with an AI or text editor, then import it. Import replaces the form; save to apply. Files are not automatically synced.": "用 AI 或文本编辑器修改导出的文件，再导入。导入会替换表单，保存后才会生效。文件不会自动同步。",
+  "Choose a JSON file smaller than 64 KB.": "请选择小于 64 KB 的 JSON 文件。",
+  "Invalid JSON. Your categories have not changed.": "JSON 无效。分类未更改。",
+  "Imported {count} categories into the form. Save to apply.": "已将 {count} 个分类导入表单。保存后生效。",
+  "Exported the categories currently in the form.": "已导出当前表单中的分类。"
 }

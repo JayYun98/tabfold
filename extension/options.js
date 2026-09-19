@@ -1,4 +1,4 @@
-import { DEFAULT_CATEGORIES } from './ai.js';
+import { DEFAULT_CATEGORIES, validateCategories } from './ai.js';
 import { t, initI18n, applyI18n, setLanguage, getLanguage, LANGUAGES } from './i18n.js';
 const $=id=>document.getElementById(id);
 let busy=false, keyConfigured=false;
@@ -16,6 +16,24 @@ function addCategoryRow(category={title:'',criteria:'',color:'blue'}){
 }
 function readCategories(){return [...$('categoryRows').children].map(row=>({title:row.querySelector('input').value,criteria:row.querySelector('textarea').value,color:row.dataset.color}));}
 function renderCategories(categories){$('categoryRows').replaceChildren();categories.forEach(addCategoryRow);}
+$('importCategories').onclick=()=>{ $('categoryFile').value=''; $('categoryFile').click(); };
+$('categoryFile').onchange=()=>run(async()=>{
+  const file=$('categoryFile').files[0];
+  if(!file)return;
+  if(file.size>=65536)throw new Error(t('Choose a JSON file smaller than 64 KB.'));
+  let parsed;
+  try{parsed=JSON.parse(await file.text());}catch{throw new Error(t('Invalid JSON. Your categories have not changed.'));}
+  const categories=validateCategories(parsed);
+  renderCategories(categories);
+  status(t('Imported {count} categories into the form. Save to apply.',{count:categories.length}));
+});
+$('exportCategories').onclick=()=>run(async()=>{
+  const categories=validateCategories(readCategories());
+  const url=URL.createObjectURL(new Blob([JSON.stringify(categories,null,2)+'\n'],{type:'application/json'}));
+  const link=document.createElement('a');link.href=url;link.download='tabfold-categories.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  status(t('Exported the categories currently in the form.'));
+});
 $('addCategory').onclick=()=>addCategoryRow();
 $('resetCategories').onclick=()=>{renderCategories(DEFAULT_CATEGORIES);status(t('Defaults restored. Save to keep these changes.'));};
 $('saveCategories').onclick=()=>run(async()=>{const categories=readCategories();const result=await send({type:'setCategories',categories});await chrome.storage.local.set({tabfoldPreferences:{suggestNew:$('suggestNew').checked}});renderCategories(result.categories);status(t('Saved. Your next AI preview will use these settings.'));});

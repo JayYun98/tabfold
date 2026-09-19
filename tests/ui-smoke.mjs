@@ -20,7 +20,7 @@ try {
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async()=>true},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
     if(request.type==='getSettings')return {ok:true,categories,keyConfigured:false,preferences:{suggestNew:true}};
     if(request.type==='preview')return {ok:true,plan:{total:213,protectedCount:34,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};
-    if(request.type==='setCategories')return {ok:true,categories:request.categories};
+    if(request.type==='setCategories'){window.savedCategories=request.categories;return {ok:true,categories:request.categories};}
     return {ok:true,message:'Done'};
    }}};
   },{language});
@@ -36,6 +36,25 @@ try {
   await page.locator('#language').selectOption(language==='ko'?'en':'ko');
   await page.waitForFunction(()=>!document.querySelector('#language').disabled);
   assert.equal(await page.locator('.category-row input').inputValue(),'Draft category');assert.equal(await page.locator('#apiKey').inputValue(),'test-only-not-a-real-key');
+  if(language==='en' && colorScheme==='light'){
+   const expected=[{title:'AI edited category',criteria:'Papers and benchmarks',color:'green'}];
+   await page.locator('#categoryFile').setInputFiles({name:'categories.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(expected))});
+   await page.waitForFunction(()=>!document.querySelector('#saveCategories').disabled);
+   assert.equal(await page.locator('.category-row input').inputValue(),expected[0].title);
+   assert.equal(await page.evaluate(()=>window.savedCategories),undefined,'Import must not persist before Save');
+   for(const invalid of ['{broken',JSON.stringify([expected[0],expected[0]]),JSON.stringify({...expected[0]}),' '.repeat(65537)]){
+    await page.locator('#categoryFile').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from(invalid)});
+    await page.waitForFunction(()=>!document.querySelector('#saveCategories').disabled);
+    assert.equal(await page.locator('.category-row input').inputValue(),expected[0].title);
+    assert.equal(await page.locator('#status').evaluate(e=>e.classList.contains('error')),true);
+   }
+   const downloading=page.waitForEvent('download');await page.locator('#exportCategories').click();const download=await downloading;
+   assert.equal(download.suggestedFilename(),'tabfold-categories.json');const chunks=[];for await(const chunk of await download.createReadStream())chunks.push(chunk);
+   assert.deepEqual(JSON.parse(Buffer.concat(chunks).toString()),expected);
+   await page.locator('#saveCategories').click();await page.waitForFunction(()=>!!window.savedCategories);
+   assert.deepEqual(await page.evaluate(()=>window.savedCategories),expected);
+   console.log('JSON import, rejection, export round-trip and explicit save passed');
+  }
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
   await context.close();console.log(language,colorScheme,'layout and draft preservation passed');
  }

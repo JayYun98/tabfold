@@ -45,3 +45,9 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - `tests/ui-smoke.mjs`: 10 passing combinations (5 languages × light/dark). An isolated Chromium renders actual UI files with synthetic Chrome API responses, 24 groups, and long titles. It checks horizontal overflow, footer visibility, settings navigation callback, and preserving drafts when changing language. Screenshots are `docs/assets/popup-en.png` and `popup-ko.png`; their data is synthetic.
 - The optional visual test uses an installed Playwright package: `PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node tests/ui-smoke.mjs`. Playwright is not an extension dependency.
 - Live Chrome extension-manager navigation was blocked by the browser tool URL policy. This version has not been reloaded or validated in the native toolbar popup; reload Tabfold once in Chrome's extension manager to activate the manifest/background update. Existing tabs were not regrouped or closed during this update.
+
+## v0.3.1 category JSON files
+
+- Added JSON import/export on the settings page, using the same category validator as the backend. Import updates the draft only; Save persists it. Exports include only category fields.
+- Isolated Chromium verified valid import, malformed/duplicate/non-array/oversized file rejection without replacing the draft, download round-trip equality, and explicit save. All 10 language/theme layout checks and 25 unit/regression checks passed.
+- JSON files are not automatically synchronized. The installed Chrome extension still needs a manual reload; no user tabs were changed.

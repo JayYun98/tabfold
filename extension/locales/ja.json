@@ -108,5 +108,12 @@
   "You can add up to 12 categories.": "カテゴリは最大12個まで追加できます。",
   "Your categories": "マイカテゴリ",
   "{count} matching tabs": "一致するタブ{count}個",
-  "{count} protected": "保護されたタブ{count}個"
+  "{count} protected": "保護されたタブ{count}個",
+  "Import JSON": "JSON を読み込む",
+  "Export JSON": "JSON を書き出す",
+  "Edit the exported file with an AI or text editor, then import it. Import replaces the form; save to apply. Files are not automatically synced.": "書き出したファイルを AI やエディターで編集して読み込めます。フォームが置き換わるので、保存して適用してください。ファイルは自動同期されません。",
+  "Choose a JSON file smaller than 64 KB.": "64 KB 未満の JSON ファイルを選択してください。",
+  "Invalid JSON. Your categories have not changed.": "JSON が無効です。カテゴリーは変更されていません。",
+  "Imported {count} categories into the form. Save to apply.": "{count} 件のカテゴリーをフォームに読み込みました。保存して適用してください。",
+  "Exported the categories currently in the form.": "現在のフォームのカテゴリーを書き出しました。"
 }
