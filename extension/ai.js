@@ -73,6 +73,7 @@ async function requestAnswers(tabs, key, fetchImpl) {
     const messages = {
       401: 'OpenRouter API 키가 올바르지 않거나 만료되었습니다.',
       402: 'OpenRouter 잔액 또는 크레딧이 부족합니다.',
+      403: 'OpenRouter가 요청을 거절했습니다. API 키의 사용 한도와 모델 접근 권한을 확인하세요.',
       429: 'OpenRouter 요청 한도에 도달했습니다. 잠시 후 다시 시도하세요.',
     };
     throw new Error(messages[response.status] || `OpenRouter 요청에 실패했습니다 (HTTP ${response.status}).`);

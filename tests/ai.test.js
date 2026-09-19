@@ -59,6 +59,7 @@ test('rejects missing and malformed decision answers', async () => {
 test('turns OpenRouter HTTP failures into actionable Korean errors', async () => {
   await assert.rejects(classifyTabs(tabs(1), 'key', async () => response({}, 401)), /API 키/);
   await assert.rejects(classifyTabs(tabs(1), 'key', async () => response({}, 402)), /크레딧/);
+  await assert.rejects(classifyTabs(tabs(1), 'key', async () => response({}, 403)), /사용 한도/);
   await assert.rejects(classifyTabs(tabs(1), 'key', async () => response({}, 429)), /한도/);
 });
 
