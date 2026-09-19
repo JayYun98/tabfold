@@ -1,7 +1,13 @@
 import { t } from './i18n.js';
 
-const ENDPOINT = 'https://openrouter.ai/api/alpha/decisions';
-const MODEL = 'typesafe/jev-1.13';
+const PROVIDERS = {
+  openrouter: {id:'openrouter',name:'OpenRouter',endpoint:'https://openrouter.ai/api/alpha/decisions',origin:'https://openrouter.ai/*',model:'typesafe/jev-1.13',keyName:'openrouterKey'},
+  typesafe: {id:'typesafe',name:'TypeSafe',endpoint:'https://api.typesafe.ai/v1/systemone',origin:'https://api.typesafe.ai/*',model:'jev-1.13.0',keyName:'typesafeKey'},
+};
+export function getProvider(id = 'openrouter') {
+  if(typeof id !== 'string' || !Object.hasOwn(PROVIDERS,id)) throw new Error(t('Invalid AI provider.'));
+  return PROVIDERS[id];
+}
 const BATCH_SIZE = 20;
 const TIMEOUT_MS = 20_000;
 const COLORS = new Set(['blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange', 'grey']);
@@ -76,28 +82,28 @@ function questionsFor(tabs, categories) {
   ]));
 }
 
-async function requestAnswers(tabs, key, fetchImpl, categories) {
+async function requestAnswers(tabs, key, fetchImpl, categories, provider) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   let response;
   try {
-    response = await fetchImpl(ENDPOINT, {
+    response = await fetchImpl(provider.endpoint, {
       method: 'POST', headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, state: { tabs: tabs.map(({ id, title, url }) => ({ id, title, url })) }, questions: questionsFor(tabs, categories) }),
+      body: JSON.stringify({ model: provider.model, state: { tabs: tabs.map(({ id, title, url }) => ({ id, title, url })) }, questions: questionsFor(tabs, categories) }),
       signal: controller.signal,
     });
     if (!response.ok) {
-      const messages = { 401: t('OpenRouter API key is invalid or expired.'), 402: t('OpenRouter has insufficient credits.'), 403: t('Check your OpenRouter usage limit or permissions.'), 429: t('OpenRouter rate limit reached. Try again shortly.') };
-      const failure = error(messages[response.status] || t('OpenRouter request failed (HTTP {status}).', { status: response.status }));
-      failure.isOpenRouterError = true;
+      const messages = { 401: t('AI API key is invalid or expired.'), 402: t('AI has insufficient credits.'), 403: t('Check your AI usage limit or permissions.'), 429: t('AI rate limit reached. Try again shortly.') };
+      const failure = error(messages[response.status] || t('AI request failed (HTTP {status}).', { status: response.status }));
+      failure.isProviderError = true;
       throw failure;
     }
     return await response.json();
   } catch (cause) {
-    if (controller.signal.aborted) throw error(t('OpenRouter request timed out. Try again.'));
-    if (cause?.isOpenRouterError) throw cause;
-    if (response?.ok) throw error(t('Invalid OpenRouter response format.'));
-    throw error(t('Unable to connect to OpenRouter. Check your network.'));
+    if (controller.signal.aborted) throw error(t('AI request timed out. Try again.'));
+    if (cause?.isProviderError) throw cause;
+    if (response?.ok) throw error(t('Invalid AI response format.'));
+    throw error(t('Unable to connect to AI. Check your network.'));
   } finally { clearTimeout(timer); }
 }
 
@@ -107,15 +113,15 @@ function checkedAnswers(payload, tabs, categories) {
   const answers = payload?.answers;
   const expected = new Set(tabs.map((tab) => `tab_${tab.id}`));
   const choices = new Set([...categories.map((category) => category.id), 'other']);
-  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) throw error(t('OpenRouter response is missing tab classifications.'));
-  for (const id of Object.keys(answers)) if (!expected.has(id)) throw error(t('OpenRouter response contains an unknown tab classification.'));
+  if (!answers || typeof answers !== 'object' || Array.isArray(answers)) throw error(t('AI response is missing tab classifications.'));
+  for (const id of Object.keys(answers)) if (!expected.has(id)) throw error(t('AI response contains an unknown tab classification.'));
   return tabs.map((tab) => {
     const answer = answers[`tab_${tab.id}`];
-    if (!answer || answer.type !== 'choice' || !choices.has(answer.choice)) throw error(t('Invalid tab classification in the OpenRouter response.'));
-    if (Object.hasOwn(answer, 'confidence') && !validNumber(answer.confidence)) throw error(t('Invalid tab classification in the OpenRouter response.'));
+    if (!answer || answer.type !== 'choice' || !choices.has(answer.choice)) throw error(t('Invalid tab classification in the AI response.'));
+    if (Object.hasOwn(answer, 'confidence') && !validNumber(answer.confidence)) throw error(t('Invalid tab classification in the AI response.'));
     if (Object.hasOwn(answer, 'probabilities')) {
-      if (!answer.probabilities || typeof answer.probabilities !== 'object' || Array.isArray(answer.probabilities)) throw error(t('Invalid tab classification in the OpenRouter response.'));
-      for (const [choice, probability] of Object.entries(answer.probabilities)) if (!choices.has(choice) || !validNumber(probability)) throw error(t('Invalid tab classification in the OpenRouter response.'));
+      if (!answer.probabilities || typeof answer.probabilities !== 'object' || Array.isArray(answer.probabilities)) throw error(t('Invalid tab classification in the AI response.'));
+      for (const [choice, probability] of Object.entries(answer.probabilities)) if (!choices.has(choice) || !validNumber(probability)) throw error(t('Invalid tab classification in the AI response.'));
     }
     return [tab, answer];
   });
@@ -173,7 +179,7 @@ function candidateTopics(strongTabs, categories) {
     }, []);
 }
 
-async function suggestCategories(strongTabs, categories, key, fetchImpl) {
+async function suggestCategories(strongTabs, categories, key, fetchImpl, provider) {
   const topics = candidateTopics(strongTabs, categories);
   if (!topics.length) return [];
   const candidates = topics.map(({ id, title, criteria, color }) => ({ id, title, criteria, color }));
@@ -181,7 +187,7 @@ async function suggestCategories(strongTabs, categories, key, fetchImpl) {
   const eligible = topics.flatMap((topic) => topic.tabs);
   for (let index = 0; index < eligible.length; index += BATCH_SIZE) {
     const batch = eligible.slice(index, index + BATCH_SIZE);
-    const payload = await requestAnswers(batch, key, fetchImpl, candidates);
+    const payload = await requestAnswers(batch, key, fetchImpl, candidates, provider);
     for (const [tab, answer] of checkedAnswers(payload, batch, candidates)) answers.set(tab.id, answer);
   }
   const used = new Set();
@@ -201,17 +207,18 @@ async function suggestCategories(strongTabs, categories, key, fetchImpl) {
 
 /** Classifies HTTP(S) tabs; low confidence uses hostname fallback. Suggestions are local recurring-title candidates validated by Jev and never auto-applied. */
 export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
-  if (typeof key !== 'string' || !key.trim()) throw error(t('Enter your OpenRouter API key.'));
+  if (typeof key !== 'string' || !key.trim()) throw error(t('Enter your AI API key.'));
   if (typeof fetchImpl !== 'function') throw error(t('Network requests are unavailable.'));
   const prepared = prepareTabs(tabs);
   const config = categoryConfig(options);
+  const provider = getProvider(options.provider);
   const byId = new Map(config.categories.map((category) => [category.id, category]));
   const groups = new Map();
   const strongTabs = [];
   let otherCount = 0;
   for (let index = 0; index < prepared.length; index += BATCH_SIZE) {
     const batch = prepared.slice(index, index + BATCH_SIZE);
-    const payload = await requestAnswers(batch, key.trim(), fetchImpl, config.categories);
+    const payload = await requestAnswers(batch, key.trim(), fetchImpl, config.categories, provider);
     for (const [tab, answer] of checkedAnswers(payload, batch, config.categories)) {
       const category = byId.get(answer.choice);
       if (!category || answer.confidence < 0.7) { fallback(tab, groups); otherCount += 1; } else groups.set(tab.id, { title: category.title, color: category.color });
@@ -222,7 +229,7 @@ export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
   groups.otherCount = otherCount;
   groups.suggestions = [];
   if (config.suggestNew && strongTabs.length >= 2) {
-    try { groups.suggestions = await suggestCategories(strongTabs, config.categories, key.trim(), fetchImpl); }
+    try { groups.suggestions = await suggestCategories(strongTabs, config.categories, key.trim(), fetchImpl, provider); }
     catch (cause) { groups.suggestionError = t('Unable to validate new category suggestions: {error}', { error: cause.message }); }
   }
   return groups;

@@ -155,6 +155,25 @@ test('settings reports key presence without exposing credentials and preserves c
   await backend.handle({type:'setKey', key:'private-test-key'});
   await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
   const configured = await backend.handle({type:'getSettings'});
-  assert.deepEqual(configured, {ok:true, keyConfigured:true, categories, preferences:{suggestNew:false}});
+  assert.deepEqual(configured, {ok:true, provider:'openrouter', keyConfigured:true, categories, preferences:{suggestNew:false}});
   assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
+});
+
+test('provider keys are isolated, old OpenRouter keys remain usable, and selection invalidates previews',async()=>{
+  const backend=new TabfoldBackend(mockChrome([]));
+  await backend.write('openrouterKey','openrouter-only');
+  assert.equal((await backend.handle({type:'getSettings'})).keyConfigured,true);
+  await backend.write('tabfoldPreview',{plan:{groups:[]}});
+  assert.equal((await backend.handle({type:'setProvider',provider:'typesafe'})).keyConfigured,false);
+  assert.equal(await backend.read('tabfoldPreview'),undefined);
+  assert.equal((await backend.handle({type:'preview',ai:true})).ok,false);
+  await backend.handle({type:'setKey',provider:'typesafe',key:'typesafe-only'});
+  assert.equal(await backend.read('openrouterKey'),'openrouter-only');
+  assert.equal(await backend.read('typesafeKey'),'typesafe-only');
+  assert.equal((await backend.handle({type:'getSettings'})).provider,'typesafe');
+  await backend.handle({type:'setKey',provider:'typesafe',key:''});
+  assert.equal(await backend.read('typesafeKey'),undefined);
+  assert.equal((await backend.handle({type:'setProvider',provider:'openrouter'})).keyConfigured,true);
+  assert.equal((await backend.handle({type:'setProvider',provider:'evil'})).ok,false);
+  assert.equal((await backend.handle({type:'getSettings'})).provider,'openrouter');
 });

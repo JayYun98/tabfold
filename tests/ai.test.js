@@ -185,3 +185,18 @@ test('keeps the first classification when optional suggestion validation is malf
   assert.deepEqual(result.suggestions, []);
   assert.match(result.suggestionError, /Unable to validate new category suggestions/);
 });
+
+test('TypeSafe direct routes both classification and suggestions to its pinned model',async()=>{
+  const calls=[];
+  const input=[{id:1,windowId:1,title:'Sourdough bread guide',url:'https://one.test/bread?secret=1'},{id:2,windowId:1,title:'Sourdough bread recipes',url:'https://two.test/bread'}];
+  const result=await classifyTabs(input,'typesafe-test-key',async(url,options)=>{
+    const body=JSON.parse(options.body);calls.push({url,body,auth:options.headers.Authorization});
+    const choice=calls.length===1?'other':'candidate_0';
+    return response(Object.fromEntries(input.map(tab=>['tab_'+tab.id,{type:'choice',choice,confidence:1,probabilities:{[choice]:1}}])));
+  },{provider:'typesafe',categories:[{title:'Code',criteria:'Programming',color:'blue'}],suggestNew:true});
+  assert.equal(calls.length,2);
+  for(const call of calls){assert.equal(call.url,'https://api.typesafe.ai/v1/systemone');assert.equal(call.body.model,'jev-1.13.0');assert.equal(call.auth,'Bearer typesafe-test-key');assert.ok(!JSON.stringify(call.body).includes('secret'));}
+  assert.equal(result.suggestions.length,1);
+  await assert.rejects(classifyTabs(input,'key',()=>{throw new Error('Must not call');},{provider:'https://other.test'}),/Invalid AI provider/);
+  await assert.rejects(classifyTabs(input,'key',async()=>response({},401),{provider:'typesafe'}),/API key/);
+});

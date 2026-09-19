@@ -1,11 +1,10 @@
 import { t, initI18n } from './i18n.js';
 import { buildPreview, isEligible, sameSnapshot, validGroupColor } from './core.js';
-import { classifyTabs, DEFAULT_CATEGORIES, validateCategories } from './ai.js';
+import { classifyTabs, DEFAULT_CATEGORIES, validateCategories, getProvider } from './ai.js';
 
 const UNDO_KEY = 'tabfoldUndo';
 const RECOVERY_KEY = 'tabfoldRecovery';
 const PREVIEW_KEY = 'tabfoldPreview';
-const KEY_NAME = 'openrouterKey';
 const STALE = 'Tabs have changed. Refresh the preview.';
 
 function message(ok, text, extra = {}) {
@@ -58,13 +57,14 @@ export class TabfoldBackend {
 
   async preview(request) {
     const tabs = await this.chrome.tabs.query({});
-    const key = await this.read(KEY_NAME);
+    const provider = getProvider(request.provider ?? await this.provider());
+    const key = await this.read(provider.keyName);
     let classifications;
     if (request.ai) {
       if (!key) return message(false, t('Save your API key before using AI classification.'));
       const selectedEligible = tabs.filter((tab) => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab));
       try {
-        classifications = await classifyTabs(selectedEligible, key, fetch, {categories: await this.categories(), suggestNew: request.suggestNew !== false});
+        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), suggestNew: request.suggestNew !== false});
       } catch (error) {
         return message(false, error?.message || t('Unable to complete AI classification.'));
       }
@@ -117,10 +117,20 @@ export class TabfoldBackend {
     return {ok:true, plan, suggestions, categories:next};
   }
 
-  async setKey(key) {
+  async provider() { return getProvider(await this.read('tabfoldProvider','local') || 'openrouter').id; }
+
+  async setProvider(id) {
+    const provider=getProvider(id);
+    await this.write('tabfoldProvider',provider.id,'local');
+    await this.remove(PREVIEW_KEY);
+    return {ok:true,provider:provider.id,keyConfigured:Boolean(await this.read(provider.keyName))};
+  }
+
+  async setKey(key, id) {
+    const provider=getProvider(id ?? await this.provider());
     if (typeof key !== 'string') return message(false, t('Invalid API key format.'));
-    if (key.trim()) await this.write(KEY_NAME, key.trim());
-    else await this.remove(KEY_NAME);
+    if (key.trim()) await this.write(provider.keyName, key.trim());
+    else await this.remove(provider.keyName);
     return { ok: true, keyConfigured: Boolean(key.trim()) };
   }
 
@@ -302,12 +312,13 @@ export class TabfoldBackend {
   async handle(request = {}) {
     try {
       await initI18n();
-      if (request.type === 'getSettings') return { ok: true, keyConfigured: Boolean(await this.read(KEY_NAME)), categories: await this.categories(), preferences: await this.read('tabfoldPreferences', 'local') || { suggestNew: true } };
+      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if (request.type === 'setProvider') return await this.mutate(() => this.setProvider(request.provider));
       if (request.type === 'preview') return await this.preview(request);
       if (request.type === 'getCategories') return {ok:true, categories:await this.categories()};
       if (request.type === 'setCategories') return await this.mutate(() => this.setCategories(request.categories));
       if (request.type === 'acceptSuggestion') return await this.mutate(() => this.acceptSuggestion(request));
-      if (request.type === 'setKey') return await this.setKey(request.key);
+      if (request.type === 'setKey') return await this.setKey(request.key, request.provider);
       if (request.type === 'apply') return await this.mutate(() => this.apply(request.plan, request.collapse));
       if (request.type === 'undo') return await this.mutate(() => this.undo());
       if (request.type === 'dedupe') return await this.mutate(() => this.dedupe(request.plan));

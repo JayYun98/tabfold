@@ -51,3 +51,11 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Added JSON import/export on the settings page, using the same category validator as the backend. Import updates the draft only; Save persists it. Exports include only category fields.
 - Isolated Chromium verified valid import, malformed/duplicate/non-array/oversized file rejection without replacing the draft, download round-trip equality, and explicit save. All 10 language/theme layout checks and 25 unit/regression checks passed.
 - JSON files are not automatically synchronized. The installed Chrome extension still needs a manual reload; no user tabs were changed.
+
+## v0.4.0 TypeSafe direct
+
+- Implemented the official `POST https://api.typesafe.ai/v1/systemone` contract using Bearer authentication and pinned `jev-1.13.0` (https://docs.typesafe.ai/api, https://docs.typesafe.ai/models). OpenRouter remains the default.
+- Provider-specific session keys, strict provider allowlist, selected-provider optional host access, and no automatic cross-provider fallback.
+- 27 unit/regression checks passed, including routing both classification and suggestion requests to TypeSafe, key isolation, invalid provider rejection, and preview invalidation. These transport tests use synthetic responses.
+- No `TYPESAFE_API_KEY` was configured in the supplied environment file, so a successful authenticated TypeSafe live call has not been verified. Native extension reload remains manual.
+- Isolated UI tests passed all 10 language/theme combinations, including selecting providers and requesting only the TypeSafe API origin for a TypeSafe preview.
