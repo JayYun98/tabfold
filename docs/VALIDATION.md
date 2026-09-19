@@ -59,3 +59,9 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - 27 unit/regression checks passed, including routing both classification and suggestion requests to TypeSafe, key isolation, invalid provider rejection, and preview invalidation. These transport tests use synthetic responses.
 - No `TYPESAFE_API_KEY` was configured in the supplied environment file, so a successful authenticated TypeSafe live call has not been verified. Native extension reload remains manual.
 - Isolated UI tests passed all 10 language/theme combinations, including selecting providers and requesting only the TypeSafe API origin for a TypeSafe preview.
+
+## v0.5.0 tab ordering
+
+- Added current/title/least-recently-used order for tabs inside newly created groups. Uses Chrome `lastAccessed` (Chrome 121+); missing values sort last. Group layout between windows remains unchanged.
+- 29 unit/regression tests passed, including numeric title order, timestamp ties/missing values, stale-preview rejection after a setting change, and same-window tab moves with protected tabs untouched using a mock Chrome API. Native toolbar reload and real Chrome sorting remain unverified.
+- All 10 isolated UI language/theme combinations passed, including saving the order setting and preserving its selection across language changes.

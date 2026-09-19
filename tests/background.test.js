@@ -15,6 +15,7 @@ function mockChrome(initialTabs, { reorderStorage = false } = {}) {
   const local = {};
   const created = [];
   const groupCalls = [];
+  const moves = [];
   let nextGroupId = 1;
   const area = (store) => ({
     get: async (key) => ({ [key]: reorderStorage ? reordered(store[key]) : store[key] }),
@@ -26,6 +27,13 @@ function mockChrome(initialTabs, { reorderStorage = false } = {}) {
       query: async () => [...tabs.values()].map((tab) => ({ ...tab })),
       get: async (id) => { if (!tabs.has(id)) throw new Error('missing'); return { ...tabs.get(id) }; },
       group: async (options) => { const { tabIds } = options; groupCalls.push(options); const groupId = nextGroupId++; tabIds.forEach((id) => { tabs.get(id).groupId = groupId; }); groups.set(groupId, { id: groupId, title: '', color: 'grey' }); return groupId; },
+      move: async (id, properties) => {
+        moves.push({id,...properties});
+        const moving=tabs.get(id);
+        const ordered=[...tabs.values()].filter(t=>t.windowId===moving.windowId).sort((a,b)=>a.index-b.index);
+        ordered.splice(ordered.findIndex(t=>t.id===id),1);ordered.splice(properties.index,0,moving);
+        ordered.forEach((tab,index)=>{tab.index=index;});return {...moving};
+      },
       ungroup: async (ids) => ids.forEach((id) => { tabs.get(id).groupId = -1; }),
       remove: async (id) => tabs.delete(id),
       create: async ({ url, windowId }) => { created.push({ url, windowId }); return { id: 100 + created.length, url, windowId }; },
@@ -39,6 +47,7 @@ function mockChrome(initialTabs, { reorderStorage = false } = {}) {
     _groups: groups,
     _created: created,
     _groupCalls: groupCalls,
+    _moves: moves,
   };
 }
 
@@ -155,7 +164,7 @@ test('settings reports key presence without exposing credentials and preserves c
   await backend.handle({type:'setKey', key:'private-test-key'});
   await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
   const configured = await backend.handle({type:'getSettings'});
-  assert.deepEqual(configured, {ok:true, provider:'openrouter', keyConfigured:true, categories, preferences:{suggestNew:false}});
+  assert.deepEqual(configured, {ok:true, provider:'openrouter', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false}});
   assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
 });
 
@@ -176,4 +185,29 @@ test('provider keys are isolated, old OpenRouter keys remain usable, and selecti
   assert.equal((await backend.handle({type:'setProvider',provider:'openrouter'})).keyConfigured,true);
   assert.equal((await backend.handle({type:'setProvider',provider:'evil'})).ok,false);
   assert.equal((await backend.handle({type:'getSettings'})).provider,'openrouter');
+});
+
+test('saved sorting matches apply order inside each window and never moves protected tabs',async()=>{
+  const chrome=mockChrome([
+    {id:90,windowId:1,index:0,url:'https://protected.test',pinned:true},
+    {id:1,windowId:1,index:1,url:'https://example.com/1',title:'Zulu',lastAccessed:30},
+    {id:2,windowId:1,index:2,url:'https://example.com/2',title:'Alpha',lastAccessed:10},
+    {id:3,windowId:1,index:3,url:'https://example.com/3',title:'Beta',lastAccessed:20},
+    {id:4,windowId:2,index:0,url:'https://example.com/4',title:'Delta',lastAccessed:40},
+    {id:5,windowId:2,index:1,url:'https://example.com/5',title:'Charlie',lastAccessed:20},
+  ]);
+  const backend=new TabfoldBackend(chrome);
+  const old=await backend.preview({allWindows:true});
+  assert.equal((await backend.handle({type:'setTabOrder',tabOrder:'oldest'})).ok,true);
+  assert.equal((await backend.handle({type:'apply',plan:old.plan})).ok,false);
+  assert.equal((await backend.handle({type:'setTabOrder',tabOrder:'invalid'})).ok,false);
+  assert.equal((await backend.handle({type:'getSettings'})).tabOrder,'oldest');
+  const {plan}=await backend.preview({allWindows:true});
+  assert.deepEqual(plan.groups.map(g=>g.tabIds),[[2,3,1],[5,4]]);
+  assert.equal((await backend.handle({type:'apply',plan})).ok,true);
+  const order=windowId=>[...chrome._tabs.values()].filter(t=>t.windowId===windowId).sort((a,b)=>a.index-b.index).map(t=>t.id);
+  assert.deepEqual(order(1),[90,2,3,1]);assert.deepEqual(order(2),[5,4]);
+  assert.ok(chrome._moves.every(m=>m.id!==90 && m.windowId===undefined));
+  assert.equal((await backend.handle({type:'undo'})).ok,true);
+  assert.equal(chrome._tabs.get(90).groupId,-1);
 });

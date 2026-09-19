@@ -136,5 +136,14 @@
   "API key": "API キー",
   "Invalid AI provider.": "無効な AI プロバイダーです。",
   "AI provider saved. Use a key from the selected provider.": "AI プロバイダーを保存しました。選択したプロバイダーのキーを使用してください。",
-  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "AI プレビューはタブのタイトルと URL を選択したプロバイダーに送信します。TypeSafe は直接接続し、OpenRouter は TypeSafe に中継します。キーはブラウザーセッション中、個別に保存されます。API 料金が発生する場合があります。"
+  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "AI プレビューはタブのタイトルと URL を選択したプロバイダーに送信します。TypeSafe は直接接続し、OpenRouter は TypeSafe に中継します。キーはブラウザーセッション中、個別に保存されます。API 料金が発生する場合があります。",
+  "Invalid tab order.": "無効なタブの並び順です。",
+  "Tab order": "タブの並び順",
+  "Choose the order of tabs inside each new group.": "新しいグループ内のタブの並び順を選択します。",
+  "Sort tabs by": "タブの並び替え基準",
+  "Current order": "現在の順序を維持",
+  "Least recently used first": "長く使っていない順",
+  "Title (A–Z)": "タイトル順 (A–Z)",
+  "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "作成日時ではなく、最後にアクティブになった日時が基準です。不明なタブは末尾に置き、既存のグループは変更しません。",
+  "Tab order saved. Refresh the preview to use it.": "並び順を保存しました。プレビューを更新して適用してください。"
 }

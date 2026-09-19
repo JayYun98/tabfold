@@ -19,6 +19,7 @@ try {
    const groups=Array.from({length:24},(_,i)=>({title:i?'Research '+i:'A very long research category title that must not stretch the popup',color:'blue',tabIds:[1,2],tabs:[{title:'A long paper title '.repeat(12),url:'https://example.com/paper'},{title:'Experiments',url:'https://example.com/experiments'}]}));
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async request=>{window.requestedOrigins=request.origins;return true;}},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
     if(request.type==='getSettings')return {ok:true,provider:'typesafe',categories,keyConfigured:false,preferences:{suggestNew:true}};
+    if(request.type==='setTabOrder'){window.savedTabOrder=request.tabOrder;return {ok:true,tabOrder:request.tabOrder};}
     if(request.type==='setProvider')return {ok:true,provider:request.provider,keyConfigured:false};
     if(request.type==='preview')return {ok:true,plan:{total:213,protectedCount:34,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};
     if(request.type==='setCategories'){window.savedCategories=request.categories;return {ok:true,categories:request.categories};}
@@ -34,12 +35,14 @@ try {
   await page.locator('#settings').click();assert.equal(await page.evaluate(()=>window.settingsOpened),true);
   if(colorScheme==='light' && ['en','ko'].includes(language))await page.screenshot({path:new URL('../docs/assets/popup-'+language+'.png',import.meta.url).pathname});
   await page.goto('https://tabfold.test/options.html');await page.waitForSelector('.category-row');
+  await page.locator('#tabOrder').selectOption('oldest');await page.waitForFunction(()=>window.savedTabOrder==='oldest');
   assert.equal(await page.locator('#provider').inputValue(),'typesafe');
   await page.locator('#provider').selectOption('openrouter');await page.waitForFunction(()=>!document.querySelector('#provider').disabled);
   assert.match(await page.locator('#providerInfo').textContent(),/OpenRouter/);
   await page.locator('.category-row input').fill('Draft category');await page.locator('#apiKey').fill('test-only-not-a-real-key');
   await page.locator('#language').selectOption(language==='ko'?'en':'ko');
   await page.waitForFunction(()=>!document.querySelector('#language').disabled);
+  assert.equal(await page.locator('#tabOrder').inputValue(),'oldest');
   assert.equal(await page.locator('.category-row input').inputValue(),'Draft category');assert.equal(await page.locator('#apiKey').inputValue(),'test-only-not-a-real-key');
   if(language==='en' && colorScheme==='light'){
    const expected=[{title:'AI edited category',criteria:'Papers and benchmarks',color:'green'}];

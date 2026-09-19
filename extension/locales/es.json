@@ -141,5 +141,14 @@
   "API key": "Clave de API",
   "Invalid AI provider.": "Proveedor de IA no válido.",
   "AI provider saved. Use a key from the selected provider.": "Proveedor guardado. Usa una clave del proveedor seleccionado.",
-  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "La vista previa con IA envía títulos y URL al proveedor seleccionado. TypeSafe conecta directamente; OpenRouter dirige las solicitudes a TypeSafe. Las claves se guardan por separado durante esta sesión. Pueden aplicarse cargos."
+  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "La vista previa con IA envía títulos y URL al proveedor seleccionado. TypeSafe conecta directamente; OpenRouter dirige las solicitudes a TypeSafe. Las claves se guardan por separado durante esta sesión. Pueden aplicarse cargos.",
+  "Invalid tab order.": "Orden de pestañas no válido.",
+  "Tab order": "Orden de pestañas",
+  "Choose the order of tabs inside each new group.": "Elige el orden de las pestañas dentro de cada grupo nuevo.",
+  "Sort tabs by": "Ordenar pestañas por",
+  "Current order": "Orden actual",
+  "Least recently used first": "Menos usadas recientemente primero",
+  "Title (A–Z)": "Título (A–Z)",
+  "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "Se usa la última activación, no la fecha de creación. Las horas desconocidas van al final. Los grupos existentes no cambian.",
+  "Tab order saved. Refresh the preview to use it.": "Orden guardado. Actualiza la vista previa para usarlo."
 }

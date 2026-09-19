@@ -30,3 +30,13 @@ test('duplicates retain an active or protected survivor and match full URL only'
   ]);
   assert.deepEqual(candidates.map((candidate) => candidate.id), [2, 5]);
 });
+
+test('group preview sorting is stable, numeric by title, and unknown activity goes last',()=>{
+  const input=[tab(1,'https://example.com/1',{index:2,title:'Page 10',lastAccessed:300}),tab(2,'https://example.com/2',{index:1,title:'Page 2',lastAccessed:100}),tab(3,'https://example.com/3',{index:0,title:'Page 1'}),tab(4,'https://example.com/4',{index:3,title:'Page 2',lastAccessed:100})];
+  const ids=order=>buildPreview(input,{tabOrder:order}).groups[0].tabIds;
+  assert.deepEqual(ids('current'),[3,2,1,4]);
+  assert.deepEqual(ids('title'),[3,2,4,1]);
+  assert.deepEqual(ids('oldest'),[2,4,1,3]);
+  assert.deepEqual(input.map(t=>t.id),[1,2,3,4]);
+  assert.throws(()=>ids('invalid'),/Invalid tab order/);
+});

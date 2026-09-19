@@ -141,5 +141,14 @@
   "API key": "API 密钥",
   "Invalid AI provider.": "无效的 AI 提供商。",
   "AI provider saved. Use a key from the selected provider.": "已保存 AI 提供商。请使用所选提供商的密钥。",
-  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "AI 预览会将标签页标题和 URL 发送给所选提供商。TypeSafe 直接连接，OpenRouter 转发至 TypeSafe。密钥在本次浏览器会话中分别保存，可能产生 API 费用。"
+  "AI preview sends tab titles and URLs to your selected provider. TypeSafe connects directly; OpenRouter routes to TypeSafe. Keys are stored separately for this browser session. API charges may apply.": "AI 预览会将标签页标题和 URL 发送给所选提供商。TypeSafe 直接连接，OpenRouter 转发至 TypeSafe。密钥在本次浏览器会话中分别保存，可能产生 API 费用。",
+  "Invalid tab order.": "无效的标签页排序方式。",
+  "Tab order": "标签页顺序",
+  "Choose the order of tabs inside each new group.": "选择每个新分组内的标签页顺序。",
+  "Sort tabs by": "标签页排序依据",
+  "Current order": "保持当前顺序",
+  "Least recently used first": "最久未使用优先",
+  "Title (A–Z)": "标题顺序 (A–Z)",
+  "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "按上次激活时间而非创建时间排序。时间未知的放在最后，已有分组保持不变。",
+  "Tab order saved. Refresh the preview to use it.": "已保存排序方式。刷新预览后生效。"
 }

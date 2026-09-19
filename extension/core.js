@@ -42,7 +42,23 @@ function publicTab(tab) {
   return { id: tab.id, title: tab.title || '', url: tab.url, windowId: tab.windowId };
 }
 
-export function buildPreview(tabs, { windowId, allWindows = false } = {}, classifications) {
+export function validateTabOrder(value = 'current') {
+  if (!['current','title','oldest'].includes(value)) throw new Error(t('Invalid tab order.'));
+  return value;
+}
+
+function orderedTabs(tabs, order) {
+  const position = (a,b) => (a.index ?? 0) - (b.index ?? 0);
+  const time = tab => Number.isFinite(tab.lastAccessed) && tab.lastAccessed > 0 ? tab.lastAccessed : Infinity;
+  return [...tabs].sort((a,b) => {
+    if (order === 'title') return (a.title || a.url).localeCompare(b.title || b.url, undefined, {numeric:true,sensitivity:'base'}) || position(a,b);
+    if (order === 'oldest') return (time(a)-time(b)) || position(a,b);
+    return position(a,b);
+  });
+}
+
+export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'current' } = {}, classifications) {
+  validateTabOrder(tabOrder);
   const selected = tabs.filter((tab) => allWindows || windowId === undefined || tab.windowId === windowId);
   const buckets = new Map();
   for (const tab of selected) {
@@ -53,11 +69,12 @@ export function buildPreview(tabs, { windowId, allWindows = false } = {}, classi
       : classifyTab(tab);
     const bucketKey = `${tab.windowId}\u0000${category.key}`;
     const bucket = buckets.get(bucketKey) || { ...category, tabs: [] };
-    bucket.tabs.push(publicTab(tab));
+    bucket.tabs.push(tab);
     buckets.set(bucketKey, bucket);
   }
   const groups = [...buckets.values()]
     .filter((bucket) => bucket.tabs.length >= 2)
+    .map(bucket => ({...bucket,tabs:orderedTabs(bucket.tabs,tabOrder).map(publicTab)}))
     .map(({ title, color, tabs }) => ({
       windowId: tabs[0].windowId,
       title,
@@ -66,6 +83,7 @@ export function buildPreview(tabs, { windowId, allWindows = false } = {}, classi
       tabs,
     }));
   return {
+    tabOrder,
     groups,
     duplicates: findDuplicateCandidates(selected),
     total: selected.length,

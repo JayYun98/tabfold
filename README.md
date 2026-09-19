@@ -41,6 +41,10 @@ TypeSafe direct calls use the [official API](https://docs.typesafe.ai/api) at `h
 
 **All windows** builds separate groups within each original window. It never combines windows or merges pages into one tab. Collapsing a group only hides its individual tabs from the tab bar until expanded.
 
+### Tab order
+
+In **Settings → Tab order**, keep the current order (default), sort by title, or put least recently used tabs first. This applies inside each new group, in both local and AI previews. Activity order uses Chrome’s last active timestamp—not creation time; unknown times go last. Existing groups and window boundaries are preserved. Refresh the preview after changing the setting. Undo removes the groups but does not restore the previous tab order.
+
 ### Categories as JSON
 
 In **Settings → Your categories**, choose **Export JSON** to download the current form as `tabfold-categories.json`. Ask an AI to edit that file, then choose **Import JSON** and **Save categories and preferences**. Import replaces the draft form; it does not change saved settings until you save. Files are not watched or automatically synced.

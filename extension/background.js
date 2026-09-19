@@ -1,5 +1,5 @@
 import { t, initI18n } from './i18n.js';
-import { buildPreview, isEligible, sameSnapshot, validGroupColor } from './core.js';
+import { buildPreview, isEligible, sameSnapshot, validGroupColor, validateTabOrder } from './core.js';
 import { classifyTabs, DEFAULT_CATEGORIES, validateCategories, getProvider } from './ai.js';
 
 const UNDO_KEY = 'tabfoldUndo';
@@ -74,8 +74,9 @@ export class TabfoldBackend {
         suggestion.tabs = tabs.filter(t => suggestion.tabIds.includes(t.id)).map(({id,title,url})=>({id,title,url}));
       }
     }
-    const plan = buildPreview(tabs, request, classifications);
-    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(isEligible).map(({id,title,url,windowId})=>({id,title,url,windowId})), categories: await this.categories() });
+    const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
+    const plan = buildPreview(tabs, {...request,tabOrder}, classifications);
+    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(isEligible).map(({id,title,url,windowId,index,lastAccessed})=>({id,title,url,windowId,index,lastAccessed})), categories: await this.categories() });
     const undo = await this.read(UNDO_KEY);
     return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
   }
@@ -104,7 +105,7 @@ export class TabfoldBackend {
     const ids = new Set(suggestion.tabIds);
     const candidateTabs = saved.tabs.filter(t => ids.has(t.id));
     const replacements = new Map(candidateTabs.map(t => [t.id, category]));
-    const added = buildPreview(candidateTabs, {allWindows:true}, replacements).groups;
+    const added = buildPreview(candidateTabs, {allWindows:true,tabOrder:saved.plan.tabOrder}, replacements).groups;
     if (!added.length || !await this.validateGroups({groups:added})) return message(false, t(STALE));
     const remaining = saved.plan.groups.map(group => {
       const tabs = group.tabs.filter(t => !ids.has(t.id));
@@ -183,6 +184,18 @@ export class TabfoldBackend {
     return true;
   }
 
+  async orderGroup(groupId, group) {
+    const members=(await this.chrome.tabs.query({windowId:group.windowId})).filter(tab=>tab.groupId===groupId);
+    if(members.length!==group.tabIds.length || members.some(tab=>!group.tabIds.includes(tab.id)) || members.some(tab=>!Number.isInteger(tab.index))) throw new Error(STALE);
+    const start=Math.min(...members.map(tab=>tab.index));
+    for(let offset=0;offset<group.tabs.length;offset++) {
+      const snapshot=group.tabs[offset];
+      const current=await this.chrome.tabs.get(snapshot.id);
+      if(!sameSnapshot(current,snapshot) || current.groupId!==groupId || current.pinned || current.audible) throw new Error(STALE);
+      if(current.index!==start+offset) await this.chrome.tabs.move(current.id,{index:start+offset});
+    }
+  }
+
   async apply(plan, collapse = true) {
     if (!await this.matchesSavedPreview(plan)) return message(false, t(STALE));
     const groups = await this.validateGroups(plan);
@@ -200,6 +213,7 @@ export class TabfoldBackend {
         undo.groups.push(created);
         await this.write(UNDO_KEY, undo);
         await this.chrome.tabGroups.update(groupId, { title: created.title, color: created.color, collapsed: Boolean(collapse) });
+        if(plan.tabOrder && plan.tabOrder!=='current') await this.orderGroup(groupId,group);
       }
       return message(true, t('Organized tabs into {count} groups.', { count: groups.length }), { undoAvailable: true });
     } catch {
@@ -312,7 +326,8 @@ export class TabfoldBackend {
   async handle(request = {}) {
     try {
       await initI18n();
-      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, tabOrder:validateTabOrder(await this.read('tabfoldTabOrder','local')), keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if (request.type === 'setTabOrder') return await this.mutate(async()=>{const tabOrder=validateTabOrder(request.tabOrder);await this.write('tabfoldTabOrder',tabOrder,'local');await this.remove(PREVIEW_KEY);return {ok:true,tabOrder};});
       if (request.type === 'setProvider') return await this.mutate(() => this.setProvider(request.provider));
       if (request.type === 'preview') return await this.preview(request);
       if (request.type === 'getCategories') return {ok:true, categories:await this.categories()};
