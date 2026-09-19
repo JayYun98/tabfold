@@ -1,5 +1,5 @@
 import { buildPreview, isEligible, sameSnapshot, validGroupColor } from './core.js';
-import { classifyTabs } from './ai.js';
+import { classifyTabs, DEFAULT_CATEGORIES, validateCategories } from './ai.js';
 
 const UNDO_KEY = 'tabfoldUndo';
 const RECOVERY_KEY = 'tabfoldRecovery';
@@ -63,15 +63,57 @@ export class TabfoldBackend {
       if (!key) return message(false, 'AI 분류를 사용하려면 API 키를 먼저 저장하세요.');
       const selectedEligible = tabs.filter((tab) => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab));
       try {
-        classifications = await classifyTabs(selectedEligible, key);
+        classifications = await classifyTabs(selectedEligible, key, fetch, {categories: await this.categories(), suggestNew: request.suggestNew !== false});
       } catch (error) {
         return message(false, error?.message || 'AI 분류를 완료하지 못했습니다.');
       }
     }
+    if (classifications?.suggestions) {
+      for (const suggestion of classifications.suggestions) {
+        suggestion.tabs = tabs.filter(t => suggestion.tabIds.includes(t.id)).map(({id,title,url})=>({id,title,url}));
+      }
+    }
     const plan = buildPreview(tabs, request, classifications);
-    await this.write(PREVIEW_KEY, { plan });
+    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(isEligible).map(({id,title,url,windowId})=>({id,title,url,windowId})), categories: await this.categories() });
     const undo = await this.read(UNDO_KEY);
-    return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key) };
+    return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
+  }
+
+  async categories() {
+    return validateCategories(await this.read('tabfoldCategories', 'local') || DEFAULT_CATEGORIES);
+  }
+
+  async setCategories(value) {
+    const categories = validateCategories(value);
+    await this.write('tabfoldCategories', categories, 'local');
+    await this.remove(PREVIEW_KEY);
+    return {ok: true, categories};
+  }
+
+  async acceptSuggestion(request) {
+    if (!await this.matchesSavedPreview(request.plan)) return message(false, STALE);
+    const saved = await this.read(PREVIEW_KEY);
+    if (!Number.isInteger(request.index)) return message(false, '제안을 다시 확인하세요.');
+    const suggestion = saved.suggestions?.[request.index];
+    if (!suggestion) return message(false, '제안을 다시 확인하세요.');
+    const categories = await this.categories();
+    if (stableJson(categories) !== stableJson(saved.categories)) return message(false, '카테고리가 바뀌었습니다. 정리안을 다시 만드세요.');
+    const next = validateCategories([...categories, {title: request.title, criteria: suggestion.criteria, color: suggestion.color}]);
+    const category = next.at(-1);
+    const ids = new Set(suggestion.tabIds);
+    const candidateTabs = saved.tabs.filter(t => ids.has(t.id));
+    const replacements = new Map(candidateTabs.map(t => [t.id, category]));
+    const added = buildPreview(candidateTabs, {allWindows:true}, replacements).groups;
+    if (!added.length || !await this.validateGroups({groups:added})) return message(false, STALE);
+    const remaining = saved.plan.groups.map(group => {
+      const tabs = group.tabs.filter(t => !ids.has(t.id));
+      return {...group, tabs, tabIds: tabs.map(t => t.id)};
+    }).filter(g => g.tabs.length >= 2);
+    const plan = {...saved.plan, groups:[...remaining, ...added]};
+    const suggestions = saved.suggestions.filter((_, index) => index !== request.index);
+    await this.write('tabfoldCategories', next, 'local');
+    await this.write(PREVIEW_KEY, {...saved, plan, suggestions, categories:next});
+    return {ok:true, plan, suggestions, categories:next};
   }
 
   async setKey(key) {
@@ -259,14 +301,17 @@ export class TabfoldBackend {
   async handle(request = {}) {
     try {
       if (request.type === 'preview') return await this.preview(request);
+      if (request.type === 'getCategories') return {ok:true, categories:await this.categories()};
+      if (request.type === 'setCategories') return await this.mutate(() => this.setCategories(request.categories));
+      if (request.type === 'acceptSuggestion') return await this.mutate(() => this.acceptSuggestion(request));
       if (request.type === 'setKey') return await this.setKey(request.key);
       if (request.type === 'apply') return await this.mutate(() => this.apply(request.plan, request.collapse));
       if (request.type === 'undo') return await this.mutate(() => this.undo());
       if (request.type === 'dedupe') return await this.mutate(() => this.dedupe(request.plan));
       if (request.type === 'restore') return await this.mutate(() => this.restore());
       return message(false, '알 수 없는 요청입니다.');
-    } catch {
-      return message(false, '탭 정보를 읽는 중 문제가 생겼습니다.');
+    } catch (error) {
+      return message(false, error.message || '탭 정보를 읽는 중 문제가 생겼습니다.');
     }
   }
 }

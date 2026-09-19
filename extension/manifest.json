@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Tabfold — 탭을 접고, 생각을 펼치세요",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "열린 탭을 미리 보고 주제별로 묶으세요. 그룹 접기, 정확히 같은 URL의 중복 정리, 그룹 되돌리기를 지원합니다.",
   "minimum_chrome_version": "120",
   "permissions": [

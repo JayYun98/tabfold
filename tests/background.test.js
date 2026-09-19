@@ -102,3 +102,43 @@ test('dedupe persists a URL and restore recreates it', async () => {
   assert.equal((await backend.handle({ type: 'restore' })).ok, true);
   assert.deepEqual(chrome._created, [{ url: 'https://example.com/a?keep=all', windowId: 1 }]);
 });
+
+test('category settings persist and invalidate old previews', async () => {
+  const chrome = mockChrome([]);
+  const backend = new TabfoldBackend(chrome);
+  const first = await backend.preview({allWindows:true});
+  const categories=[{title:'논문',criteria:'Machine learning papers',color:'green'}];
+  assert.equal((await backend.handle({type:'setCategories',categories})).ok,true);
+  assert.deepEqual((await backend.handle({type:'getCategories'})).categories,categories);
+  assert.equal(await backend.matchesSavedPreview(first.plan),false);
+  assert.equal((await backend.handle({type:'setCategories',categories:[]})).ok,false);
+  assert.deepEqual((await backend.handle({type:'getCategories'})).categories,categories);
+});
+
+test('accepting a suggestion updates preview and categories without changing tabs', async () => {
+  const chrome=mockChrome([{id:1,windowId:7,url:'https://example.com/a'},{id:2,windowId:7,url:'https://example.com/b'}]);
+  const backend=new TabfoldBackend(chrome);
+  const {plan}=await backend.preview({windowId:7});
+  const saved=await backend.read('tabfoldPreview');
+  await backend.write('tabfoldPreview',{...saved,suggestions:[{title:'프로젝트',criteria:'Project documentation',color:'blue',tabIds:[1,2]}]});
+  const result=await backend.handle({type:'acceptSuggestion',plan,index:0,title:'내 프로젝트'});
+  assert.equal(result.ok,true);
+  assert.equal(result.plan.groups.length,1);
+  assert.equal(result.plan.groups[0].title,'내 프로젝트');
+  assert.equal(chrome._groups.size,0);
+  assert.equal(result.categories.at(-1).title,'내 프로젝트');
+  assert.equal((await backend.handle({type:'acceptSuggestion',plan,index:0,title:'재사용'})).ok,false);
+  assert.equal((await backend.handle({type:'apply',plan:result.plan})).ok,true);
+});
+
+test('accepting a stale suggestion cannot change settings', async () => {
+  const chrome=mockChrome([{id:1,windowId:7,url:'https://example.com/a'},{id:2,windowId:7,url:'https://example.com/b'}]);
+  const backend=new TabfoldBackend(chrome);
+  const {plan}=await backend.preview({windowId:7});
+  const saved=await backend.read('tabfoldPreview');
+  await backend.write('tabfoldPreview',{...saved,suggestions:[{title:'프로젝트',criteria:'Project documentation',color:'blue',tabIds:[1,2]}]});
+  chrome._tabs.get(1).pinned=true;
+  const result=await backend.handle({type:'acceptSuggestion',plan,index:0,title:'내 프로젝트'});
+  assert.equal(result.ok,false);
+  assert.deepEqual(await backend.categories(),saved.categories);
+});

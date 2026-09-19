@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { classifyTabs } from '../extension/ai.js';
+import { classifyTabs, DEFAULT_CATEGORIES, validateCategories } from '../extension/ai.js';
 
 const tabs = (count) => Array.from({ length: count }, (_, index) => ({
   id: index + 1,
@@ -93,4 +93,95 @@ test('keeps the timeout active while parsing a stalled response body', async () 
     globalThis.setTimeout = setTimeoutOriginal;
     globalThis.clearTimeout = clearTimeoutOriginal;
   }
+});
+
+test('validates custom categories and sends their internal choice IDs', async () => {
+  const categories = validateCategories([{ title: '  고객 지원 ', criteria: 'Support tickets and customer conversations.', color: 'cyan' }]);
+  assert.deepEqual(categories, [{ title: '고객 지원', criteria: 'Support tickets and customer conversations.', color: 'cyan' }]);
+  assert.equal(DEFAULT_CATEGORIES.length, 7);
+  assert.throws(() => validateCategories([{ title: 'other', criteria: 'x', color: 'blue' }]), /올바르지/);
+  assert.throws(() => validateCategories([{ title: 'A', criteria: 'x', color: 'blue' }, { title: ' a ', criteria: 'y', color: 'red' }]), /올바르지/);
+  let body;
+  const result = await classifyTabs(tabs(1), 'key', async (_url, options) => {
+    body = JSON.parse(options.body);
+    return response({ tab_1: { type: 'choice', choice: 'c0', confidence: 0.9 } });
+  }, { categories });
+  assert.deepEqual(body.questions.tab_1.criteria, { c0: '고객 지원: Support tickets and customer conversations.', other: 'None of the above.' });
+  assert.deepEqual(result.get(1), { title: '고객 지원', color: 'cyan' });
+});
+
+test('suggests only repeated strong-other tabs in one window and never changes their fallback groups', async () => {
+  const source = [
+    { id: 1, windowId: 1, title: 'Atlas migration notes', url: 'https://atlas.example/one' },
+    { id: 2, windowId: 1, title: 'Atlas migration plan', url: 'https://atlas.example/two' },
+  ];
+  let calls = 0;
+  const result = await classifyTabs(source, 'key', async (_url, options) => {
+    calls += 1;
+    const body = JSON.parse(options.body);
+    if (calls === 1) return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, {
+      type: 'choice', choice: 'other', confidence: 0.9,
+      probabilities: { other: 0.8, development: 0.1 },
+    }])));
+    return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, { type: 'choice', choice: 'candidate_0', confidence: 0.9 }])));
+  }, { suggestNew: true });
+  assert.equal(calls, 2);
+  assert.deepEqual(result.get(1), { title: 'atlas.example', color: 'grey' });
+  assert.equal(result.otherCount, 2);
+  assert.equal(result.suggestions.length, 1);
+  assert.deepEqual(result.suggestions[0].tabIds, [1, 2]);
+});
+
+test('does not suggest categories for low-confidence or cross-window other answers', async () => {
+  const source = [
+    { id: 1, windowId: 1, title: 'Atlas migration', url: 'https://atlas.example/one' },
+    { id: 2, windowId: 2, title: 'Atlas migration', url: 'https://atlas.example/two' },
+  ];
+  let calls = 0;
+  const result = await classifyTabs(source, 'key', async (_url, options) => {
+    calls += 1;
+    const body = JSON.parse(options.body);
+    return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, { type: 'choice', choice: 'other', confidence: 0.69 }])));
+  }, { suggestNew: true });
+  assert.equal(calls, 1);
+  assert.deepEqual(result.suggestions, []);
+});
+
+test('requires the strong-other probability margin before a second paid pass', async () => {
+  const source = [
+    { id: 1, windowId: 1, title: 'Atlas migration', url: 'https://atlas.example/one' },
+    { id: 2, windowId: 1, title: 'Atlas migration', url: 'https://atlas.example/two' },
+  ];
+  let calls = 0;
+  const result = await classifyTabs(source, 'key', async (_url, options) => {
+    calls += 1;
+    const body = JSON.parse(options.body);
+    return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, {
+      type: 'choice', choice: 'other', confidence: 0.9,
+      probabilities: { other: 0.65, development: 0.5 },
+    }])));
+  }, { suggestNew: true });
+  assert.equal(calls, 1);
+  assert.deepEqual(result.suggestions, []);
+});
+
+test('keeps the first classification when optional suggestion validation is malformed', async () => {
+  const source = [
+    { id: 1, windowId: 1, title: 'Atlas migration notes', url: 'https://atlas.example/one' },
+    { id: 2, windowId: 1, title: 'Atlas migration plan', url: 'https://atlas.example/two' },
+  ];
+  let calls = 0;
+  const result = await classifyTabs(source, 'key', async (_url, options) => {
+    calls += 1;
+    const body = JSON.parse(options.body);
+    if (calls === 1) return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, {
+      type: 'choice', choice: 'other', confidence: 0.9,
+      probabilities: { other: 0.8, development: 0.1 },
+    }])));
+    return response({ tab_1: { type: 'choice', choice: 'candidate_0', confidence: 0.9 }, unknown_tab: { type: 'choice', choice: 'other', confidence: 0.9 } });
+  }, { suggestNew: true });
+  assert.equal(calls, 2);
+  assert.deepEqual(result.get(1), { title: 'atlas.example', color: 'grey' });
+  assert.deepEqual(result.suggestions, []);
+  assert.match(result.suggestionError, /제안을 검증하지 못했습니다/);
 });
