@@ -57,6 +57,9 @@ export class TabfoldBackend {
 
   async preview(request) {
     const tabs = await this.chrome.tabs.query({});
+    const existingGroups = await this.chrome.tabGroups.query({});
+    const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
+    const initial = buildPreview(tabs, {...request,tabOrder,existingGroups});
     const provider = getProvider(request.provider ?? await this.provider());
     const key = await this.read(provider.keyName);
     let classifications;
@@ -64,7 +67,7 @@ export class TabfoldBackend {
       if (!key) return message(false, t('Save your API key before using AI classification.'));
       const selectedEligible = tabs.filter((tab) => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab));
       try {
-        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), suggestNew: request.suggestNew !== false});
+        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:initial.existingGroups, suggestNew: request.suggestNew !== false});
       } catch (error) {
         return message(false, error?.message || t('Unable to complete AI classification.'));
       }
@@ -74,8 +77,7 @@ export class TabfoldBackend {
         suggestion.tabs = tabs.filter(t => suggestion.tabIds.includes(t.id)).map(({id,title,url})=>({id,title,url}));
       }
     }
-    const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
-    const plan = buildPreview(tabs, {...request,tabOrder}, classifications);
+    const plan = classifications ? buildPreview(tabs, {...request,tabOrder,existingGroups}, classifications) : initial;
     await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(isEligible).map(({id,title,url,windowId,index,lastAccessed})=>({id,title,url,windowId,index,lastAccessed})), categories: await this.categories() });
     const undo = await this.read(UNDO_KEY);
     return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
@@ -110,7 +112,7 @@ export class TabfoldBackend {
     const remaining = saved.plan.groups.map(group => {
       const tabs = group.tabs.filter(t => !ids.has(t.id));
       return {...group, tabs, tabIds: tabs.map(t => t.id)};
-    }).filter(g => g.tabs.length >= 2);
+    }).filter(g => g.tabs.length >= (Number.isInteger(g.targetGroupId) ? 1 : 2));
     const plan = {...saved.plan, groups:[...remaining, ...added]};
     const suggestions = saved.suggestions.filter((_, index) => index !== request.index);
     await this.write('tabfoldCategories', next, 'local');
@@ -146,7 +148,8 @@ export class TabfoldBackend {
     const seen = new Set();
     const valid = [];
     for (const group of plan.groups) {
-      if (!Number.isInteger(group?.windowId) || !Array.isArray(group.tabs) || group.tabs.length < 2 || !Array.isArray(group.tabIds)) return null;
+      if (!Number.isInteger(group?.windowId) || !Array.isArray(group.tabs) || group.tabs.length < (Number.isInteger(group.targetGroupId) ? 1 : 2) || !Array.isArray(group.tabIds)) return null;
+      if (group.targetGroupId !== undefined && (!Number.isInteger(group.targetGroupId) || !await this.targetUnchanged(group, plan))) return null;
       const ids = group.tabs.map((tab) => tab?.id);
       if (ids.length !== group.tabIds.length || ids.some((id, index) => id !== group.tabIds[index])) return null;
       const fresh = [];
@@ -165,6 +168,20 @@ export class TabfoldBackend {
       valid.push({ ...group, tabs: fresh, tabIds: fresh.map((tab) => tab.id) });
     }
     return valid;
+  }
+
+  async targetUnchanged(group, plan) {
+    const snapshot = plan.existingGroups?.find(item => item.id === group.targetGroupId);
+    if (!snapshot || snapshot.windowId !== group.windowId) return false;
+    try {
+      const current = await this.chrome.tabGroups.get(snapshot.id);
+      if (['windowId','title','color','collapsed'].some(key => (key === 'title' ? current[key] || '' : current[key]) !== snapshot[key])) return false;
+      const members = (await this.chrome.tabs.query({windowId:group.windowId})).filter(tab => tab.groupId === snapshot.id);
+      return members.length === snapshot.tabs.length && snapshot.tabs.every(tab => {
+        const member = members.find(item => item.id === tab.id);
+        return sameSnapshot(member,tab) && member.title === tab.title;
+      });
+    } catch { return false; }
   }
 
   async matchesSavedPreview(plan) {
@@ -207,7 +224,23 @@ export class TabfoldBackend {
     await this.write(UNDO_KEY, undo);
     try {
       for (const group of groups) {
-        if (!await this.revalidateGroup(group)) return message(false, t(STALE));
+        if (!await this.revalidateGroup(group) || (Number.isInteger(group.targetGroupId) && !await this.targetUnchanged(group,plan))) return message(false, t(STALE));
+        if (Number.isInteger(group.targetGroupId)) {
+          const snapshot = plan.existingGroups.find(item => item.id === group.targetGroupId);
+          const added = {groupId:group.targetGroupId,tabIds:group.tabIds,windowId:group.windowId,title:snapshot.title,color:snapshot.color,existing:true};
+          undo.groups.push(added);
+          await this.write(UNDO_KEY,undo);
+          await this.chrome.tabs.group({tabIds:group.tabIds,groupId:group.targetGroupId});
+          // Only move added tabs, after the original members; their order and metadata stay intact.
+          const members = (await this.chrome.tabs.query({windowId:group.windowId})).filter(tab => tab.groupId === group.targetGroupId);
+          const end = Math.max(...members.map(tab => tab.index));
+          for (const tab of group.tabs) {
+            const current = await this.chrome.tabs.get(tab.id);
+            if (!sameSnapshot(current,tab) || current.groupId !== group.targetGroupId || current.pinned || current.audible) throw new Error(STALE);
+            await this.chrome.tabs.move(tab.id,{index:end});
+          }
+          continue;
+        }
         const groupId = await this.chrome.tabs.group({ tabIds: group.tabIds, createProperties: { windowId: group.windowId } });
         const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: safeTitle(group.title), color: validGroupColor(group.color) };
         undo.groups.push(created);

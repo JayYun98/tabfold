@@ -145,5 +145,16 @@
   "Least recently used first": "En uzun süredir kullanılmayanlar önce",
   "Title (A–Z)": "Başlık (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "Oluşturulma zamanı değil, son etkin olma zamanı kullanılır. Zamanı bilinmeyenler sona yerleştirilir. Mevcut gruplar değişmez.",
-  "Tab order saved. Refresh the preview to use it.": "Sekme sırası kaydedildi. Kullanmak için önizlemeyi yenileyin."
+  "Tab order saved. Refresh the preview to use it.": "Sekme sırası kaydedildi. Kullanmak için önizlemeyi yenileyin.",
+  "Changes": "Değişiklikler",
+  "Existing groups": "Mevcut gruplar",
+  "No existing groups in this scope.": "Bu kapsamda mevcut grup yok.",
+  "Proposed changes": "Önerilen değişiklikler",
+  "Unnamed group": "Adsız grup",
+  "New group": "Yeni grup",
+  "Add tabs": "Sekme ekle",
+  "{count} tabs excluded from classification": "{count} sekme sınıflandırma dışında",
+  "{count} already grouped — members stay in place.": "{count} zaten gruplanmış — üyeler yerinde kalır.",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "{count} korunan — sabitlenmiş, ses çalan, gizli veya dahili sekme.",
+  "Only ungrouped tabs change. Existing group members stay in place.": "Yalnızca gruplanmamış sekmeler değişir. Mevcut grup üyeleri yerinde kalır."
 }

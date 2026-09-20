@@ -18,11 +18,14 @@ try {
    const data={tabfoldLanguage:language};
    const categories=[{title:'Research',criteria:'Papers and experiments',color:'blue'}];
    const groups=Array.from({length:24},(_,i)=>({title:i?'Research '+i:'A very long research category title that must not stretch the popup',color:'blue',tabIds:[1,2],tabs:[{title:'A long paper title '.repeat(12),url:'https://example.com/paper'},{title:'Experiments',url:'https://example.com/experiments'}]}));
+   const existingGroups=[{id:71,title:'Existing research',color:'green',windowId:1,collapsed:true,tabs:Array.from({length:18},(_,i)=>({id:100+i,title:'Saved paper '+i,url:'https://example.com/saved/'+i,windowId:1}))},{id:72,title:'Existing reading',color:'purple',windowId:1,collapsed:false,tabs:Array.from({length:11},(_,i)=>({id:200+i,title:'Saved article '+i,url:'https://example.org/'+i,windowId:1}))}];
+   groups[1]={...groups[1],title:existingGroups[0].title,color:existingGroups[0].color,targetGroupId:71};
+   window.previewRequests=[];
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async request=>{window.requestedOrigins=request.origins;return true;}},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
     if(request.type==='getSettings')return {ok:true,provider:'typesafe',categories,keyConfigured:false,preferences:{suggestNew:true}};
     if(request.type==='setTabOrder'){window.savedTabOrder=request.tabOrder;return {ok:true,tabOrder:request.tabOrder};}
     if(request.type==='setProvider')return {ok:true,provider:request.provider,keyConfigured:false};
-    if(request.type==='preview')return {ok:true,plan:{total:213,protectedCount:34,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};
+    if(request.type==='preview'){window.previewRequests.push(request);return {ok:true,plan:{total:213,protectedCount:34,groupedCount:29,otherProtectedCount:5,existingGroups,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};}
     if(request.type==='setCategories'){window.savedCategories=request.categories;return {ok:true,categories:request.categories};}
     return {ok:true,message:'Done'};
    }}};
@@ -32,7 +35,21 @@ try {
   assert.equal(await page.locator('html').getAttribute('lang'),language);
   const bounds=await page.evaluate(()=>({width:document.body.scrollWidth,height:document.body.scrollHeight,apply:document.querySelector('#apply').getBoundingClientRect().toJSON(),list:document.querySelector('main').getBoundingClientRect().toJSON()}));
   assert.equal(bounds.width,380);assert.ok(bounds.height<=560);assert.ok(bounds.apply.bottom<=560);assert.ok(bounds.list.height>70);
-  await page.locator('.group summary').first().click();assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth),380);
+  assert.equal(await page.evaluate(()=>window.previewRequests[0].ai),false,'Existing groups must appear before an AI call');
+  assert.equal(await page.locator('#existingGroups .group').count(),2);
+  assert.equal(await page.locator('#existingGroups .group-title').first().textContent(),'Existing research');
+  assert.equal(await page.locator('#existingGroups .count').first().textContent(),'18');
+  assert.equal(await page.locator('#existingGroups .dot').first().evaluate(e=>e.style.getPropertyValue('--group-color')),'#479278');
+  await page.locator('#existingGroups .group summary').first().click();
+  assert.equal(await page.locator('#existingGroups .group').first().locator('li').count(),18);
+  assert.equal(await page.locator('#existingGroups .group').first().locator('li').first().textContent(),'Saved paper 0');
+  await page.locator('#existingGroups .group summary').first().click();
+  await page.locator('#excluded summary').click();assert.match(await page.locator('#groupedReason').textContent(),/29/);assert.match(await page.locator('#otherProtectedReason').textContent(),/5/);await page.locator('#excluded summary').click();
+  assert.equal(await page.locator('#groups [data-action="append"]').count(),1);
+  assert.equal(await page.locator('#groups [data-action="new"]').count(),23);
+  assert.equal(await page.locator('#groups [data-action="append"] .group-title').textContent(),'Existing research');
+  assert.notEqual(await page.locator('#groups [data-action="append"] .group-action').textContent(),await page.locator('#groups [data-action="new"] .group-action').first().textContent());
+  await page.locator('#groups .group summary').first().click();assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth),380);
   await page.locator('#aiPreview').click();await page.waitForFunction(()=>!document.querySelector('#aiPreview').disabled);assert.deepEqual(await page.evaluate(()=>window.requestedOrigins),['https://api.typesafe.ai/*']);
   await page.locator('#settings').click();assert.equal(await page.evaluate(()=>window.settingsOpened),true);
   if(colorScheme==='light' && ['en','ko'].includes(language))await page.screenshot({path:new URL('../docs/assets/popup-'+language+'.png',import.meta.url).pathname});

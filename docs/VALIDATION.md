@@ -72,3 +72,11 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Added French, Traditional Chinese, Russian, and Turkish UI dictionaries and Chrome manifest messages. English remains the default; existing Spanish support is preserved.
 - All 29 unit/regression checks and JavaScript syntax checks passed. Translation checks cover required UI/runtime keys, interpolation placeholders, and native manifest messages for every language.
 - All 18 isolated Chromium language/theme combinations passed: 380×560 popup bounds, visible apply footer, settings overflow, language selection, and draft preservation. These checks use synthetic Chrome responses, not the user's tabs. Native toolbar reload remains manual; no live AI calls or user-tab changes were made.
+
+## v0.7.0 existing groups as classification context
+
+- Preview now reads native group names, colors, members, and window identity before any AI request. Popup lists existing groups separately from new-group/append proposals, and explains grouped versus other excluded tabs.
+- Quick preview uses an unambiguous same-window hostname match. AI prioritizes existing same-window groups with up to three sanitized member examples, then configured categories. Matching ungrouped tabs append; existing group members and metadata are preserved. Changed target metadata or membership invalidates apply.
+- 34 unit/regression checks and syntax checks passed, including window isolation, duplicate group names, context URL sanitization, append ordering, stale-target rejection, and undo preserving original members. All 18 language/theme UI checks passed with synthetic data.
+- `tests/native-groups.mjs` passed in a temporary, isolated Chromium profile with the real extension loaded: native group append, unchanged title/color/collapsed state, original member order, and undo removing only the added tab. Run with `PLAYWRIGHT_MODULE=/absolute/path/to/playwright/index.mjs node tests/native-groups.mjs`. No user browser connection or AI calls are made by this test.
+- The user's installed extension still requires reload. No user tabs were changed and no live AI classification calls were made for this update.

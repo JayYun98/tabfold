@@ -35,6 +35,8 @@ Chrome Manifest V3 · Priorité au local · Jev 1.13 · Aucune dépendance à l�
 
 C’est tout. Tabfold regroupe et replie les onglets sans fusionner les fenêtres ni remplacer vos pages.
 
+Les groupes existants sont visibles avant de lancer l’IA. Celle-ci privilégie les groupes de la même fenêtre à partir de leurs noms et d’exemples de titres et de chemins d’URL. Les onglets non groupés correspondants y sont ajoutés ; les autres forment de nouveaux groupes. Les membres, noms, couleurs et états repliés existants restent inchangés. L’annulation retire des groupes existants uniquement les onglets ajoutés par Tabfold. Les exemples de titres et de chemins d’URL sont envoyés au fournisseur d’IA choisi.
+
 ## Installation
 
 1. Téléchargez ou clonez ce dépôt.

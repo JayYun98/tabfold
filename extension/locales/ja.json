@@ -145,5 +145,16 @@
   "Least recently used first": "長く使っていない順",
   "Title (A–Z)": "タイトル順 (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "作成日時ではなく、最後にアクティブになった日時が基準です。不明なタブは末尾に置き、既存のグループは変更しません。",
-  "Tab order saved. Refresh the preview to use it.": "並び順を保存しました。プレビューを更新して適用してください。"
+  "Tab order saved. Refresh the preview to use it.": "並び順を保存しました。プレビューを更新して適用してください。",
+  "Changes": "変更",
+  "Existing groups": "既存のグループ",
+  "No existing groups in this scope.": "この範囲に既存のグループはありません。",
+  "Proposed changes": "変更案",
+  "Unnamed group": "名前のないグループ",
+  "New group": "新しいグループ",
+  "Add tabs": "タブを追加",
+  "{count} tabs excluded from classification": "{count} 個のタブを分類対象から除外",
+  "{count} already grouped — members stay in place.": "グループ化済み {count} 個 — そのまま保持します。",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "保護対象 {count} 個 — 固定、再生中、シークレット、内部ページ。",
+  "Only ungrouped tabs change. Existing group members stay in place.": "未グループ化のタブのみ変更します。既存グループのタブはそのまま保持します。"
 }

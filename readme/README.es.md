@@ -35,6 +35,8 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 
 Eso es todo. Tabfold agrupa y pliega pestañas sin fusionar ventanas ni reemplazar tus páginas.
 
+Los grupos existentes son visibles antes de ejecutar la IA. La IA prioriza los grupos de la misma ventana según sus nombres y ejemplos de títulos y rutas de URL. Las pestañas sin agrupar que coincidan se añaden a esos grupos; las demás forman grupos nuevos. Los miembros, nombres, colores y estados contraídos existentes no cambian. Deshacer solo retira de los grupos existentes las pestañas añadidas por Tabfold. Los títulos y las rutas de URL de ejemplo se envían al proveedor de IA seleccionado.
+
 ## Instalación
 
 1. Descarga o clona este repositorio.

@@ -35,6 +35,8 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 That’s it. Tabfold groups and folds tabs without merging windows or replacing your pages.
 
+Existing groups are visible before you run AI. AI prioritizes groups in the same window, using their names and example tab titles and URL paths. Matching ungrouped tabs are added to those groups; other tabs form new groups. Existing members, names, colors, and collapsed states stay unchanged. Undo removes only the tabs added by Tabfold from existing groups. The example titles and URL paths are sent to the selected AI provider.
+
 ## Install
 
 1. Download or clone this repository.

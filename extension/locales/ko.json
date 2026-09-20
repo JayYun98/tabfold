@@ -145,5 +145,16 @@
   "Least recently used first": "오래 사용하지 않은 순",
   "Title (A–Z)": "이름순 (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "생성 시각이 아닌 마지막 사용 시각을 기준으로 합니다. 시각을 모르면 뒤에 배치하며 기존 그룹은 유지합니다.",
-  "Tab order saved. Refresh the preview to use it.": "탭 순서를 저장했습니다. 미리보기를 새로 만들면 적용됩니다."
+  "Tab order saved. Refresh the preview to use it.": "탭 순서를 저장했습니다. 미리보기를 새로 만들면 적용됩니다.",
+  "Changes": "변경",
+  "Existing groups": "기존 그룹",
+  "No existing groups in this scope.": "이 범위에 기존 그룹이 없습니다.",
+  "Proposed changes": "변경 제안",
+  "Unnamed group": "이름 없는 그룹",
+  "New group": "새 그룹",
+  "Add tabs": "탭 추가",
+  "{count} tabs excluded from classification": "탭 {count}개 분류 제외",
+  "{count} already grouped — members stay in place.": "이미 그룹화된 탭 {count}개 — 기존 위치 유지",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "보호된 탭 {count}개 — 고정·재생 중·시크릿·내부 페이지",
+  "Only ungrouped tabs change. Existing group members stay in place.": "미분류 탭만 변경합니다. 기존 그룹의 탭은 유지합니다."
 }

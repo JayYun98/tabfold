@@ -145,5 +145,16 @@
   "Least recently used first": "Давно не используемые первыми",
   "Title (A–Z)": "Заголовок (А–Я)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "Учитывается время последней активности, а не создания. Вкладки с неизвестным временем идут в конце. Существующие группы не меняются.",
-  "Tab order saved. Refresh the preview to use it.": "Порядок вкладок сохранён. Обновите просмотр для применения."
+  "Tab order saved. Refresh the preview to use it.": "Порядок вкладок сохранён. Обновите просмотр для применения.",
+  "Changes": "Изменения",
+  "Existing groups": "Существующие группы",
+  "No existing groups in this scope.": "В этой области нет существующих групп.",
+  "Proposed changes": "Предлагаемые изменения",
+  "Unnamed group": "Группа без названия",
+  "New group": "Новая группа",
+  "Add tabs": "Добавить вкладки",
+  "{count} tabs excluded from classification": "{count} вкладок исключено из классификации",
+  "{count} already grouped — members stay in place.": "{count} уже сгруппировано — вкладки остаются на месте.",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "{count} защищено — закреплённые, со звуком, инкогнито или внутренние вкладки.",
+  "Only ungrouped tabs change. Existing group members stay in place.": "Изменяются только несгруппированные вкладки. Вкладки существующих групп остаются на месте."
 }

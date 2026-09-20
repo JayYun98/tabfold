@@ -145,5 +145,16 @@
   "Least recently used first": "Moins récemment utilisés d’abord",
   "Title (A–Z)": "Titre (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "L’ancienneté repose sur la dernière activité, pas la création. Les dates inconnues vont à la fin. Les groupes existants restent inchangés.",
-  "Tab order saved. Refresh the preview to use it.": "Ordre des onglets enregistré. Actualisez l’aperçu pour l’utiliser."
+  "Tab order saved. Refresh the preview to use it.": "Ordre des onglets enregistré. Actualisez l’aperçu pour l’utiliser.",
+  "Changes": "Modifications",
+  "Existing groups": "Groupes existants",
+  "No existing groups in this scope.": "Aucun groupe existant dans ce périmètre.",
+  "Proposed changes": "Modifications proposées",
+  "Unnamed group": "Groupe sans nom",
+  "New group": "Nouveau groupe",
+  "Add tabs": "Ajouter des onglets",
+  "{count} tabs excluded from classification": "{count} onglets exclus de la classification",
+  "{count} already grouped — members stay in place.": "{count} déjà groupés — ils restent en place.",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "{count} protégés — épinglés, en lecture, privés ou internes.",
+  "Only ungrouped tabs change. Existing group members stay in place.": "Seuls les onglets non groupés changent. Ceux des groupes existants restent en place."
 }

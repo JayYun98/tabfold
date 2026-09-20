@@ -4,7 +4,7 @@ import {readFile} from 'node:fs/promises';
 import {LANGUAGES,initI18n,t,setLanguage} from '../extension/i18n.js';
 
 test('every shipped language covers UI and runtime messages with matching placeholders',async()=>{
-  const keys=new Set(['Tabs have changed. Refresh the preview.','Work','Video','Shopping','Reading','Social','A key is saved for this browser session.','No API key saved.','API key saved for this session.','API key removed.']);
+  const keys=new Set(['New group','Add tabs','Tabs have changed. Refresh the preview.','Work','Video','Shopping','Reading','Social','A key is saved for this browser session.','No API key saved.','API key saved for this session.','API key removed.']);
   for(const file of ['popup.js','options.js','ai.js','background.js','core.js','popup.html','options.html']){
     const source=await readFile(new URL('../extension/'+file,import.meta.url),'utf8');
     for(const match of source.matchAll(/\bt\('([^']+)'/g)) keys.add(match[1]);

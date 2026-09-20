@@ -35,6 +35,8 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 
 Hepsi bu. Tabfold, pencereleri birleştirmeden veya sayfalarınızı değiştirmeden sekmeleri gruplar ve daraltır.
 
+Mevcut gruplar YZ çalıştırılmadan önce görünür. YZ, grup adlarını ve örnek sekme başlıkları ile URL yollarını kullanarak aynı penceredeki gruplara öncelik verir. Eşleşen gruplanmamış sekmeler bu gruplara eklenir; diğerleri yeni gruplar oluşturur. Mevcut üyeler, adlar, renkler ve daraltma durumları değişmez. Geri alma, mevcut gruplardan yalnızca Tabfold tarafından eklenen sekmeleri çıkarır. Örnek başlıklar ve URL yolları seçilen YZ sağlayıcısına gönderilir.
+
 ## Kurulum
 
 1. Bu depoyu indirin veya klonlayın.

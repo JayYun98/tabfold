@@ -150,5 +150,16 @@
   "Least recently used first": "最久未使用優先",
   "Title (A–Z)": "標題順序 (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "按上次啟用時間而非建立時間排序。時間未知的放在最後，已有群組保持不變。",
-  "Tab order saved. Refresh the preview to use it.": "已儲存排序方式。重新整理預覽後生效。"
+  "Tab order saved. Refresh the preview to use it.": "已儲存排序方式。重新整理預覽後生效。",
+  "Changes": "變更",
+  "Existing groups": "現有群組",
+  "No existing groups in this scope.": "此範圍內沒有現有群組。",
+  "Proposed changes": "建議的變更",
+  "Unnamed group": "未命名群組",
+  "New group": "新群組",
+  "Add tabs": "新增分頁",
+  "{count} tabs excluded from classification": "{count} 個分頁不參與分類",
+  "{count} already grouped — members stay in place.": "{count} 個已分組 — 保留原有成員。",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "{count} 個受保護 — 已固定、正在播放、無痕或內部分頁。",
+  "Only ungrouped tabs change. Existing group members stay in place.": "僅變更未分組分頁。現有群組的成員保持不變。"
 }

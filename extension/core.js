@@ -39,7 +39,7 @@ export function classifyTab(tab) {
 }
 
 function publicTab(tab) {
-  return { id: tab.id, title: tab.title || '', url: tab.url, windowId: tab.windowId };
+  return { id: tab.id, title: tab.title || '', url: tab.url, windowId: tab.windowId, ...(tab.incognito ? {incognito:true} : {}) };
 }
 
 export function validateTabOrder(value = 'current') {
@@ -57,14 +57,24 @@ function orderedTabs(tabs, order) {
   });
 }
 
-export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'current' } = {}, classifications) {
+export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'current', existingGroups = [] } = {}, classifications) {
   validateTabOrder(tabOrder);
   const selected = tabs.filter((tab) => allWindows || windowId === undefined || tab.windowId === windowId);
+  const snapshots = existingGroups
+    .filter(group => Number.isInteger(group.id) && (allWindows || windowId === undefined || group.windowId === windowId))
+    .map(group => ({id:group.id, windowId:group.windowId, title:group.title || '', color:validGroupColor(group.color), collapsed:Boolean(group.collapsed), tabs:selected.filter(tab => tab.groupId === group.id && tab.windowId === group.windowId).map(publicTab)}));
   const buckets = new Map();
   for (const tab of selected) {
     if (!isEligible(tab)) continue;
     const override = classifications?.get(tab.id);
-    const category = typeof override?.title === 'string' && override.title.trim()
+    const sameWindow = snapshots.filter(group => group.windowId === tab.windowId);
+    const matches = sameWindow.filter(group => group.tabs.some(member => !member.incognito && normalUrl(member.url)?.hostname === normalUrl(tab.url)?.hostname));
+    const existing = Number.isInteger(override?.targetGroupId)
+      ? sameWindow.find(group => group.id === override.targetGroupId)
+      : !classifications && matches.length === 1 ? matches[0] : undefined;
+    const category = existing
+      ? {key:`existing:${existing.id}`,title:existing.title,color:existing.color,targetGroupId:existing.id}
+      : typeof override?.title === 'string' && override.title.trim()
       ? { key: `ai:${override.title.trim()}\u0000${validGroupColor(override.color)}`, title: override.title.trim().slice(0, 80), color: validGroupColor(override.color) }
       : classifyTab(tab);
     const bucketKey = `${tab.windowId}\u0000${category.key}`;
@@ -73,9 +83,10 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
     buckets.set(bucketKey, bucket);
   }
   const groups = [...buckets.values()]
-    .filter((bucket) => bucket.tabs.length >= 2)
+    .filter((bucket) => bucket.tabs.length >= (Number.isInteger(bucket.targetGroupId) ? 1 : 2))
     .map(bucket => ({...bucket,tabs:orderedTabs(bucket.tabs,tabOrder).map(publicTab)}))
-    .map(({ title, color, tabs }) => ({
+    .map(({ title, color, tabs, targetGroupId }) => ({
+      ...(Number.isInteger(targetGroupId) ? {targetGroupId} : {}),
       windowId: tabs[0].windowId,
       title,
       color,
@@ -85,6 +96,9 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
   return {
     tabOrder,
     groups,
+    existingGroups: snapshots,
+    groupedCount: selected.filter(tab => !isUngrouped(tab)).length,
+    otherProtectedCount: selected.filter(tab => isUngrouped(tab) && !isEligible(tab)).length,
     duplicates: findDuplicateCandidates(selected),
     total: selected.length,
     protectedCount: selected.filter((tab) => !isEligible(tab)).length,

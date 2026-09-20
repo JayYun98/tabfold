@@ -150,5 +150,16 @@
   "Least recently used first": "Menos usadas recientemente primero",
   "Title (A–Z)": "Título (A–Z)",
   "Age uses the last active time, not creation time. Unknown times go last. Existing groups stay unchanged.": "Se usa la última activación, no la fecha de creación. Las horas desconocidas van al final. Los grupos existentes no cambian.",
-  "Tab order saved. Refresh the preview to use it.": "Orden guardado. Actualiza la vista previa para usarlo."
+  "Tab order saved. Refresh the preview to use it.": "Orden guardado. Actualiza la vista previa para usarlo.",
+  "Changes": "Cambios",
+  "Existing groups": "Grupos existentes",
+  "No existing groups in this scope.": "No hay grupos existentes en este ámbito.",
+  "Proposed changes": "Cambios propuestos",
+  "Unnamed group": "Grupo sin nombre",
+  "New group": "Nuevo grupo",
+  "Add tabs": "Añadir pestañas",
+  "{count} tabs excluded from classification": "{count} pestañas excluidas de la clasificación",
+  "{count} already grouped — members stay in place.": "{count} ya agrupadas — se mantienen en su sitio.",
+  "{count} protected — pinned, playing, incognito or internal tabs.": "{count} protegidas — fijadas, en reproducción, de incógnito o internas.",
+  "Only ungrouped tabs change. Existing group members stay in place.": "Solo cambian las pestañas sin agrupar. Las de los grupos existentes se mantienen en su sitio."
 }

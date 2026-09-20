@@ -40,3 +40,21 @@ test('group preview sorting is stable, numeric by title, and unknown activity go
   assert.deepEqual(input.map(t=>t.id),[1,2,3,4]);
   assert.throws(()=>ids('invalid'),/Invalid tab order/);
 });
+
+test('existing groups are visible and a unique same-window hostname accepts one new tab',()=>{
+  const input=[tab(1,'https://github.com/a',{groupId:10}),tab(2,'https://github.com/b'),tab(3,'https://github.com/c',{windowId:2}),tab(4,'https://private.example',{groupId:20,incognito:true}),tab(5,'https://safe.example',{pinned:true})];
+  const existingGroups=[{id:10,windowId:1,title:'My project',color:'cyan',collapsed:true},{id:20,windowId:1,title:'Private',color:'red'}];
+  const plan=buildPreview(input,{allWindows:true,existingGroups});
+  assert.equal(plan.groups.length,1);assert.equal(plan.groups[0].targetGroupId,10);assert.deepEqual(plan.groups[0].tabIds,[2]);
+  assert.deepEqual(plan.existingGroups[0],{...existingGroups[0],tabs:[{id:1,windowId:1,title:'',url:'https://github.com/a'}]});
+  assert.equal(plan.groupedCount,2);assert.equal(plan.protectedCount,3);assert.equal(plan.otherProtectedCount,1);
+  assert.deepEqual(input.map(t=>t.groupId),[10,-1,-1,20,-1]);
+});
+
+test('ambiguous domains do not choose existing groups; AI identity never merges equal names',()=>{
+  const existingGroups=[{id:10,windowId:1,title:'Same',color:'blue'},{id:11,windowId:1,title:'Same',color:'blue'}];
+  const input=[tab(1,'https://example.com/a',{groupId:10}),tab(2,'https://example.com/b',{groupId:11}),tab(3,'https://example.com/c'),tab(4,'https://example.com/d')];
+  const quick=buildPreview(input,{existingGroups});assert.equal(quick.groups.length,1);assert.equal(quick.groups[0].targetGroupId,undefined);
+  const classifications=new Map([[3,{targetGroupId:10,title:'Same',color:'blue'}],[4,{targetGroupId:11,title:'Same',color:'blue'}]]);
+  const ai=buildPreview(input,{existingGroups},classifications);assert.deepEqual(ai.groups.map(g=>g.targetGroupId),[10,11]);
+});

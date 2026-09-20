@@ -8,15 +8,15 @@ function reordered(value) {
   return Object.fromEntries(Object.keys(value).sort().reverse().map((key) => [key, reordered(value[key])]));
 }
 
-function mockChrome(initialTabs, { reorderStorage = false } = {}) {
+function mockChrome(initialTabs, { reorderStorage = false, initialGroups = [] } = {}) {
   const tabs = new Map(initialTabs.map((tab) => [tab.id, { groupId: -1, ...tab }]));
-  const groups = new Map();
+  const groups = new Map(initialGroups.map(group=>[group.id,{...group}]));
   const session = {};
   const local = {};
   const created = [];
   const groupCalls = [];
   const moves = [];
-  let nextGroupId = 1;
+  let nextGroupId = Math.max(0,...groups.keys())+1;
   const area = (store) => ({
     get: async (key) => ({ [key]: reorderStorage ? reordered(store[key]) : store[key] }),
     set: async (value) => Object.assign(store, value),
@@ -24,9 +24,22 @@ function mockChrome(initialTabs, { reorderStorage = false } = {}) {
   });
   return {
     tabs: {
-      query: async () => [...tabs.values()].map((tab) => ({ ...tab })),
+      query: async (query={}) => [...tabs.values()].filter(tab=>query.windowId===undefined || tab.windowId===query.windowId).map((tab) => ({ ...tab })),
       get: async (id) => { if (!tabs.has(id)) throw new Error('missing'); return { ...tabs.get(id) }; },
-      group: async (options) => { const { tabIds } = options; groupCalls.push(options); const groupId = nextGroupId++; tabIds.forEach((id) => { tabs.get(id).groupId = groupId; }); groups.set(groupId, { id: groupId, title: '', color: 'grey' }); return groupId; },
+      group: async (options) => {
+        const {tabIds}=options; groupCalls.push(options);
+        const groupId=options.groupId ?? nextGroupId++;
+        if(options.groupId===undefined) groups.set(groupId,{id:groupId,windowId:options.createProperties.windowId,title:'',color:'grey',collapsed:false});
+        const original=[...tabs.values()].filter(tab=>tab.groupId===groupId);
+        tabIds.forEach(id=>{tabs.get(id).groupId=groupId;});
+        if(original.length){
+          const windowTabs=[...tabs.values()].filter(tab=>tab.windowId===original[0].windowId).sort((a,b)=>a.index-b.index);
+          const remaining=windowTabs.filter(tab=>!tabIds.includes(tab.id));
+          const end=Math.max(...remaining.map((tab,index)=>original.some(t=>t.id===tab.id)?index:-1));
+          remaining.splice(end+1,0,...tabIds.map(id=>tabs.get(id)));remaining.forEach((tab,index)=>{tab.index=index;});
+        }
+        return groupId;
+      },
       move: async (id, properties) => {
         moves.push({id,...properties});
         const moving=tabs.get(id);
@@ -39,6 +52,7 @@ function mockChrome(initialTabs, { reorderStorage = false } = {}) {
       create: async ({ url, windowId }) => { created.push({ url, windowId }); return { id: 100 + created.length, url, windowId }; },
     },
     tabGroups: {
+      query: async () => [...groups.values()].map(group=>({...group})),
       get: async (id) => { if (!groups.has(id)) throw new Error('missing'); return { ...groups.get(id) }; },
       update: async (id, changes) => Object.assign(groups.get(id), changes),
     },
@@ -210,4 +224,44 @@ test('saved sorting matches apply order inside each window and never moves prote
   assert.ok(chrome._moves.every(m=>m.id!==90 && m.windowId===undefined));
   assert.equal((await backend.handle({type:'undo'})).ok,true);
   assert.equal(chrome._tabs.get(90).groupId,-1);
+});
+
+function existingFixture() {
+  const chrome=mockChrome([
+    {id:1,index:0,windowId:1,groupId:40,title:'Original A',url:'https://project.test/a'},
+    {id:2,index:1,windowId:1,groupId:40,title:'Original B',url:'https://project.test/b'},
+    {id:3,index:2,windowId:1,title:'New Z',url:'https://project.test/z'},
+    {id:4,index:3,windowId:1,title:'New A',url:'https://project.test/new'},
+    {id:5,index:4,windowId:1,title:'Pinned',url:'https://project.test/pinned',pinned:true},
+    {id:6,index:0,windowId:2,title:'Other window',url:'https://project.test/else'},
+  ],{initialGroups:[{id:40,windowId:1,title:'My project',color:'purple',collapsed:false}]});
+  return {chrome,backend:new TabfoldBackend(chrome)};
+}
+
+test('preview reads existing groups before AI; append preserves members, metadata and undo',async()=>{
+  const {chrome,backend}=existingFixture();
+  await backend.handle({type:'setTabOrder',tabOrder:'title'});
+  const {plan}=await backend.preview({allWindows:true});
+  assert.equal(plan.existingGroups[0].title,'My project');
+  assert.equal(plan.groupedCount,2);assert.equal(plan.otherProtectedCount,1);
+  assert.equal(plan.groups.length,1);assert.equal(plan.groups[0].targetGroupId,40);
+  assert.deepEqual(plan.groups[0].tabIds,[4,3]);
+  const metadata={...chrome._groups.get(40)};
+  assert.equal((await backend.handle({type:'apply',plan,collapse:true})).ok,true);
+  assert.deepEqual(chrome._groups.get(40),metadata);
+  assert.deepEqual(chrome._groupCalls,[{groupId:40,tabIds:[4,3]}]);
+  assert.ok(chrome._moves.every(move=>[3,4].includes(move.id)));
+  assert.deepEqual([...chrome._tabs.values()].filter(t=>t.groupId===40).sort((a,b)=>a.index-b.index).map(t=>t.id),[1,2,4,3]);
+  assert.equal(chrome._tabs.get(6).groupId,-1);
+  assert.equal((await backend.handle({type:'undo'})).ok,true);
+  assert.equal(chrome._tabs.get(1).groupId,40);assert.equal(chrome._tabs.get(2).groupId,40);
+  assert.equal(chrome._tabs.get(3).groupId,-1);assert.equal(chrome._tabs.get(4).groupId,-1);
+  assert.deepEqual(chrome._groups.get(40),metadata);
+});
+
+test('changed target metadata, membership, or window rejects append before any mutation',async()=>{
+  for(const change of [c=>c._groups.get(40).title='Renamed',c=>c._groups.get(40).collapsed=true,c=>c._groups.get(40).windowId=2,c=>c._tabs.get(2).groupId=-1,c=>c._tabs.get(2).url='https://changed.test']){
+    const {chrome,backend}=existingFixture();const {plan}=await backend.preview({windowId:1});change(chrome);
+    assert.equal((await backend.handle({type:'apply',plan})).ok,false);assert.equal(chrome._groupCalls.length,0);
+  }
 });

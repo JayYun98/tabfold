@@ -10,9 +10,27 @@ async function send(message){const result=await chrome.runtime.sendMessage(messa
 function controls(){document.querySelectorAll('button,input,select').forEach(el=>el.disabled=busy);$('apply').disabled=busy||!plan?.groups.length;$('duplicates').disabled=busy||!plan?.duplicates.length;$('undo').disabled=busy||!undoAvailable;}
 async function run(action){if(busy)return;busy=true;controls();try{await action();}catch(error){status(error.message,true);}finally{busy=false;controls();}}
 function tabList(tabs){const list=document.createElement('ul');for(const tab of tabs){const li=document.createElement('li');li.textContent=tab.title||tab.url;li.title=tab.url;list.append(li);}return list;}
+function groupRow(group,existing=false){
+  const item=document.createElement('details');item.className='group';
+  if(existing)item.dataset.groupId=group.id;
+  else item.dataset.action=group.targetGroupId==null?'new':'append';
+  const summary=document.createElement('summary');
+  const dot=document.createElement('span');dot.className='dot';dot.style.setProperty('--group-color',colors[group.color]||colors.grey);
+  const title=document.createElement('span');title.className='group-title';title.textContent=group.title||t('Unnamed group');title.title=title.textContent;
+  const count=document.createElement('span');count.className='count';count.textContent=existing?group.tabs.length:group.tabIds.length;
+  summary.append(dot,title);
+  if(!existing){const action=document.createElement('span');action.className='group-action';action.textContent=t(group.targetGroupId==null?'New group':'Add tabs');summary.append(action);}
+  summary.append(count);item.append(summary,tabList(group.tabs));return item;
+}
 function render(){
-  $('total').textContent=plan.total;$('groupCount').textContent=plan.groups.length;$('duplicateCount').textContent=plan.duplicates.length;$('protected').textContent=t('{count} protected',{count:plan.protectedCount});$('groups').replaceChildren();
-  for(const group of plan.groups){const item=document.createElement('details');item.className='group';const summary=document.createElement('summary');const dot=document.createElement('span');dot.className='dot';dot.style.setProperty('--group-color',colors[group.color]||colors.grey);const title=document.createElement('span');title.className='group-title';title.textContent=group.title;title.title=group.title;const count=document.createElement('span');count.className='count';count.textContent=group.tabIds.length;summary.append(dot,title,count);item.append(summary,tabList(group.tabs));$('groups').append(item);}
+  $('total').textContent=plan.total;$('groupCount').textContent=plan.groups.length;$('duplicateCount').textContent=plan.duplicates.length;
+  const existing=plan.existingGroups||[];
+  $('existingCount').textContent=existing.length;$('existingGroups').replaceChildren(...existing.map(group=>groupRow(group,true)));$('noExisting').hidden=!!existing.length;
+  const grouped=plan.groupedCount||0;const other=plan.otherProtectedCount??Math.max(0,plan.protectedCount-grouped);
+  $('excludedSummary').textContent=t('{count} tabs excluded from classification',{count:grouped+other});
+  $('groupedReason').textContent=t('{count} already grouped — members stay in place.',{count:grouped});
+  $('otherProtectedReason').textContent=t('{count} protected — pinned, playing, incognito or internal tabs.',{count:other});
+  $('groups').replaceChildren(...plan.groups.map(group=>groupRow(group)));
   $('empty').hidden=!!plan.groups.length;$('duplicateReview').hidden=true;renderSuggestions();controls();
 }
 function renderSuggestions(){
@@ -28,4 +46,4 @@ $('undo').onclick=()=>run(async()=>{const result=await send({type:'undo'});await
 $('duplicates').onclick=()=>{$('duplicateList').replaceChildren(...tabList(plan.duplicates).children);$('duplicateReview').hidden=!$('duplicateReview').hidden;if(!$('duplicateReview').hidden)$('duplicateReview').scrollIntoView({block:'nearest'});};
 $('dedupe').onclick=()=>run(async()=>{const result=await send({type:'dedupe',plan});await refresh();status(result.message);});
 $('restore').onclick=()=>run(async()=>{const result=await send({type:'restore'});await refresh();status(result.message);});
-await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);preferences=settings.preferences||preferences;await refresh();status(t('Pinned, playing and grouped tabs stay protected.'));});
+await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);preferences=settings.preferences||preferences;await refresh();status(t('Only ungrouped tabs change. Existing group members stay in place.'));});
