@@ -1,92 +1,98 @@
-<p align="center"><img src="docs/assets/cover.svg" alt="Tabfold — Less tab noise. More headspace." width="100%"></p>
+<div align="center">
 
-<p align="center"><strong>Less tab noise. More headspace.</strong><br>Preview, group, and fold your tabs without losing your place.</p>
+# Tabfold
 
-<p align="center">Chrome Manifest V3 · Jev 1.13 · No runtime dependencies</p>
+**Less tab noise. More headspace.**
 
-[한국어](docs/README.ko.md)
+Turn crowded Chrome windows into clean, collapsible tab groups — **previewed before anything changes**.
 
-**Tabfold** turns a crowded tab bar into groups you can review before applying. Use local rules immediately, or connect your OpenRouter or TypeSafe key for AI classification with **TypeSafe Jev 1.13**.
+**Preview → Review → Apply**
 
-### A small popup. Room to focus.
+Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
-- **Preview first.** Inspect proposed groups for the current window or all windows.
-- **Group and fold.** Keep tabs in their original windows and collapse groups to reclaim space.
-- **Your categories.** Define names and classification criteria on the dedicated settings page.
-- **Discover new topics.** When “Other” clearly wins, review new category suggestions before adding them.
-- **Undo and recover.** Undo the last grouping or reopen addresses removed during duplicate cleanup.
+[English](README.md) · [Français](readme/README.fr.md) · [한국어](readme/README.ko.md) · [简体中文](readme/README.zh-CN.md) · [繁體中文](readme/README.zh-TW.md) · [Русский](readme/README.ru.md) · [日本語](readme/README.ja.md) · [Türkçe](readme/README.tr.md) · [Español](readme/README.es.md)
 
-Pinned, audible, incognito, internal, and already-grouped tabs are protected. Active tabs are never closed by duplicate cleanup.
+<img src="docs/assets/cover.svg" alt="Tabfold cover" width="100%" />
 
-<p align="center"><img src="docs/assets/popup-en.png" width="380" alt="Compact popup with synthetic test tabs and a persistent apply button"></p>
+</div>
 
-### Install in a minute
+## Why Tabfold
 
-1. Download this repository.
-2. Open `chrome://extensions` and enable **Developer mode**.
-3. Choose **Load unpacked** and select the **`extension`** folder.
-4. Pin Tabfold to your toolbar.
+- **Preview first** — see the proposed groups before Tabfold touches your tabs.
+- **Works without AI** — local title/domain rules organize tabs instantly with no API key.
+- **AI when you want it** — use Jev through OpenRouter or TypeSafe for smarter classification.
+- **Keeps your context** — tabs stay in their original windows; groups simply collapse to reduce clutter.
+- **Safe by default** — pinned, audible, incognito, internal, and already-grouped tabs are protected.
+- **Easy to recover** — undo the last grouping and recover URLs removed by duplicate cleanup.
 
-No build or package installation is needed. This is an unpacked extension, not a Chrome Web Store release.
+<img src="docs/assets/popup-en.png" alt="Tabfold popup preview" width="100%" />
 
-### Make it yours
+## How it works
 
-Open **Settings** from the popup for your API key, up to 12 categories, topic suggestions, and display language. English is the default; Korean, Japanese, Simplified Chinese, and Spanish are also available. Language changes affect the interface; your saved category names remain yours.
+1. **Preview** with local rules or AI.
+2. **Review** the proposed groups.
+3. **Apply** when the result looks right.
 
-For AI classification, select **Settings → AI connection → AI provider**, choose **OpenRouter** or **TypeSafe**, and save that provider’s API key. Then choose **AI preview** in the popup. Keys are stored separately for the current browser session. The first use requests access only to the selected provider. Calls are billed by that provider.
+That’s it. Tabfold groups and folds tabs without merging windows or replacing your pages.
 
-On OpenRouter, Jev uses the [OpenRouter Decisions API](https://openrouter.ai/docs/api/api-reference/alphadecisions/submit-a-decisions-questions-and-answers-request), not a chat endpoint. Requests contain up to 20 tabs at a time, with up to 500 tabs per preview. Low-confidence classifications fall back to domains.
+## Install
 
-TypeSafe direct calls use the [official API](https://docs.typesafe.ai/api) at `https://api.typesafe.ai/v1/systemone`, pinned to [Jev 1.13](https://docs.typesafe.ai/models) (`jev-1.13.0`). An OpenRouter key cannot authenticate with TypeSafe; use a TypeSafe-issued key. No automatic provider fallback occurs.
+1. Download or clone this repository.
+2. Open `chrome://extensions`.
+3. Enable **Developer mode**.
+4. Click **Load unpacked** and select the `extension` folder.
+5. Pin **Tabfold** to the toolbar.
 
-**All windows** builds separate groups within each original window. It never combines windows or merges pages into one tab. Collapsing a group only hides its individual tabs from the tab bar until expanded.
+No build step or package installation is required.
 
-### Tab order
+## Make it yours
 
-In **Settings → Tab order**, keep the current order (default), sort by title, or put least recently used tabs first. This applies inside each new group, in both local and AI previews. Activity order uses Chrome’s last active timestamp—not creation time; unknown times go last. Existing groups and window boundaries are preserved. Refresh the preview after changing the setting. Undo removes the groups but does not restore the previous tab order.
+From **Settings**, you can:
 
-### Categories as JSON
+- Create up to **12 custom categories**
+- Choose **current / title / least-recently-used** tab ordering
+- Review suggested new topics before adding them
+- Import or export categories as JSON
+- Switch between English, French, Korean, Simplified Chinese, Traditional Chinese, Russian, Japanese, Turkish, and Spanish
 
-In **Settings → Your categories**, choose **Export JSON** to download the current form as `tabfold-categories.json`. Ask an AI to edit that file, then choose **Import JSON** and **Save categories and preferences**. Import replaces the draft form; it does not change saved settings until you save. Files are not watched or automatically synced.
+“Other” is handled automatically.
 
-Use a JSON array of `{ "title": "Research", "criteria": "Papers and benchmarks", "color": "green" }` objects. See the [editable example](docs/categories.example.json). Keep 1–12 unique categories; title ≤40 characters, criteria ≤240. Supported colors: blue, red, yellow, green, pink, purple, cyan, orange, grey. “Other” is automatic. Invalid files leave the current form unchanged. Exports contain categories only, never API keys or tab data.
+## AI is optional
 
-### Suggestions, with a second check
+Local preview stays entirely in your browser.
 
-Tabfold first compares your categories with “Other.” If Other has at least 60% probability and leads existing categories by at least 20 percentage points, it looks for recurring title phrases or domains. Jev then validates these candidates. At least two matching tabs in the same window are required.
+For AI preview, choose **OpenRouter** or **TypeSafe** in **Settings → AI connection** and add that provider’s API key.
 
-Names are extracted locally, not freely generated by Jev. Topics without shared wording can be missed. Suggestions may require additional paid requests. Accepting a suggestion updates your categories and preview; tabs change only when you apply the plan.
+- OpenRouter uses the **Decisions API**
+- TypeSafe uses **Jev 1.13**
+- API keys are stored in Chrome **session storage** and cleared when the browser closes
+- There is **no automatic provider fallback**
 
-### Data and permissions
+## Privacy
 
-| Feature | What happens |
-| --- | --- |
-| Local preview | No external transmission |
-| AI preview | Sends tab titles, URL origins/paths, and category criteria directly to TypeSafe, or through OpenRouter when selected |
-| Excluded from requests | Page bodies, URL credentials, query strings, fragments |
-| API key | Stored in Chrome session storage; cleared when the browser closes |
-| Language and categories | Stored locally on your device |
-| Analytics and advertising | None |
-| `tabs`, `tabGroups`, `storage` | Read tabs, manage groups, and keep settings/recovery records |
-| Provider host access | Optional; requested when enabling AI |
+| | |
+|---|---|
+| **Local preview** | No external transmission |
+| **AI preview** | Sends tab titles, URL origins/paths, and category criteria |
+| **Never sent** | Page bodies, URL credentials, query strings, fragments |
+| **API keys** | Session-only storage |
+| **Analytics / ads** | None |
 
-Titles and paths may themselves contain sensitive information. See [privacy details](docs/PRIVACY.md).
+Titles and URL paths can still contain sensitive information. See [Privacy](docs/PRIVACY.md) for details.
 
-### What folding means
+## Develop
 
-Folding is visual compaction, not content summarization or guaranteed memory savings. Undo does not restore the exact original tab order and preserves groups you renamed or recolored. Duplicate recovery reopens URLs; it cannot restore form input, scroll position, or page state.
+Requires **Node.js 22+**.
 
-### Develop and verify
-
-Requires Node.js 22 or newer:
-
-```sh
+```bash
 npm test
 npm run check
 ```
 
-Plain JavaScript and native Chrome APIs, with no runtime dependencies or remote code. See the [validation record](docs/VALIDATION.md) and [launch copy](docs/LAUNCH.md).
+Plain JavaScript, native Chrome APIs, no runtime dependencies, and no remote code.
 
-### References
+[Validation](docs/VALIDATION.md) · [Launch notes](docs/LAUNCH.md) · [Category JSON example](docs/categories.example.json)
 
-Interaction ideas were informed by [TabPilot](https://github.com/florianlanx/tabpilot), [AI Group Tabs](https://github.com/MichaelYuhe/ai-group-tabs), and [Browser Extension Skills](https://github.com/quangpl/browser-extension-skills). Their code, logos, and assets are not bundled. The cover is a product illustration.
+---
+
+**Folding is visual compaction, not content summarization or guaranteed memory reduction.**

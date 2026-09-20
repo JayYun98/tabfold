@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — Меньше шума во вкладках"
+  },
+  "extensionDescription": {
+    "message": "Просматривайте, группируйте и сворачивайте вкладки. ИИ по желанию, очистка дубликатов и отмена."
+  },
+  "actionTitle": {
+    "message": "Открыть Tabfold"
+  }
+}

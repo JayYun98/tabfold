@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import {readFile,mkdir} from 'node:fs/promises';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const browser=await chromium.launch({headless:true});
-const languages=['en','ko','ja','zh-CN','es'];
+const {LANGUAGES}=await import('../extension/i18n.js');
+const languages=LANGUAGES.map(({code})=>code);
 await mkdir(new URL('../docs/assets/',import.meta.url),{recursive:true});
 try {
  for(const language of languages) for(const colorScheme of ['light','dark']) {
@@ -28,6 +29,7 @@ try {
   },{language});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('https://tabfold.test/popup.html');await page.waitForFunction(()=>document.querySelector('#total').textContent==='213');
+  assert.equal(await page.locator('html').getAttribute('lang'),language);
   const bounds=await page.evaluate(()=>({width:document.body.scrollWidth,height:document.body.scrollHeight,apply:document.querySelector('#apply').getBoundingClientRect().toJSON(),list:document.querySelector('main').getBoundingClientRect().toJSON()}));
   assert.equal(bounds.width,380);assert.ok(bounds.height<=560);assert.ok(bounds.apply.bottom<=560);assert.ok(bounds.list.height>70);
   await page.locator('.group summary').first().click();assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth),380);
@@ -35,6 +37,9 @@ try {
   await page.locator('#settings').click();assert.equal(await page.evaluate(()=>window.settingsOpened),true);
   if(colorScheme==='light' && ['en','ko'].includes(language))await page.screenshot({path:new URL('../docs/assets/popup-'+language+'.png',import.meta.url).pathname});
   await page.goto('https://tabfold.test/options.html');await page.waitForSelector('.category-row');
+  assert.equal(await page.locator('html').getAttribute('lang'),language);
+  assert.equal(await page.locator('#language option').count(),languages.length);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.locator('#tabOrder').selectOption('oldest');await page.waitForFunction(()=>window.savedTabOrder==='oldest');
   assert.equal(await page.locator('#provider').inputValue(),'typesafe');
   await page.locator('#provider').selectOption('openrouter');await page.waitForFunction(()=>!document.querySelector('#provider').disabled);

@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — Moins d’onglets encombrants"
+  },
+  "extensionDescription": {
+    "message": "Prévisualisez, regroupez et repliez vos onglets. IA facultative, nettoyage des doublons et annulation."
+  },
+  "actionTitle": {
+    "message": "Ouvrir Tabfold"
+  }
+}

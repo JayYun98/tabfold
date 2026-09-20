@@ -11,7 +11,10 @@ test('every shipped language covers UI and runtime messages with matching placeh
     for(const match of source.matchAll(/data-i18n(?:-placeholder|-title|-label)?="([^"]+)"/g)) keys.add(match[1]);
   }
   const placeholders=s=>[...s.matchAll(/\{\w+\}/g)].map(m=>m[0]).sort();
-  for(const {code}of LANGUAGES.filter(l=>l.code!=='en')){
+  for(const {code}of LANGUAGES){
+    const native=JSON.parse(await readFile(new URL('../extension/_locales/'+code.replace('-','_')+'/messages.json',import.meta.url)));
+    for(const key of ['extensionName','extensionDescription','actionTitle']) assert.ok(native[key]?.message,`${code} missing manifest message ${key}`);
+    if(code==='en') continue;
     const messages=JSON.parse(await readFile(new URL('../extension/locales/'+code+'.json',import.meta.url)));
     for(const key of keys){assert.ok(messages[key],`${code} missing ${key}`);assert.deepEqual(placeholders(messages[key]),placeholders(key),`${code}: ${key}`);}
   }

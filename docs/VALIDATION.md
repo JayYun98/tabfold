@@ -65,3 +65,10 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Added current/title/least-recently-used order for tabs inside newly created groups. Uses Chrome `lastAccessed` (Chrome 121+); missing values sort last. Group layout between windows remains unchanged.
 - 29 unit/regression tests passed, including numeric title order, timestamp ties/missing values, stale-preview rejection after a setting change, and same-window tab moves with protected tabs untouched using a mock Chrome API. Native toolbar reload and real Chrome sorting remain unverified.
 - All 10 isolated UI language/theme combinations passed, including saving the order setting and preserving its selection across language changes.
+
+## v0.6.0 multilingual documentation and interface
+
+- Replaced the English README with the supplied optimized structure. Added French, Korean, Simplified Chinese, Traditional Chinese, Russian, Japanese, Turkish, and Spanish README translations, each with navigation to all nine languages. Verified every local document and image link. The old Korean document links to its new location.
+- Added French, Traditional Chinese, Russian, and Turkish UI dictionaries and Chrome manifest messages. English remains the default; existing Spanish support is preserved.
+- All 29 unit/regression checks and JavaScript syntax checks passed. Translation checks cover required UI/runtime keys, interpolation placeholders, and native manifest messages for every language.
+- All 18 isolated Chromium language/theme combinations passed: 380×560 popup bounds, visible apply footer, settings overflow, language selection, and draft preservation. These checks use synthetic Chrome responses, not the user's tabs. Native toolbar reload remains manual; no live AI calls or user-tab changes were made.

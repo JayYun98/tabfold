@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "Tabfold — 減少分頁干擾"
+  },
+  "extensionDescription": {
+    "message": "預覽、分組並收合分頁。可選用 AI 分類、清理重複分頁，並復原操作。"
+  },
+  "actionTitle": {
+    "message": "開啟 Tabfold"
+  }
+}

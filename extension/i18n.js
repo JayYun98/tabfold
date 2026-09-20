@@ -1,6 +1,8 @@
 export const LANGUAGES = [
-  {code:'en',name:'English'}, {code:'ko',name:'한국어'},
-  {code:'ja',name:'日本語'}, {code:'zh-CN',name:'简体中文'},
+  {code:'en',name:'English'}, {code:'fr',name:'Français'},
+  {code:'ko',name:'한국어'}, {code:'zh-CN',name:'简体中文'},
+  {code:'zh-TW',name:'繁體中文'}, {code:'ru',name:'Русский'},
+  {code:'ja',name:'日本語'}, {code:'tr',name:'Türkçe'},
   {code:'es',name:'Español'},
 ];
 let language = 'en';
