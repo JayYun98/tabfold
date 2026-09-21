@@ -41,9 +41,10 @@ $('saveKey').onclick=()=>run(async()=>{const key=$('apiKey').value.trim();await 
 $('clearKey').onclick=()=>run(async()=>{await send({type:'setKey',key:'',provider:$('provider').value});$('apiKey').value='';keyState(false);status(t('API key removed.'));});
 function providerInfo(){const provider=getProvider($('provider').value);$('providerInfo').textContent=provider.name+' · '+provider.model;}
 $('provider').onchange=()=>run(async()=>{const result=await send({type:'setProvider',provider:$('provider').value});$('apiKey').value='';keyState(result.keyConfigured);providerInfo();status(t('AI provider saved. Use a key from the selected provider.'));});
+$('groupingMode').onchange=()=>run(async()=>{const result=await send({type:'setGroupingMode',groupingMode:$('groupingMode').value});$('groupingMode').value=result.groupingMode;status(t('Grouping mode saved. Refresh the preview to use it.'));});
 $('tabOrder').onchange=()=>run(async()=>{await send({type:'setTabOrder',tabOrder:$('tabOrder').value});status(t('Tab order saved. Refresh the preview to use it.'));});
 $('language').onchange=()=>run(async()=>{const draft=readCategories();await setLanguage($('language').value);applyI18n();renderCategories(draft);keyState(keyConfigured);status('');});
 await initI18n();applyI18n();
 for(const language of LANGUAGES){const option=document.createElement('option');option.value=language.code;option.textContent=language.name;$('language').append(option);}
 $('language').value=getLanguage();
-await run(async()=>{const settings=await send({type:'getSettings'});$('tabOrder').value=settings.tabOrder || 'current';$('provider').value=settings.provider || 'openrouter';providerInfo();renderCategories(settings.categories);$('suggestNew').checked=settings.preferences?.suggestNew!==false;keyState(settings.keyConfigured);});
+await run(async()=>{const settings=await send({type:'getSettings'});$('groupingMode').value=settings.groupingMode || 'preserve';$('tabOrder').value=settings.tabOrder || 'current';$('provider').value=settings.provider || 'openrouter';providerInfo();renderCategories(settings.categories);$('suggestNew').checked=settings.preferences?.suggestNew!==false;keyState(settings.keyConfigured);});

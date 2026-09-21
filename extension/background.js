@@ -1,5 +1,6 @@
+import { clusterTabs } from './clustering.js';
 import { t, initI18n } from './i18n.js';
-import { buildPreview, isEligible, sameSnapshot, validGroupColor, validateTabOrder } from './core.js';
+import { buildPreview, isEligible, sameSnapshot, validGroupColor, validateTabOrder, validateGroupingMode } from './core.js';
 import { classifyTabs, DEFAULT_CATEGORIES, validateCategories, getProvider } from './ai.js';
 
 const UNDO_KEY = 'tabfoldUndo';
@@ -59,15 +60,17 @@ export class TabfoldBackend {
     const tabs = await this.chrome.tabs.query({});
     const existingGroups = await this.chrome.tabGroups.query({});
     const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
-    const initial = buildPreview(tabs, {...request,tabOrder,existingGroups});
+    const groupingMode=validateGroupingMode(await this.read('tabfoldGroupingMode','local'));
+    const regroup=groupingMode==='regroup';
+    const initial = buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode});
+    const selectedEligible = tabs.filter(tab => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab,{regroup}));
     const provider = getProvider(request.provider ?? await this.provider());
     const key = await this.read(provider.keyName);
-    let classifications;
+    let classifications = request.ai ? undefined : clusterTabs(selectedEligible,{existingGroups:regroup ? [] : initial.existingGroups,regroup});
     if (request.ai) {
       if (!key) return message(false, t('Save your API key before using AI classification.'));
-      const selectedEligible = tabs.filter((tab) => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab));
       try {
-        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:initial.existingGroups, suggestNew: request.suggestNew !== false});
+        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:regroup ? [] : initial.existingGroups, suggestNew: request.suggestNew !== false});
       } catch (error) {
         return message(false, error?.message || t('Unable to complete AI classification.'));
       }
@@ -77,8 +80,8 @@ export class TabfoldBackend {
         suggestion.tabs = tabs.filter(t => suggestion.tabIds.includes(t.id)).map(({id,title,url})=>({id,title,url}));
       }
     }
-    const plan = classifications ? buildPreview(tabs, {...request,tabOrder,existingGroups}, classifications) : initial;
-    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(isEligible).map(({id,title,url,windowId,index,lastAccessed})=>({id,title,url,windowId,index,lastAccessed})), categories: await this.categories() });
+    const plan = classifications ? buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode}, classifications) : initial;
+    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(tab=>isEligible(tab,{regroup})).map(({id,title,url,windowId,index,lastAccessed,groupId})=>({id,title,url,windowId,index,lastAccessed,groupId})), categories: await this.categories() });
     const undo = await this.read(UNDO_KEY);
     return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
   }
@@ -107,8 +110,8 @@ export class TabfoldBackend {
     const ids = new Set(suggestion.tabIds);
     const candidateTabs = saved.tabs.filter(t => ids.has(t.id));
     const replacements = new Map(candidateTabs.map(t => [t.id, category]));
-    const added = buildPreview(candidateTabs, {allWindows:true,tabOrder:saved.plan.tabOrder}, replacements).groups;
-    if (!added.length || !await this.validateGroups({groups:added})) return message(false, t(STALE));
+    const added = buildPreview(candidateTabs, {allWindows:true,tabOrder:saved.plan.tabOrder,groupingMode:saved.plan.groupingMode}, replacements).groups;
+    if (!added.length || !await this.validateGroups({...saved.plan,groups:added})) return message(false, t(STALE));
     const remaining = saved.plan.groups.map(group => {
       const tabs = group.tabs.filter(t => !ids.has(t.id));
       return {...group, tabs, tabIds: tabs.map(t => t.id)};
@@ -145,11 +148,12 @@ export class TabfoldBackend {
 
   async validateGroups(plan) {
     if (!plan || !Array.isArray(plan.groups)) return null;
+    const regroup=plan.groupingMode==='regroup';
     const seen = new Set();
     const valid = [];
     for (const group of plan.groups) {
       if (!Number.isInteger(group?.windowId) || !Array.isArray(group.tabs) || group.tabs.length < (Number.isInteger(group.targetGroupId) ? 1 : 2) || !Array.isArray(group.tabIds)) return null;
-      if (group.targetGroupId !== undefined && (!Number.isInteger(group.targetGroupId) || !await this.targetUnchanged(group, plan))) return null;
+      if (group.targetGroupId !== undefined && (regroup || !Number.isInteger(group.targetGroupId) || !await this.targetUnchanged(group, plan))) return null;
       const ids = group.tabs.map((tab) => tab?.id);
       if (ids.length !== group.tabIds.length || ids.some((id, index) => id !== group.tabIds[index])) return null;
       const fresh = [];
@@ -161,7 +165,7 @@ export class TabfoldBackend {
         } catch {
           return null;
         }
-        if (!sameSnapshot(tab, snapshot) || tab.windowId !== group.windowId || !isEligible(tab)) return null;
+        if (!sameSnapshot(tab, snapshot) || tab.windowId !== group.windowId || !isEligible(tab,{regroup}) || (regroup && (tab.groupId ?? -1)!==snapshot.groupId)) return null;
         seen.add(tab.id);
         fresh.push(tab);
       }
@@ -189,11 +193,11 @@ export class TabfoldBackend {
     return Boolean(saved?.plan && stableJson(saved.plan) === stableJson(plan));
   }
 
-  async revalidateGroup(group) {
+  async revalidateGroup(group, regroup = false) {
     for (const snapshot of group.tabs) {
       try {
         const tab = await this.chrome.tabs.get(snapshot.id);
-        if (!sameSnapshot(tab, snapshot) || tab.windowId !== group.windowId || !isEligible(tab)) return false;
+        if (!sameSnapshot(tab, snapshot) || tab.windowId !== group.windowId || !isEligible(tab,{regroup}) || (regroup && (tab.groupId ?? -1)!==(snapshot.groupId ?? -1))) return false;
       } catch {
         return false;
       }
@@ -214,17 +218,23 @@ export class TabfoldBackend {
   }
 
   async apply(plan, collapse = true) {
-    if (!await this.matchesSavedPreview(plan)) return message(false, t(STALE));
+    if (!await this.matchesSavedPreview(plan) || validateGroupingMode(await this.read('tabfoldGroupingMode','local')) !== (plan.groupingMode || 'preserve')) return message(false, t(STALE));
     const groups = await this.validateGroups(plan);
     if (!groups) return message(false, t(STALE));
     if (!groups.length) return message(true, t('No tab groups to organize.'), { undoAvailable: false });
 
+    const regroup=plan.groupingMode==='regroup';
+    if(regroup) {
+      for(const original of plan.existingGroups || []) {
+        if(groups.some(group=>group.tabs.some(tab=>tab.groupId===original.id)) && !await this.targetUnchanged({targetGroupId:original.id,windowId:original.windowId},plan)) return message(false,t(STALE));
+      }
+    }
     // Persist the pre-mutation state before chrome.tabs.group can change it.
-    const undo = { groups: [], tabs: groups.flatMap((group) => group.tabs.map((tab) => ({ id: tab.id, windowId: tab.windowId, groupId: tab.groupId }))) };
+    const undo = { groupingMode:plan.groupingMode, groups: [], tabs: groups.flatMap(group => group.tabs.map(tab => ({id:tab.id,url:tab.url,windowId:tab.windowId,groupId:tab.groupId ?? -1}))), originalGroups:regroup ? (plan.existingGroups || []).filter(original=>groups.some(group=>group.tabs.some(tab=>tab.groupId===original.id))) : [] };
     await this.write(UNDO_KEY, undo);
     try {
       for (const group of groups) {
-        if (!await this.revalidateGroup(group) || (Number.isInteger(group.targetGroupId) && !await this.targetUnchanged(group,plan))) return message(false, t(STALE));
+        if (!await this.revalidateGroup(group,regroup) || (Number.isInteger(group.targetGroupId) && !await this.targetUnchanged(group,plan))) return message(false, t(STALE));
         if (Number.isInteger(group.targetGroupId)) {
           const snapshot = plan.existingGroups.find(item => item.id === group.targetGroupId);
           const added = {groupId:group.targetGroupId,tabIds:group.tabIds,windowId:group.windowId,title:snapshot.title,color:snapshot.color,existing:true};
@@ -242,7 +252,7 @@ export class TabfoldBackend {
           continue;
         }
         const groupId = await this.chrome.tabs.group({ tabIds: group.tabIds, createProperties: { windowId: group.windowId } });
-        const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: safeTitle(group.title), color: validGroupColor(group.color) };
+        const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: safeTitle(group.title), color: validGroupColor(group.color), collapsed:Boolean(collapse) };
         undo.groups.push(created);
         await this.write(UNDO_KEY, undo);
         await this.chrome.tabGroups.update(groupId, { title: created.title, color: created.color, collapsed: Boolean(collapse) });
@@ -257,6 +267,7 @@ export class TabfoldBackend {
   async undo() {
     const undo = await this.read(UNDO_KEY);
     if (!undo?.groups?.length) return message(true, t('No Tabfold grouping to undo.'), { undoAvailable: false });
+    if(undo.groupingMode==='regroup') return this.undoRegroup(undo);
     let ungrouped = 0;
     for (const group of undo.groups) {
       let currentGroup;
@@ -283,6 +294,50 @@ export class TabfoldBackend {
     }
     await this.write(UNDO_KEY, { groups: [], tabs: [] });
     return message(true, t('Undid grouping for {count} tabs.', { count: ungrouped }), { undoAvailable: false });
+  }
+
+  async undoRegroup(undo) {
+    const candidates=[];
+    for(const group of undo.groups) {
+      let current;
+      try {current=await this.chrome.tabGroups.get(group.groupId);} catch {continue;}
+      if(current.windowId!==group.windowId || current.title!==group.title || current.color!==group.color || current.collapsed!==group.collapsed) continue;
+      for(const id of group.tabIds) {
+        const before=undo.tabs.find(tab=>tab.id===id);
+        try {
+          const tab=await this.chrome.tabs.get(id);
+          if(before && sameSnapshot(tab,before) && tab.groupId===group.groupId && isEligible(tab,{regroup:true})) candidates.push({tab,before});
+        } catch { /* Closed or moved tabs are left alone. */ }
+      }
+    }
+    let restored=0;
+    for(const original of undo.originalGroups || []) {
+      const members=candidates.filter(item=>item.before.groupId===original.id);
+      if(!members.length) continue;
+      let target;
+      try {target=await this.chrome.tabGroups.get(original.id);} catch { /* Recreate a group emptied by regrouping. */ }
+      if(!target && original.tabs.some(tab=>!undo.groups.some(changed=>changed.tabIds.includes(tab.id)))) continue;
+      if(target) {
+        if(['windowId','title','color','collapsed'].some(key=>(key==='title' ? target[key] || '' : target[key])!==original[key])) continue;
+        const currentMembers=(await this.chrome.tabs.query({windowId:original.windowId})).filter(tab=>tab.groupId===original.id);
+        const expected=original.tabs.filter(tab=>!undo.groups.some(changed=>changed.tabIds.includes(tab.id)));
+        if(currentMembers.length!==expected.length || expected.some(before=>!currentMembers.some(tab=>sameSnapshot(tab,before)))) continue;
+      }
+      // Recheck each candidate immediately before moving it back.
+      const ids=[];
+      for(const item of members) {
+        try {const fresh=await this.chrome.tabs.get(item.tab.id);if(sameSnapshot(fresh,item.before) && fresh.groupId===item.tab.groupId && isEligible(fresh,{regroup:true})) ids.push(fresh.id);} catch {}
+      }
+      if(!ids.length) continue;
+      const groupId=await this.chrome.tabs.group(target ? {tabIds:ids,groupId:target.id} : {tabIds:ids,createProperties:{windowId:original.windowId}});
+      if(!target) await this.chrome.tabGroups.update(groupId,{title:original.title,color:original.color,collapsed:original.collapsed});
+      restored+=ids.length;
+    }
+    for(const item of candidates.filter(item=>item.before.groupId===-1)) {
+      try {const fresh=await this.chrome.tabs.get(item.tab.id);if(sameSnapshot(fresh,item.before) && fresh.groupId===item.tab.groupId && isEligible(fresh,{regroup:true})) {await this.chrome.tabs.ungroup([fresh.id]);restored++;}} catch {}
+    }
+    await this.write(UNDO_KEY,{groups:[],tabs:[]});
+    return message(true,t('Undid grouping for {count} tabs.',{count:restored}),{undoAvailable:false});
   }
 
   async validateDedupe(plan) {
@@ -359,7 +414,8 @@ export class TabfoldBackend {
   async handle(request = {}) {
     try {
       await initI18n();
-      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, tabOrder:validateTabOrder(await this.read('tabfoldTabOrder','local')), keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, groupingMode:validateGroupingMode(await this.read('tabfoldGroupingMode','local')), tabOrder:validateTabOrder(await this.read('tabfoldTabOrder','local')), keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if(request.type==='setGroupingMode') return await this.mutate(async()=>{const groupingMode=validateGroupingMode(request.groupingMode);await this.write('tabfoldGroupingMode',groupingMode,'local');await this.remove(PREVIEW_KEY);return {ok:true,groupingMode};});
       if (request.type === 'setTabOrder') return await this.mutate(async()=>{const tabOrder=validateTabOrder(request.tabOrder);await this.write('tabfoldTabOrder',tabOrder,'local');await this.remove(PREVIEW_KEY);return {ok:true,tabOrder};});
       if (request.type === 'setProvider') return await this.mutate(() => this.setProvider(request.provider));
       if (request.type === 'preview') return await this.preview(request);

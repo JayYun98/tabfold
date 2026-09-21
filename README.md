@@ -19,7 +19,7 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 ## Why Tabfold
 
 - **Preview first** — see the proposed groups before Tabfold touches your tabs.
-- **Works without AI** — local title/domain rules organize tabs instantly with no API key.
+- **Works without AI** — local TF-IDF and cosine similarity cluster title/URL terms with no API key.
 - **AI when you want it** — use Jev through OpenRouter or TypeSafe for smarter classification.
 - **Keeps your context** — tabs stay in their original windows; groups simply collapse to reduce clutter.
 - **Safe by default** — pinned, audible, incognito, internal, and already-grouped tabs are protected.
@@ -29,13 +29,17 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 ## How it works
 
-1. **Preview** with local rules or AI.
+1. **Preview** with local clustering or AI.
 2. **Review** the proposed groups.
 3. **Apply** when the result looks right.
 
 That’s it. Tabfold groups and folds tabs without merging windows or replacing your pages.
 
-Existing groups are visible before you run AI. AI prioritizes groups in the same window, using their names and example tab titles and URL paths. Matching ungrouped tabs are added to those groups; other tabs form new groups. Existing members, names, colors, and collapsed states stay unchanged. Undo removes only the tabs added by Tabfold from existing groups. The example titles and URL paths are sent to the selected AI provider.
+By default, existing groups are preserved. Existing groups are visible before you run AI. AI prioritizes groups in the same window, using their names and example tab titles and URL paths. Matching ungrouped tabs are added to those groups; other tabs form new groups. Existing members, names, colors, and collapsed states stay unchanged. Undo removes only the tabs added by Tabfold from existing groups. The example titles and URL paths are sent to the selected AI provider.
+
+Choose **Regroup all eligible tabs** to ignore existing group names and context and reassign eligible grouped and ungrouped tabs within each window. Pinned, audible, incognito and internal tabs stay protected. Undo restores original groups where possible; exact original tab order is not guaranteed. Only proposed groups are applied. New groups require at least two tabs; unmatched single tabs stay where they are.
+
+Quick preview uses statistical TF-IDF weights and cosine similarity over title/URL terms, entirely in your browser. It matches lexical similarities, not meanings translated across languages. This is not a pretrained neural or TensorFlow model: no dependencies, model downloads or server requests. The reusable JavaScript clustering module also runs in Node.js.
 
 ## Install
 

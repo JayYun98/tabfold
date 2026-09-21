@@ -156,5 +156,16 @@
   "{count} tabs excluded from classification": "{count} вкладок исключено из классификации",
   "{count} already grouped — members stay in place.": "{count} уже сгруппировано — вкладки остаются на месте.",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} защищено — закреплённые, со звуком, инкогнито или внутренние вкладки.",
-  "Only ungrouped tabs change. Existing group members stay in place.": "Изменяются только несгруппированные вкладки. Вкладки существующих групп остаются на месте."
+  "Only ungrouped tabs change. Existing group members stay in place.": "Изменяются только несгруппированные вкладки. Вкладки существующих групп остаются на месте.",
+  "Grouping mode": "Режим группировки",
+  "Choose whether existing groups stay in place or are rebuilt.": "Выберите, сохранять существующие группы или создавать их заново.",
+  "Keep existing groups": "Сохранить существующие группы",
+  "Regroup all eligible tabs": "Перегруппировать все доступные вкладки",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "Перегруппировка игнорирует текущую принадлежность к группам. Закреплённые, воспроизводящие звук, внутренние вкладки и вкладки инкогнито остаются защищены.",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "Быстрый просмотр локально сравнивает слова и сочетания символов в заголовках. Подключение к серверу и загрузка модели не нужны.",
+  "Age uses the last active time, not creation time. Unknown times go last.": "Используется время последней активности, а не создания. Неизвестное время помещает вкладку в конец.",
+  "Grouping mode saved. Refresh the preview to use it.": "Режим группировки сохранён. Обновите предварительный просмотр.",
+  "Regroup mode: existing groups may be rebuilt.": "Режим перегруппировки: существующие группы могут быть пересозданы.",
+  "Review the new groups before applying. Protected tabs stay in place.": "Проверьте новые группы перед применением. Защищённые вкладки остаются на месте.",
+  "Invalid grouping mode.": "Недопустимый режим группировки."
 }

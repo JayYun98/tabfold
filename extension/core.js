@@ -24,8 +24,8 @@ export function isUngrouped(tab) {
   return tab.groupId === undefined || tab.groupId === null || tab.groupId === GROUP_NONE;
 }
 
-export function isEligible(tab) {
-  return Boolean(tab && Number.isInteger(tab.id) && normalUrl(tab.url) && !tab.pinned && !tab.audible && !tab.incognito && isUngrouped(tab));
+export function isEligible(tab, {regroup = false} = {}) {
+  return Boolean(tab && Number.isInteger(tab.id) && normalUrl(tab.url) && !tab.pinned && !tab.audible && !tab.incognito && (regroup || isUngrouped(tab)));
 }
 
 export function classifyTab(tab) {
@@ -47,6 +47,11 @@ export function validateTabOrder(value = 'current') {
   return value;
 }
 
+export function validateGroupingMode(value = 'preserve') {
+  if (!['preserve','regroup'].includes(value)) throw new Error(t('Invalid grouping mode.'));
+  return value;
+}
+
 function orderedTabs(tabs, order) {
   const position = (a,b) => (a.index ?? 0) - (b.index ?? 0);
   const time = tab => Number.isFinite(tab.lastAccessed) && tab.lastAccessed > 0 ? tab.lastAccessed : Infinity;
@@ -57,17 +62,18 @@ function orderedTabs(tabs, order) {
   });
 }
 
-export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'current', existingGroups = [] } = {}, classifications) {
+export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'current', existingGroups = [], groupingMode = 'preserve' } = {}, classifications) {
   validateTabOrder(tabOrder);
+  const regroup = validateGroupingMode(groupingMode) === 'regroup';
   const selected = tabs.filter((tab) => allWindows || windowId === undefined || tab.windowId === windowId);
   const snapshots = existingGroups
     .filter(group => Number.isInteger(group.id) && (allWindows || windowId === undefined || group.windowId === windowId))
     .map(group => ({id:group.id, windowId:group.windowId, title:group.title || '', color:validGroupColor(group.color), collapsed:Boolean(group.collapsed), tabs:selected.filter(tab => tab.groupId === group.id && tab.windowId === group.windowId).map(publicTab)}));
   const buckets = new Map();
   for (const tab of selected) {
-    if (!isEligible(tab)) continue;
+    if (!isEligible(tab,{regroup})) continue;
     const override = classifications?.get(tab.id);
-    const sameWindow = snapshots.filter(group => group.windowId === tab.windowId);
+    const sameWindow = (regroup ? [] : snapshots).filter(group => group.windowId === tab.windowId);
     const matches = sameWindow.filter(group => group.tabs.some(member => !member.incognito && normalUrl(member.url)?.hostname === normalUrl(tab.url)?.hostname));
     const existing = Number.isInteger(override?.targetGroupId)
       ? sameWindow.find(group => group.id === override.targetGroupId)
@@ -75,7 +81,7 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
     const category = existing
       ? {key:`existing:${existing.id}`,title:existing.title,color:existing.color,targetGroupId:existing.id}
       : typeof override?.title === 'string' && override.title.trim()
-      ? { key: `ai:${override.title.trim()}\u0000${validGroupColor(override.color)}`, title: override.title.trim().slice(0, 80), color: validGroupColor(override.color) }
+      ? { key: `ai:${override.clusterId ?? override.title.trim()}\u0000${validGroupColor(override.color)}`, title: override.title.trim().slice(0, 80), color: validGroupColor(override.color) }
       : classifyTab(tab);
     const bucketKey = `${tab.windowId}\u0000${category.key}`;
     const bucket = buckets.get(bucketKey) || { ...category, tabs: [] };
@@ -84,7 +90,7 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
   }
   const groups = [...buckets.values()]
     .filter((bucket) => bucket.tabs.length >= (Number.isInteger(bucket.targetGroupId) ? 1 : 2))
-    .map(bucket => ({...bucket,tabs:orderedTabs(bucket.tabs,tabOrder).map(publicTab)}))
+    .map(bucket => ({...bucket,tabs:orderedTabs(bucket.tabs,tabOrder).map(tab=>({...publicTab(tab),...(regroup ? {groupId:tab.groupId ?? -1} : {})}))}))
     .map(({ title, color, tabs, targetGroupId }) => ({
       ...(Number.isInteger(targetGroupId) ? {targetGroupId} : {}),
       windowId: tabs[0].windowId,
@@ -95,13 +101,14 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
     }));
   return {
     tabOrder,
+    groupingMode,
     groups,
     existingGroups: snapshots,
     groupedCount: selected.filter(tab => !isUngrouped(tab)).length,
-    otherProtectedCount: selected.filter(tab => isUngrouped(tab) && !isEligible(tab)).length,
+    otherProtectedCount: selected.filter(tab => (regroup || isUngrouped(tab)) && !isEligible(tab,{regroup})).length,
     duplicates: findDuplicateCandidates(selected),
     total: selected.length,
-    protectedCount: selected.filter((tab) => !isEligible(tab)).length,
+    protectedCount: selected.filter((tab) => !isEligible(tab,{regroup})).length,
   };
 }
 

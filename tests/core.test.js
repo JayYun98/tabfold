@@ -58,3 +58,10 @@ test('ambiguous domains do not choose existing groups; AI identity never merges 
   const classifications=new Map([[3,{targetGroupId:10,title:'Same',color:'blue'}],[4,{targetGroupId:11,title:'Same',color:'blue'}]]);
   const ai=buildPreview(input,{existingGroups},classifications);assert.deepEqual(ai.groups.map(g=>g.targetGroupId),[10,11]);
 });
+
+test('regroup considers safe grouped tabs but keeps protected members and duplicate cleanup untouched',()=>{
+ const input=[tab(1,'https://example.com/a',{groupId:10}),tab(2,'https://example.com/b',{groupId:10}),tab(3,'https://example.com/c',{groupId:10,audible:true}),tab(4,'https://example.com/d',{groupId:10,incognito:true}),tab(5,'https://example.com/a',{groupId:10,pinned:true})];
+ const plan=buildPreview(input,{groupingMode:'regroup',existingGroups:[{id:10,windowId:1,title:'Old',color:'blue'}]});
+ assert.equal(plan.groups.length,1);assert.deepEqual(plan.groups[0].tabIds,[1,2]);assert.equal(plan.groups[0].targetGroupId,undefined);assert.equal(plan.groups[0].tabs[0].groupId,10);
+ assert.equal(plan.otherProtectedCount,3);assert.equal(plan.protectedCount,3);assert.equal(plan.groupedCount,5);assert.deepEqual(plan.duplicates,[]);
+});

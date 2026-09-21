@@ -38,6 +38,7 @@ function mockChrome(initialTabs, { reorderStorage = false, initialGroups = [] } 
           const end=Math.max(...remaining.map((tab,index)=>original.some(t=>t.id===tab.id)?index:-1));
           remaining.splice(end+1,0,...tabIds.map(id=>tabs.get(id)));remaining.forEach((tab,index)=>{tab.index=index;});
         }
+        for(const id of [...groups.keys()]) if(![...tabs.values()].some(tab=>tab.groupId===id)) groups.delete(id);
         return groupId;
       },
       move: async (id, properties) => {
@@ -178,7 +179,7 @@ test('settings reports key presence without exposing credentials and preserves c
   await backend.handle({type:'setKey', key:'private-test-key'});
   await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
   const configured = await backend.handle({type:'getSettings'});
-  assert.deepEqual(configured, {ok:true, provider:'openrouter', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false}});
+  assert.deepEqual(configured, {ok:true, provider:'openrouter', groupingMode:'preserve', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false}});
   assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
 });
 
@@ -204,11 +205,11 @@ test('provider keys are isolated, old OpenRouter keys remain usable, and selecti
 test('saved sorting matches apply order inside each window and never moves protected tabs',async()=>{
   const chrome=mockChrome([
     {id:90,windowId:1,index:0,url:'https://protected.test',pinned:true},
-    {id:1,windowId:1,index:1,url:'https://example.com/1',title:'Zulu',lastAccessed:30},
-    {id:2,windowId:1,index:2,url:'https://example.com/2',title:'Alpha',lastAccessed:10},
-    {id:3,windowId:1,index:3,url:'https://example.com/3',title:'Beta',lastAccessed:20},
-    {id:4,windowId:2,index:0,url:'https://example.com/4',title:'Delta',lastAccessed:40},
-    {id:5,windowId:2,index:1,url:'https://example.com/5',title:'Charlie',lastAccessed:20},
+    {id:1,windowId:1,index:1,url:'https://example.com/1',title:'Atlas platform documentation Zulu',lastAccessed:30},
+    {id:2,windowId:1,index:2,url:'https://example.com/2',title:'Atlas platform documentation Alpha',lastAccessed:10},
+    {id:3,windowId:1,index:3,url:'https://example.com/3',title:'Atlas platform documentation Beta',lastAccessed:20},
+    {id:4,windowId:2,index:0,url:'https://example.com/4',title:'Atlas platform documentation Delta',lastAccessed:40},
+    {id:5,windowId:2,index:1,url:'https://example.com/5',title:'Atlas platform documentation Charlie',lastAccessed:20},
   ]);
   const backend=new TabfoldBackend(chrome);
   const old=await backend.preview({allWindows:true});
@@ -264,4 +265,57 @@ test('changed target metadata, membership, or window rejects append before any m
     const {chrome,backend}=existingFixture();const {plan}=await backend.preview({windowId:1});change(chrome);
     assert.equal((await backend.handle({type:'apply',plan})).ok,false);assert.equal(chrome._groupCalls.length,0);
   }
+});
+
+function regroupFixture() {
+ const chrome=mockChrome([
+  {id:1,windowId:1,index:0,title:'Atlas platform documentation docs',url:'https://atlas.example/a',groupId:10},
+  {id:2,windowId:1,index:1,title:'Atlas platform documentation guide',url:'https://atlas.example/b',groupId:10},
+  {id:3,windowId:1,index:2,title:'Atlas platform documentation playing',url:'https://atlas.example/c',groupId:10,audible:true},
+  {id:4,windowId:1,index:3,title:'Atlas platform documentation tutorial',url:'https://atlas.example/d',groupId:11},
+  {id:5,windowId:1,index:4,title:'Atlas platform documentation reference',url:'https://atlas.example/e'},
+ ],{initialGroups:[{id:10,windowId:1,title:'First old',color:'red',collapsed:true},{id:11,windowId:1,title:'Second old',color:'green',collapsed:false}]});
+ return {chrome,backend:new TabfoldBackend(chrome)};
+}
+
+test('grouping mode is persisted, validated, authoritative and invalidates preview',async()=>{
+ const {backend}=regroupFixture();
+ assert.equal((await backend.handle({type:'getSettings'})).groupingMode,'preserve');
+ const previous=await backend.handle({type:'preview',groupingMode:'regroup'});assert.equal(previous.plan.groupingMode,'preserve');
+ assert.equal((await backend.handle({type:'setGroupingMode',groupingMode:'regroup'})).ok,true);
+ assert.equal((await backend.handle({type:'apply',plan:previous.plan})).ok,false);
+ assert.equal((await backend.handle({type:'preview',groupingMode:'preserve'})).plan.groupingMode,'regroup');
+ assert.equal((await backend.handle({type:'setGroupingMode',groupingMode:'anything'})).ok,false);
+});
+
+test('regroup restores emptied original groups and metadata while leaving protected members untouched',async()=>{
+ const {backend,chrome}=regroupFixture();await backend.handle({type:'setGroupingMode',groupingMode:'regroup'});
+ const {plan}=await backend.handle({type:'preview'});assert.equal(plan.groups.length,1);assert.deepEqual(plan.groups[0].tabIds,[1,2,4,5]);
+ assert.equal((await backend.handle({type:'apply',plan})).ok,true);
+ assert.equal(chrome._tabs.get(3).groupId,10);assert.equal(chrome._groups.has(11),false);
+ assert.equal((await backend.handle({type:'undo'})).ok,true);
+ assert.equal(chrome._tabs.get(1).groupId,10);assert.equal(chrome._tabs.get(2).groupId,10);assert.equal(chrome._tabs.get(3).groupId,10);assert.equal(chrome._tabs.get(5).groupId,-1);
+ const recreated=chrome._groups.get(chrome._tabs.get(4).groupId);assert.equal(recreated.title,'Second old');assert.equal(recreated.color,'green');assert.equal(recreated.collapsed,false);
+});
+
+test('regroup rejects changed membership and undo preserves edited groups, navigated and moved tabs',async()=>{
+ const {backend,chrome}=regroupFixture();await backend.handle({type:'setGroupingMode',groupingMode:'regroup'});
+ let {plan}=await backend.handle({type:'preview'});chrome._tabs.get(1).groupId=-1;
+ assert.equal((await backend.handle({type:'apply',plan})).ok,false);assert.equal(chrome._groupCalls.length,0);
+ chrome._tabs.get(1).groupId=10;({plan}=await backend.handle({type:'preview'}));await backend.handle({type:'apply',plan});
+ const created=chrome._tabs.get(1).groupId;chrome._tabs.get(1).url='https://elsewhere.example/';chrome._tabs.get(2).windowId=2;
+ await backend.handle({type:'undo'});assert.equal(chrome._tabs.get(1).groupId,created);assert.equal(chrome._tabs.get(2).groupId,created);
+ const next=regroupFixture();await next.backend.handle({type:'setGroupingMode',groupingMode:'regroup'});const preview=await next.backend.handle({type:'preview'});await next.backend.handle({type:'apply',plan:preview.plan});
+ const edited=next.chrome._tabs.get(1).groupId;next.chrome._groups.get(edited).title='User renamed';await next.backend.handle({type:'undo'});assert.equal(next.chrome._tabs.get(1).groupId,edited);
+});
+
+test('regroup undo does not recreate an original group the user removed around protected members',async()=>{
+ const {backend,chrome}=regroupFixture();await backend.handle({type:'setGroupingMode',groupingMode:'regroup'});
+ const {plan}=await backend.handle({type:'preview'});await backend.handle({type:'apply',plan});
+ const destination=chrome._tabs.get(1).groupId;
+ chrome._groups.delete(10);chrome._tabs.get(3).groupId=-1;
+ await backend.handle({type:'undo'});
+ assert.equal(chrome._tabs.get(1).groupId,destination);
+ assert.equal(chrome._tabs.get(2).groupId,destination);
+ assert.equal(chrome._tabs.get(3).groupId,-1);
 });

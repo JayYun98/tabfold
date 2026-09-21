@@ -19,7 +19,7 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 ## Por qué Tabfold
 
 - **Primero, una vista previa** — consulta los grupos propuestos antes de que Tabfold modifique tus pestañas.
-- **Funciona sin IA** — las reglas locales de títulos y dominios organizan las pestañas al instante, sin clave de API.
+- **Funciona sin IA** — TF-IDF y similitud coseno agrupan localmente los términos de títulos y URL, sin clave API.
 - **IA cuando la necesites** — usa Jev a través de OpenRouter o TypeSafe para una clasificación más inteligente.
 - **Conserva tu contexto** — las pestañas permanecen en sus ventanas originales; los grupos se pliegan para reducir el desorden.
 - **Protección por defecto** — protege las pestañas fijadas, con audio, de incógnito, internas y ya agrupadas.
@@ -29,13 +29,17 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 
 ## Cómo funciona
 
-1. Genera una **vista previa** con reglas locales o IA.
+1. Genera una **vista previa** con agrupación local o IA.
 2. **Revisa** los grupos propuestos.
 3. **Aplica** los cambios cuando el resultado te convenza.
 
 Eso es todo. Tabfold agrupa y pliega pestañas sin fusionar ventanas ni reemplazar tus páginas.
 
-Los grupos existentes son visibles antes de ejecutar la IA. La IA prioriza los grupos de la misma ventana según sus nombres y ejemplos de títulos y rutas de URL. Las pestañas sin agrupar que coincidan se añaden a esos grupos; las demás forman grupos nuevos. Los miembros, nombres, colores y estados contraídos existentes no cambian. Deshacer solo retira de los grupos existentes las pestañas añadidas por Tabfold. Los títulos y las rutas de URL de ejemplo se envían al proveedor de IA seleccionado.
+Por defecto, se conservan los grupos existentes. Los grupos existentes son visibles antes de ejecutar la IA. La IA prioriza los grupos de la misma ventana según sus nombres y ejemplos de títulos y rutas de URL. Las pestañas sin agrupar que coincidan se añaden a esos grupos; las demás forman grupos nuevos. Los miembros, nombres, colores y estados contraídos existentes no cambian. Deshacer solo retira de los grupos existentes las pestañas añadidas por Tabfold. Los títulos y las rutas de URL de ejemplo se envían al proveedor de IA seleccionado.
+
+Elige **Reagrupar todas las pestañas elegibles** para ignorar los nombres y el contexto de los grupos existentes y reasignar las pestañas elegibles, agrupadas o no, dentro de cada ventana. Las pestañas fijadas, con audio, de incógnito e internas siguen protegidas. Deshacer restaura los grupos originales cuando es posible, sin garantizar el orden exacto original. Solo se aplican los grupos propuestos. Los grupos nuevos requieren al menos dos pestañas; las pestañas sueltas sin coincidencias permanecen donde están.
+
+La vista rápida calcula pesos estadísticos TF-IDF y similitud coseno sobre términos de títulos y URL, dentro del navegador. Compara semejanzas léxicas, no significados traducidos entre idiomas. No es un modelo neuronal preentrenado ni de TensorFlow: no requiere dependencias, descargas de modelos ni solicitudes al servidor. El módulo JavaScript reutilizable también funciona en Node.js.
 
 ## Instalación
 

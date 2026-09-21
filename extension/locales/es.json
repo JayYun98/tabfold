@@ -161,5 +161,16 @@
   "{count} tabs excluded from classification": "{count} pestañas excluidas de la clasificación",
   "{count} already grouped — members stay in place.": "{count} ya agrupadas — se mantienen en su sitio.",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} protegidas — fijadas, en reproducción, de incógnito o internas.",
-  "Only ungrouped tabs change. Existing group members stay in place.": "Solo cambian las pestañas sin agrupar. Las de los grupos existentes se mantienen en su sitio."
+  "Only ungrouped tabs change. Existing group members stay in place.": "Solo cambian las pestañas sin agrupar. Las de los grupos existentes se mantienen en su sitio.",
+  "Grouping mode": "Modo de agrupación",
+  "Choose whether existing groups stay in place or are rebuilt.": "Elige si los grupos existentes se conservan o se reconstruyen.",
+  "Keep existing groups": "Conservar grupos existentes",
+  "Regroup all eligible tabs": "Reagrupar todas las pestañas elegibles",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "La reagrupación ignora las asignaciones de grupo existentes. Las pestañas fijadas, en reproducción, de incógnito e internas siguen protegidas.",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "La vista rápida compara palabras y patrones de caracteres de los títulos localmente. No requiere conexión al servidor ni descarga de modelos.",
+  "Age uses the last active time, not creation time. Unknown times go last.": "Se usa la última actividad, no la fecha de creación. Las fechas desconocidas van al final.",
+  "Grouping mode saved. Refresh the preview to use it.": "Modo de agrupación guardado. Actualiza la vista previa para usarlo.",
+  "Regroup mode: existing groups may be rebuilt.": "Modo de reagrupación: los grupos existentes pueden reconstruirse.",
+  "Review the new groups before applying. Protected tabs stay in place.": "Revisa los grupos nuevos antes de aplicar. Las pestañas protegidas se mantienen en su sitio.",
+  "Invalid grouping mode.": "El modo de agrupación no es válido."
 }

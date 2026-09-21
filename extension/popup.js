@@ -26,8 +26,12 @@ function render(){
   $('total').textContent=plan.total;$('groupCount').textContent=plan.groups.length;$('duplicateCount').textContent=plan.duplicates.length;
   const existing=plan.existingGroups||[];
   $('existingCount').textContent=existing.length;$('existingGroups').replaceChildren(...existing.map(group=>groupRow(group,true)));$('noExisting').hidden=!!existing.length;
+  const regroup=plan.groupingMode==='regroup';
+  $('groupingModeNotice').textContent=t(regroup?'Regroup mode: existing groups may be rebuilt.':'Keep existing groups');
+  $('groupingModeNotice').classList.toggle('warning',regroup);
+  $('groupedReason').hidden=regroup;
   const grouped=plan.groupedCount||0;const other=plan.otherProtectedCount??Math.max(0,plan.protectedCount-grouped);
-  $('excludedSummary').textContent=t('{count} tabs excluded from classification',{count:grouped+other});
+  $('excludedSummary').textContent=t('{count} tabs excluded from classification',{count:regroup?other:grouped+other});
   $('groupedReason').textContent=t('{count} already grouped — members stay in place.',{count:grouped});
   $('otherProtectedReason').textContent=t('{count} protected — pinned, playing, incognito or internal tabs.',{count:other});
   $('groups').replaceChildren(...plan.groups.map(group=>groupRow(group)));
@@ -46,4 +50,4 @@ $('undo').onclick=()=>run(async()=>{const result=await send({type:'undo'});await
 $('duplicates').onclick=()=>{$('duplicateList').replaceChildren(...tabList(plan.duplicates).children);$('duplicateReview').hidden=!$('duplicateReview').hidden;if(!$('duplicateReview').hidden)$('duplicateReview').scrollIntoView({block:'nearest'});};
 $('dedupe').onclick=()=>run(async()=>{const result=await send({type:'dedupe',plan});await refresh();status(result.message);});
 $('restore').onclick=()=>run(async()=>{const result=await send({type:'restore'});await refresh();status(result.message);});
-await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);preferences=settings.preferences||preferences;await refresh();status(t('Only ungrouped tabs change. Existing group members stay in place.'));});
+await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);preferences=settings.preferences||preferences;await refresh();status(t(plan.groupingMode==='regroup'?'Review the new groups before applying. Protected tabs stay in place.':'Only ungrouped tabs change. Existing group members stay in place.'));});

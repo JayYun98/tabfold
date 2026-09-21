@@ -156,5 +156,16 @@
   "{count} tabs excluded from classification": "{count} 個のタブを分類対象から除外",
   "{count} already grouped — members stay in place.": "グループ化済み {count} 個 — そのまま保持します。",
   "{count} protected — pinned, playing, incognito or internal tabs.": "保護対象 {count} 個 — 固定、再生中、シークレット、内部ページ。",
-  "Only ungrouped tabs change. Existing group members stay in place.": "未グループ化のタブのみ変更します。既存グループのタブはそのまま保持します。"
+  "Only ungrouped tabs change. Existing group members stay in place.": "未グループ化のタブのみ変更します。既存グループのタブはそのまま保持します。",
+  "Grouping mode": "グループ化モード",
+  "Choose whether existing groups stay in place or are rebuilt.": "既存グループを保持するか、再構成するかを選びます。",
+  "Keep existing groups": "既存グループを保持",
+  "Regroup all eligible tabs": "対象のすべてのタブを再グループ化",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "再グループ化では既存の所属グループを無視します。固定、再生中、シークレット、内部ページのタブは保護されます。",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "クイックプレビューはタイトルの語句や文字パターンをローカルで比較します。サーバー接続やモデルのダウンロードは不要です。",
+  "Age uses the last active time, not creation time. Unknown times go last.": "作成時刻ではなく最終使用時刻を使います。時刻不明のタブは最後に配置します。",
+  "Grouping mode saved. Refresh the preview to use it.": "グループ化モードを保存しました。プレビューを更新すると適用されます。",
+  "Regroup mode: existing groups may be rebuilt.": "再グループ化モード：既存グループが再構成される場合があります。",
+  "Review the new groups before applying. Protected tabs stay in place.": "適用前に新しいグループを確認してください。保護対象のタブはそのまま保持します。",
+  "Invalid grouping mode.": "無効なグループ化モードです。"
 }

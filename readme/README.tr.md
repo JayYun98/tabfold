@@ -19,7 +19,7 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 ## Neden Tabfold?
 
 - **Önce önizleme** — Tabfold sekmelerinize dokunmadan önerilen grupları görün.
-- **YZ olmadan çalışır** — yerel başlık ve alan adı kuralları, API anahtarı gerektirmeden sekmeleri anında düzenler.
+- **YZ olmadan çalışır** — TF-IDF ve kosinüs benzerliğiyle başlık/URL terimlerini yerel olarak kümeler; API anahtarı gerekmez.
 - **İstediğinizde YZ** — daha akıllı sınıflandırma için Jev'i OpenRouter veya TypeSafe üzerinden kullanın.
 - **Bağlamınız korunur** — sekmeler özgün pencerelerinde kalır; gruplar yalnızca dağınıklığı azaltmak için daraltılır.
 - **Varsayılan olarak güvenli** — sabitlenmiş, ses çalan, gizli, tarayıcı içi ve zaten gruplanmış sekmeler korunur.
@@ -29,13 +29,17 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 
 ## Nasıl çalışır?
 
-1. Yerel kurallarla veya YZ ile **önizleyin**.
+1. Yerel kümeleme veya YZ ile **önizleyin**.
 2. Önerilen grupları **gözden geçirin**.
 3. Sonuç uygunsa **uygulayın**.
 
 Hepsi bu. Tabfold, pencereleri birleştirmeden veya sayfalarınızı değiştirmeden sekmeleri gruplar ve daraltır.
 
-Mevcut gruplar YZ çalıştırılmadan önce görünür. YZ, grup adlarını ve örnek sekme başlıkları ile URL yollarını kullanarak aynı penceredeki gruplara öncelik verir. Eşleşen gruplanmamış sekmeler bu gruplara eklenir; diğerleri yeni gruplar oluşturur. Mevcut üyeler, adlar, renkler ve daraltma durumları değişmez. Geri alma, mevcut gruplardan yalnızca Tabfold tarafından eklenen sekmeleri çıkarır. Örnek başlıklar ve URL yolları seçilen YZ sağlayıcısına gönderilir.
+Varsayılan olarak mevcut gruplar korunur. Mevcut gruplar YZ çalıştırılmadan önce görünür. YZ, grup adlarını ve örnek sekme başlıkları ile URL yollarını kullanarak aynı penceredeki gruplara öncelik verir. Eşleşen gruplanmamış sekmeler bu gruplara eklenir; diğerleri yeni gruplar oluşturur. Mevcut üyeler, adlar, renkler ve daraltma durumları değişmez. Geri alma, mevcut gruplardan yalnızca Tabfold tarafından eklenen sekmeleri çıkarır. Örnek başlıklar ve URL yolları seçilen YZ sağlayıcısına gönderilir.
+
+**Tüm uygun sekmeleri yeniden grupla** seçeneği, mevcut grup adlarını ve bağlamını yok sayarak her penceredeki uygun gruplanmış ve gruplanmamış sekmeleri yeniden düzenler. Sabitlenmiş, ses çalan, gizli ve dahili sekmeler korunur. Geri alma, mümkün olduğunda özgün grupları geri yükler; sekmelerin tam özgün sırası garanti edilmez. Yalnızca önerilen gruplar uygulanır. Yeni gruplar en az iki sekme gerektirir; eşleşmeyen tek sekmeler yerinde kalır.
+
+Hızlı önizleme, başlık/URL terimleri üzerinde istatistiksel TF-IDF ağırlıklarını ve kosinüs benzerliğini tamamen tarayıcıda hesaplar. Diller arasında çevrilmiş anlamları değil, sözcüksel benzerlikleri karşılaştırır. Önceden eğitilmiş bir sinir ağı veya TensorFlow modeli değildir: bağımlılık, model indirme veya sunucu isteği yoktur. Yeniden kullanılabilir JavaScript kümeleme modülü Node.js üzerinde de çalışır.
 
 ## Kurulum
 

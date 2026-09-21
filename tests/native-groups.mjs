@@ -9,13 +9,14 @@ const extension=new URL('../extension',import.meta.url).pathname;
 let context;
 try {
  context=await chromium.launchPersistentContext(profile,{channel:'chromium',headless:true,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
+ await context.route(url=>url.hostname.endsWith('.invalid'),route=>route.fulfill({contentType:'text/html',body:'<title>Atlas platform documentation guide</title>'}));
  const worker=context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
  const id=new URL(worker.url()).host;
  const page=await context.newPage();await page.goto(`chrome-extension://${id}/options.html`);
  const result=await page.evaluate(async()=>{
   const send=async request=>{const r=await chrome.runtime.sendMessage(request);if(!r.ok)throw new Error(r.error);return r;};
   const window=await chrome.windows.create({url:'about:blank',focused:false});
-  const make=path=>chrome.tabs.create({windowId:window.id,url:'https://tabfold-test.invalid/'+path,active:false});
+  const make=async path=>{const tab=await chrome.tabs.create({windowId:window.id,url:'https://tabfold-test.invalid/'+path,active:false});for(let i=0;i<100;i++){const fresh=await chrome.tabs.get(tab.id);if(fresh.status==='complete' && fresh.url.startsWith('https:'))return fresh;await new Promise(resolve=>setTimeout(resolve,50));}throw new Error('Test tab did not load');};
   const first=await make('original-a'),second=await make('original-b');
   const groupId=await chrome.tabs.group({tabIds:[first.id,second.id],createProperties:{windowId:window.id}});
   await chrome.tabGroups.update(groupId,{title:'Original project',color:'purple',collapsed:true});
@@ -37,4 +38,34 @@ try {
  assert.deepEqual(result.memberOrder,[...result.original,result.added]);
  assert.deepEqual(result.remaining,result.original);
  console.log('Native Chromium: existing group append, original metadata/order, and undo passed');
+ const regroup=await page.evaluate(async()=>{
+  const send=async request=>{const r=await chrome.runtime.sendMessage(request);if(!r.ok)throw new Error(r.error);return r;};
+  const win=await chrome.windows.create({url:'about:blank',focused:false});
+  const protectedTab=win.tabs[0];
+  const make=async path=>{const tab=await chrome.tabs.create({windowId:win.id,url:'https://regroup-test.invalid/atlas-platform-documentation/'+path,active:false});for(let i=0;i<100;i++){const fresh=await chrome.tabs.get(tab.id);if(fresh.status==='complete' && fresh.url.startsWith('https:'))return fresh;await new Promise(resolve=>setTimeout(resolve,50));}throw new Error('Test tab did not load');};
+  try {
+   const a=await make('a'),b=await make('b'),c=await make('c'),d=await make('d');
+   const original=await chrome.tabs.group({tabIds:[a.id,b.id,protectedTab.id],createProperties:{windowId:win.id}});
+   const emptied=await chrome.tabs.group({tabIds:[c.id],createProperties:{windowId:win.id}});
+   await chrome.tabGroups.update(original,{title:'Keep protected member',color:'purple',collapsed:true});
+   await chrome.tabGroups.update(emptied,{title:'Restore empty group',color:'green',collapsed:false});
+   const metadata=await chrome.tabGroups.get(original);
+   await send({type:'setGroupingMode',groupingMode:'regroup'});
+   const {plan}=await send({type:'preview',windowId:win.id});
+   await send({type:'apply',plan});
+   const protectedAfter=await chrome.tabs.get(protectedTab.id);
+   let disappeared=false;try{await chrome.tabGroups.get(emptied);}catch{disappeared=true;}
+   await send({type:'undo'});
+   const restored=await Promise.all([a,b,c,d].map(tab=>chrome.tabs.get(tab.id)));
+   const recreated=await chrome.tabGroups.get(restored[2].groupId);
+   return {plan:plan.groups.map(g=>g.tabIds),ids:[a.id,b.id,c.id,d.id],original,emptied,disappeared,protectedGroup:protectedAfter.groupId,metadata,after:await chrome.tabGroups.get(original),restored:restored.map(t=>t.groupId),recreated};
+  }finally{await chrome.windows.remove(win.id);}
+ });
+ assert.deepEqual(regroup.plan.flat().sort((a,b)=>a-b),regroup.ids.sort((a,b)=>a-b));
+ assert.equal(regroup.disappeared,true);assert.equal(regroup.protectedGroup,regroup.original);
+ assert.deepEqual(regroup.after,regroup.metadata);
+ assert.equal(regroup.restored[0],regroup.original);assert.equal(regroup.restored[1],regroup.original);assert.equal(regroup.restored[3],-1);
+ assert.notEqual(regroup.recreated.id,regroup.emptied);assert.equal(regroup.recreated.title,'Restore empty group');assert.equal(regroup.recreated.color,'green');assert.equal(regroup.recreated.collapsed,false);
+ console.log('Native Chromium: regroup preserves protected members and undo recreates emptied original groups');
+
 } finally {await context?.close();await rm(profile,{recursive:true,force:true});}

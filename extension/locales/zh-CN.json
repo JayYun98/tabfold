@@ -161,5 +161,16 @@
   "{count} tabs excluded from classification": "{count} 个标签页不参与分类",
   "{count} already grouped — members stay in place.": "{count} 个已分组 — 保留原有成员。",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} 个受保护 — 已固定、正在播放、无痕或内部标签页。",
-  "Only ungrouped tabs change. Existing group members stay in place.": "仅更改未分组标签页。现有分组的成员保持不变。"
+  "Only ungrouped tabs change. Existing group members stay in place.": "仅更改未分组标签页。现有分组的成员保持不变。",
+  "Grouping mode": "分组模式",
+  "Choose whether existing groups stay in place or are rebuilt.": "选择保留现有分组还是重新构建。",
+  "Keep existing groups": "保留现有分组",
+  "Regroup all eligible tabs": "重新分组所有符合条件的标签页",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "重新分组会忽略现有的分组分配。已固定、正在播放、无痕和内部标签页仍受保护。",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "快速预览在本地比较标题词语和字符模式，无需连接服务器或下载模型。",
+  "Age uses the last active time, not creation time. Unknown times go last.": "使用上次活跃时间而非创建时间。时间未知的排在最后。",
+  "Grouping mode saved. Refresh the preview to use it.": "已保存分组模式。刷新预览后生效。",
+  "Regroup mode: existing groups may be rebuilt.": "重新分组模式：现有分组可能会被重新构建。",
+  "Review the new groups before applying. Protected tabs stay in place.": "应用前请检查新分组。受保护的标签页保持不变。",
+  "Invalid grouping mode.": "无效的分组模式。"
 }

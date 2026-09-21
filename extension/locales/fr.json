@@ -156,5 +156,16 @@
   "{count} tabs excluded from classification": "{count} onglets exclus de la classification",
   "{count} already grouped — members stay in place.": "{count} déjà groupés — ils restent en place.",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} protégés — épinglés, en lecture, privés ou internes.",
-  "Only ungrouped tabs change. Existing group members stay in place.": "Seuls les onglets non groupés changent. Ceux des groupes existants restent en place."
+  "Only ungrouped tabs change. Existing group members stay in place.": "Seuls les onglets non groupés changent. Ceux des groupes existants restent en place.",
+  "Grouping mode": "Mode de regroupement",
+  "Choose whether existing groups stay in place or are rebuilt.": "Choisissez de conserver les groupes existants ou de les reconstruire.",
+  "Keep existing groups": "Conserver les groupes existants",
+  "Regroup all eligible tabs": "Regrouper tous les onglets admissibles",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "Le regroupement ignore les affectations existantes. Les onglets épinglés, en lecture, privés et internes restent protégés.",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "L’aperçu rapide compare localement les mots et motifs de caractères des titres. Aucune connexion serveur ni aucun téléchargement de modèle n’est nécessaire.",
+  "Age uses the last active time, not creation time. Unknown times go last.": "La dernière activité est utilisée, pas la date de création. Les dates inconnues vont en dernier.",
+  "Grouping mode saved. Refresh the preview to use it.": "Mode de regroupement enregistré. Actualisez l’aperçu pour l’utiliser.",
+  "Regroup mode: existing groups may be rebuilt.": "Mode regroupement : les groupes existants peuvent être reconstruits.",
+  "Review the new groups before applying. Protected tabs stay in place.": "Vérifiez les nouveaux groupes avant d’appliquer. Les onglets protégés restent en place.",
+  "Invalid grouping mode.": "Mode de regroupement non valide."
 }

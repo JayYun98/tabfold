@@ -156,5 +156,16 @@
   "{count} tabs excluded from classification": "{count} sekme sınıflandırma dışında",
   "{count} already grouped — members stay in place.": "{count} zaten gruplanmış — üyeler yerinde kalır.",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} korunan — sabitlenmiş, ses çalan, gizli veya dahili sekme.",
-  "Only ungrouped tabs change. Existing group members stay in place.": "Yalnızca gruplanmamış sekmeler değişir. Mevcut grup üyeleri yerinde kalır."
+  "Only ungrouped tabs change. Existing group members stay in place.": "Yalnızca gruplanmamış sekmeler değişir. Mevcut grup üyeleri yerinde kalır.",
+  "Grouping mode": "Gruplandırma modu",
+  "Choose whether existing groups stay in place or are rebuilt.": "Mevcut grupların korunmasını veya yeniden oluşturulmasını seçin.",
+  "Keep existing groups": "Mevcut grupları koru",
+  "Regroup all eligible tabs": "Tüm uygun sekmeleri yeniden grupla",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "Yeniden gruplandırma mevcut grup atamalarını yok sayar. Sabitlenmiş, ses çalan, gizli ve dahili sekmeler korunur.",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "Hızlı önizleme başlık sözcüklerini ve karakter örüntülerini yerel olarak karşılaştırır. Sunucu bağlantısı veya model indirme gerekmez.",
+  "Age uses the last active time, not creation time. Unknown times go last.": "Oluşturulma zamanı değil, son etkin olma zamanı kullanılır. Zamanı bilinmeyenler sona yerleştirilir.",
+  "Grouping mode saved. Refresh the preview to use it.": "Gruplandırma modu kaydedildi. Kullanmak için önizlemeyi yenileyin.",
+  "Regroup mode: existing groups may be rebuilt.": "Yeniden gruplandırma modu: mevcut gruplar yeniden oluşturulabilir.",
+  "Review the new groups before applying. Protected tabs stay in place.": "Uygulamadan önce yeni grupları inceleyin. Korunan sekmeler yerinde kalır.",
+  "Invalid grouping mode.": "Geçersiz gruplandırma modu."
 }

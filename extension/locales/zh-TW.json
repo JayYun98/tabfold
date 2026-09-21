@@ -161,5 +161,16 @@
   "{count} tabs excluded from classification": "{count} 個分頁不參與分類",
   "{count} already grouped — members stay in place.": "{count} 個已分組 — 保留原有成員。",
   "{count} protected — pinned, playing, incognito or internal tabs.": "{count} 個受保護 — 已固定、正在播放、無痕或內部分頁。",
-  "Only ungrouped tabs change. Existing group members stay in place.": "僅變更未分組分頁。現有群組的成員保持不變。"
+  "Only ungrouped tabs change. Existing group members stay in place.": "僅變更未分組分頁。現有群組的成員保持不變。",
+  "Grouping mode": "分組模式",
+  "Choose whether existing groups stay in place or are rebuilt.": "選擇保留現有群組或重新建立。",
+  "Keep existing groups": "保留現有群組",
+  "Regroup all eligible tabs": "重新分組所有符合條件的分頁",
+  "Regrouping ignores existing group assignments. Pinned, playing, incognito and internal tabs remain protected.": "重新分組會忽略現有的群組配置。已固定、正在播放、無痕及內部分頁仍受保護。",
+  "Quick preview compares title words and character patterns locally. No server connection or model download is needed.": "快速預覽在本機比較標題詞語及字元模式，不需要連線伺服器或下載模型。",
+  "Age uses the last active time, not creation time. Unknown times go last.": "使用上次啟用時間，而非建立時間。時間未知的排在最後。",
+  "Grouping mode saved. Refresh the preview to use it.": "已儲存分組模式。重新整理預覽後生效。",
+  "Regroup mode: existing groups may be rebuilt.": "重新分組模式：現有群組可能會重新建立。",
+  "Review the new groups before applying. Protected tabs stay in place.": "套用前請檢查新群組。受保護的分頁保持不變。",
+  "Invalid grouping mode.": "無效的分組模式。"
 }

@@ -20,12 +20,13 @@ try {
    const groups=Array.from({length:24},(_,i)=>({title:i?'Research '+i:'A very long research category title that must not stretch the popup',color:'blue',tabIds:[1,2],tabs:[{title:'A long paper title '.repeat(12),url:'https://example.com/paper'},{title:'Experiments',url:'https://example.com/experiments'}]}));
    const existingGroups=[{id:71,title:'Existing research',color:'green',windowId:1,collapsed:true,tabs:Array.from({length:18},(_,i)=>({id:100+i,title:'Saved paper '+i,url:'https://example.com/saved/'+i,windowId:1}))},{id:72,title:'Existing reading',color:'purple',windowId:1,collapsed:false,tabs:Array.from({length:11},(_,i)=>({id:200+i,title:'Saved article '+i,url:'https://example.org/'+i,windowId:1}))}];
    groups[1]={...groups[1],title:existingGroups[0].title,color:existingGroups[0].color,targetGroupId:71};
-   window.previewRequests=[];
+   window.previewRequests=[];window.fixtureGroupingMode='preserve';
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async request=>{window.requestedOrigins=request.origins;return true;}},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
-    if(request.type==='getSettings')return {ok:true,provider:'typesafe',categories,keyConfigured:false,preferences:{suggestNew:true}};
+    if(request.type==='getSettings')return {ok:true,provider:'typesafe',groupingMode:window.fixtureGroupingMode,categories,keyConfigured:false,preferences:{suggestNew:true}};
+    if(request.type==='setGroupingMode'){window.fixtureGroupingMode=request.groupingMode;window.savedGroupingMode=request.groupingMode;return {ok:true,groupingMode:request.groupingMode};}
     if(request.type==='setTabOrder'){window.savedTabOrder=request.tabOrder;return {ok:true,tabOrder:request.tabOrder};}
     if(request.type==='setProvider')return {ok:true,provider:request.provider,keyConfigured:false};
-    if(request.type==='preview'){window.previewRequests.push(request);return {ok:true,plan:{total:213,protectedCount:34,groupedCount:29,otherProtectedCount:5,existingGroups,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};}
+    if(request.type==='preview'){window.previewRequests.push(request);return {ok:true,plan:{total:213,groupingMode:window.fixtureGroupingMode,protectedCount:window.fixtureGroupingMode==='regroup'?5:34,groupedCount:29,otherProtectedCount:5,existingGroups,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};}
     if(request.type==='setCategories'){window.savedCategories=request.categories;return {ok:true,categories:request.categories};}
     return {ok:true,message:'Done'};
    }}};
@@ -50,6 +51,14 @@ try {
   assert.equal(await page.locator('#groups [data-action="append"] .group-title').textContent(),'Existing research');
   assert.notEqual(await page.locator('#groups [data-action="append"] .group-action').textContent(),await page.locator('#groups [data-action="new"] .group-action').first().textContent());
   await page.locator('#groups .group summary').first().click();assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth),380);
+  assert.equal(await page.locator('#groupingModeNotice').evaluate(e=>e.classList.contains('warning')),false);
+  await page.evaluate(()=>window.fixtureGroupingMode='regroup');await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
+  assert.equal(await page.locator('#groupingModeNotice').evaluate(e=>e.classList.contains('warning')),true);
+  assert.equal(await page.locator('#groupedReason').isVisible(),false);
+  assert.match(await page.locator('#excludedSummary').textContent(),/5/);
+  assert.ok((await page.locator('#apply').boundingBox()).y+(await page.locator('#apply').boundingBox()).height<=560);
+  assert.equal(await page.evaluate(()=>Object.hasOwn(window.previewRequests.at(-1),'groupingMode')),false,'Backend settings decide mode, not popup requests');
+  await page.evaluate(()=>window.fixtureGroupingMode='preserve');await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
   await page.locator('#aiPreview').click();await page.waitForFunction(()=>!document.querySelector('#aiPreview').disabled);assert.deepEqual(await page.evaluate(()=>window.requestedOrigins),['https://api.typesafe.ai/*']);
   await page.locator('#settings').click();assert.equal(await page.evaluate(()=>window.settingsOpened),true);
   if(colorScheme==='light' && ['en','ko'].includes(language))await page.screenshot({path:new URL('../docs/assets/popup-'+language+'.png',import.meta.url).pathname});
@@ -57,6 +66,8 @@ try {
   assert.equal(await page.locator('html').getAttribute('lang'),language);
   assert.equal(await page.locator('#language option').count(),languages.length);
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.equal(await page.locator('#groupingMode').inputValue(),'preserve');
+  await page.locator('#groupingMode').selectOption('regroup');await page.waitForFunction(()=>window.savedGroupingMode==='regroup');
   await page.locator('#tabOrder').selectOption('oldest');await page.waitForFunction(()=>window.savedTabOrder==='oldest');
   assert.equal(await page.locator('#provider').inputValue(),'typesafe');
   await page.locator('#provider').selectOption('openrouter');await page.waitForFunction(()=>!document.querySelector('#provider').disabled);
@@ -64,6 +75,7 @@ try {
   await page.locator('.category-row input').fill('Draft category');await page.locator('#apiKey').fill('test-only-not-a-real-key');
   await page.locator('#language').selectOption(language==='ko'?'en':'ko');
   await page.waitForFunction(()=>!document.querySelector('#language').disabled);
+  assert.equal(await page.locator('#groupingMode').inputValue(),'regroup');
   assert.equal(await page.locator('#tabOrder').inputValue(),'oldest');
   assert.equal(await page.locator('.category-row input').inputValue(),'Draft category');assert.equal(await page.locator('#apiKey').inputValue(),'test-only-not-a-real-key');
   if(language==='en' && colorScheme==='light'){
