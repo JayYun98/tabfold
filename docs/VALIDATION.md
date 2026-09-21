@@ -131,3 +131,11 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Image extensions in the decoded URL pathname classify as Images before lexical/AI routing. Supports common formats case-insensitively; URL query/fragment and title-only mentions do not trigger the rule. Existing-window target/ambiguity/protected policies are shared with preferred rules.
 - The supplied opaque PNG filename now has Images as its candidate; the private snapshot review was updated locally. New groups still require2tabs, while a unique existing Images group accepts1. No actual browser tabs were moved.
 - All70unit/regression tests and syntax checks pass, including Quick/AI parity with zero image API requests, encoded uppercase extension, misleading query/HTML suffix, and existing group append identity.
+
+## v0.10.3 hiring-page grouping
+
+- Ashby job-board and Nebius careers hosts now route to Job before lexical/AI inference, reusing existing recruiting names within or across windows without moving tabs between windows. General product/app pages and lookalike hosts are excluded.
+- Independent review found and fixed cross-window name reuse and duplicate recruiting-target ambiguity. Quick/AI regression checks cover both, preserve/regroup, five supplied examples, product-host exclusions, and Google search precedence. All73tests and syntax checks pass.
+- Previously observed245-tab snapshot replay: all7Ashby/Nebius pages → Job Recruit. Existing media9/9, LinkedIn job11/11, and project8/8 targeted checks remain passing. This does not establish overall grouping accuracy. No new paid API calls or actual user-tab changes.
+
+- Mixed Ashby + LinkedIn singleton candidates now share the reused recruiting name identity; Quick/AI preview regression passes.

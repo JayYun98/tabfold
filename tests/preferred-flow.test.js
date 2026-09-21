@@ -33,3 +33,45 @@ test('image path extensions replace opaque filenames in Quick and AI without ins
  const existing={id:10,windowId:1,title:'Images',color:'cyan',tabs:[]};
  assert.equal(clusterTabs(images,{existingGroups:[existing]}).get(1).targetGroupId,10);
 });
+
+test('Ashby and Nebius hiring pages use Job or the existing recruiting group in both previews',async()=>{
+ const jobs=['Forward Deployed Engineer - ML @ Modal','Senior Data Scientist @ Peec AI','AI Engineer @ Distyl AI','Find your role: Open positions at Nebius','Find your role: Open positions at Nebius'].map((title,i)=>({id:i+1,windowId:1,title,url:i<3?`https://jobs.ashbyhq.com/company/${i}`:'https://careers.nebius.com/',groupId:-1}));
+ for(const existingGroups of [[],[{id:20,windowId:1,title:'Job Recruit',color:'green'}]]) for(const regroup of [false,true]) {
+  const options={existingGroups,regroup};
+  const quick=clusterTabs(jobs,options);
+  const ai=await classifyTabs(jobs,'test-key',()=>{throw new Error('Known job pages need no AI request');},options);
+  for(const result of [quick,ai]) for(const tab of jobs){
+   assert.equal(result.get(tab.id).title,existingGroups.length?'Job Recruit':'Job');
+   assert.equal(result.get(tab.id).targetGroupId,existingGroups.length&&!regroup?20:undefined);
+  }
+  assert.equal(buildPreview(jobs,{allWindows:true,groupingMode:regroup?'regroup':'preserve'},ai).groups.length,1);
+ }
+ const {preferredGroup}=await import('../extension/preferred-groups.js');
+ for(const url of ['https://nebius.com/','https://ashbyhq.com/','https://app.ashbyhq.com/','https://jobs.ashbyhq.com.evil.example/','https://careers.nebius.com.evil.example/']) assert.equal(preferredGroup({id:10,windowId:1,url}),null);
+ assert.equal(preferredGroup({id:11,windowId:1,url:'https://www.google.com/search?q=jobs.ashbyhq.com'}).title,'Google search');
+});
+
+
+test('job preferences reuse cross-window names and abstain from ambiguous recruiting targets',async()=>{
+ const jobs=[1,2].map(id=>({id,windowId:1,url:`https://jobs.ashbyhq.com/company/${id}`,title:'Engineer',groupId:-1}));
+ for(const existingGroups of [[{id:20,windowId:2,title:'Job Recruit',color:'green'}],[{id:20,windowId:1,title:'Job Recruit'},{id:21,windowId:1,title:'Job Recruit'}]]){
+  const quick=clusterTabs(jobs,{existingGroups});
+  const ai=await classifyTabs(jobs,'test-key',()=>{throw new Error('No AI expected');},{existingGroups});
+  for(const result of [quick,ai]){
+   for(const tab of jobs) assert.equal(result.get(tab.id).targetGroupId,undefined);
+   const plan=buildPreview(jobs,{allWindows:true},result);
+   if(existingGroups.length===1){assert.equal(plan.groups.length,1);assert.equal(plan.groups[0].title,'Job Recruit');assert.equal(plan.groups[0].windowId,1);}
+   else assert.equal(plan.groups.length,0);
+  }
+ }
+});
+
+
+test('one Ashby and one LinkedIn job share the reused recruiting name in preview',async()=>{
+ const jobs=[{id:1,windowId:1,url:'https://jobs.ashbyhq.com/company/1',title:'Engineer',groupId:-1},{id:2,windowId:1,url:'https://www.linkedin.com/jobs/view/2',title:'Scientist',groupId:-1}];
+ const existingGroups=[{id:9,windowId:2,title:'Job Recruit',color:'green'}];
+ for(const result of [clusterTabs(jobs,{existingGroups}),await classifyTabs(jobs,'test-key',()=>{throw new Error('No AI expected');},{existingGroups})]){
+  const plan=buildPreview(jobs,{allWindows:true,existingGroups},result);
+  assert.equal(plan.groups.length,1);assert.equal(plan.groups[0].title,'Job Recruit');assert.deepEqual(plan.groups[0].tabIds,[1,2]);
+ }
+});

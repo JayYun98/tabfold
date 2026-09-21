@@ -22,6 +22,9 @@ function topics(group) {
   return TOPICS.filter(topic=>topic.name.test(text));
 }
 function site(host,domain){return host===domain || host.endsWith('.'+domain);}
+export function isHostedJobListing(url) {
+  return ['jobs.ashbyhq.com','careers.nebius.com'].some(domain=>site(url.hostname,domain));
+}
 function tabTopics(tab) {
   const sample=safe(tab);if(!sample)return [];
   const {hostname:host,pathname:path}=new URL(sample.url);
@@ -29,7 +32,7 @@ function tabTopics(tab) {
   if(site(host,'linkedin.com')) return /^\/jobs(?:\/|$)/i.test(path) ? ['jobs'] : /^\/(in|feed|posts)(?:\/|$)/i.test(path) ? ['media'] : [];
   if(['youtube.com','youtu.be','netflix.com','vimeo.com','twitch.tv','spotify.com','instagram.com','facebook.com','reddit.com','x.com','twitter.com','tiktok.com'].some(domain=>site(host,domain))) return ['media'];
   if(['arxiv.org','openreview.net','semanticscholar.org','pubmed.ncbi.nlm.nih.gov','aclanthology.org'].some(domain=>site(host,domain))) return ['research'];
-  if(['boards.greenhouse.io','job-boards.greenhouse.io','jobs.lever.co','indeed.com','wellfound.com'].some(domain=>site(host,domain)) || /\/(jobs|careers|vacancies)(?:\/|$)/i.test(path)) return ['jobs'];
+  if(isHostedJobListing(new URL(sample.url)) || ['boards.greenhouse.io','job-boards.greenhouse.io','jobs.lever.co','indeed.com','wellfound.com'].some(domain=>site(host,domain)) || /\/(jobs|careers|vacancies)(?:\/|$)/i.test(path)) return ['jobs'];
   if(/\b(immigration|immigrant|residency permit|work visa|student visa|visa application)\b|비자|이민|체류허가/i.test(text) || ['uscis.gov','immi.homeaffairs.gov.au'].some(domain=>site(host,domain))) return ['visa'];
   if((site(host,'github.com') || site(host,'gitlab.com')) && /^\/[^/]+\/[^/]+/.test(path) && !/^\/(search|settings|marketplace|topics|orgs)\//.test(path)) return ['dev'];
   return [];

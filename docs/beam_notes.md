@@ -39,3 +39,9 @@ User gold: Toss Invest→Investment; Google search results→Google search, incl
 - [20260922T022348+0900_preferred-policy.md](../submit_logs/20260922T022348+0900_preferred-policy.md)
 - [20260922T022348+0900_duplicate-review.md](../submit_logs/20260922T022348+0900_duplicate-review.md)
 - [20260922T022348+0900_preferred-integrated.md](../submit_logs/20260922T022348+0900_preferred-integrated.md)
+
+### 2026-09-22 — hiring URL regression
+- User examples exposed missing jobs.ashbyhq.com / careers.nebius.com purpose detection and title-fragment fallback. Shared preferred routing now reuses recruiting categories or defaults to Job.
+- Review fixed cross-window template bypass and ambiguous duplicate Job Recruit targets;73tests pass. Previous snapshot replay:7/7affected tabs → Job Recruit; no additional API spend.
+
+- Mixed Ashby + LinkedIn singleton candidates now share the reused recruiting name identity; Quick/AI preview regression passes.

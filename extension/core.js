@@ -58,7 +58,7 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
   const nameKey=(tab,title)=>`${tab.windowId}\u0000${title.trim().toLowerCase()}`;
   for(const tab of selected.filter(tab=>isEligible(tab,{regroup}))){
     const rule=preferredGroup(tab),classification=classifications?.get(tab.id) ?? local.get(tab.id);
-    if(rule && classification && !classification.clusterId?.startsWith('preferred:ambiguous:')) preferred.set(nameKey(tab,rule.title),classification);
+    if(rule && typeof classification?.title==='string' && !classification.clusterId?.startsWith('preferred:ambiguous:')) preferred.set(nameKey(tab,classification.title),classification);
   }
   const buckets = new Map();
   for (const tab of selected) {
