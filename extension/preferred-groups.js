@@ -5,8 +5,11 @@ export function preferredGroup(tab,existingGroups=[],{regroup=false}={}) {
   try {url=new URL(tab.url);} catch {return null;}
   if(!['http:','https:'].includes(url.protocol)) return null;
   const host=url.hostname.toLowerCase();
+  let pathname=url.pathname;
+  try {pathname=decodeURIComponent(pathname);} catch {}
   let preference;
-  if(host==='tossinvest.com' || host.endsWith('.tossinvest.com')) preference={id:'investment',title:'Investment',color:'green'};
+  if(/\.(?:png|jpe?g|gif|webp|avif|svg|bmp|ico|tiff?|heic)$/i.test(pathname)) preference={id:'images',title:'Images',color:'purple'};
+  else if(host==='tossinvest.com' || host.endsWith('.tossinvest.com')) preference={id:'investment',title:'Investment',color:'green'};
   else if(['google.com','www.google.com','google.co.kr','www.google.co.kr'].includes(host) && url.pathname==='/search') preference={id:'google-search',title:'Google search',color:'blue'};
   if(!preference) return null;
   const matches=existingGroups.filter(group=>!group.template && group.windowId===tab.windowId && Number.isInteger(group.id) && String(group.title || '').trim().toLowerCase()===preference.title.toLowerCase());

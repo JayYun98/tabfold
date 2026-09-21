@@ -125,3 +125,9 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Review→optimization ran3rounds. Fixed duplicate same-name groups caused by AI/local identity or color differences,1+1singleton loss, and unwanted third groups when multiple physical targets shared a name. Ambiguous preserve-mode targets now abstain. Explicit physical group IDs remain separate.
 - All69unit/regression tests pass. No new live API request or cost. Full review artifact remains private/ignored. Global245-tab grouping accuracy is not established by the20targeted checks.
 - Native isolated Chromium: all4scenarios passed, including2Google+2Toss tabs forming exactly2preferred groups, a pinned Google tab staying protected, and apply/undo preserving windows. Test-only page routing was adjusted to attach before navigating new pages after an initial interception race; no user browser was connected.
+
+## v0.10.2 image-file grouping
+
+- Image extensions in the decoded URL pathname classify as Images before lexical/AI routing. Supports common formats case-insensitively; URL query/fragment and title-only mentions do not trigger the rule. Existing-window target/ambiguity/protected policies are shared with preferred rules.
+- The supplied opaque PNG filename now has Images as its candidate; the private snapshot review was updated locally. New groups still require2tabs, while a unique existing Images group accepts1. No actual browser tabs were moved.
+- All70unit/regression tests and syntax checks pass, including Quick/AI parity with zero image API requests, encoded uppercase extension, misleading query/HTML suffix, and existing group append identity.
