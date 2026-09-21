@@ -88,3 +88,8 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - 41 unit/regression checks and JavaScript syntax checks passed. All 18 isolated language/theme UI checks passed, including mode selection, regroup warning, and protected counts.
 - Native isolated Chromium passed preserve/append and regroup/undo scenarios: existing protected members remain in place, emptied original groups disappear and are recreated on undo with their metadata, and originally ungrouped tabs return to ungrouped. Test pages are served as synthetic documents and awaited until loaded so pending navigation cannot race the preview.
 - Undo does not guarantee exact original tab order and skips later user edits, changed URLs, or moved tabs. No user Chrome tabs or live AI requests were used for this release. Reload the installed extension to activate v0.8.0.
+
+## v0.8.1 popup grouping mode
+
+- Added the existing preserve/regroup selector directly above Apply in the popup, sharing the saved setting with the options page. Changing it invalidates the old plan and automatically refreshes local preview without an AI request or tab mutation. Regroup retains its warning; preserve hides the redundant notice.
+- All 41 tests, syntax checks, and 18 language/theme UI checks passed. UI checks now operate the actual popup selector in both directions and verify saved mode, automatic local preview, warning visibility, and footer bounds.

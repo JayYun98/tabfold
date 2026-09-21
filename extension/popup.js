@@ -27,6 +27,8 @@ function render(){
   const existing=plan.existingGroups||[];
   $('existingCount').textContent=existing.length;$('existingGroups').replaceChildren(...existing.map(group=>groupRow(group,true)));$('noExisting').hidden=!!existing.length;
   const regroup=plan.groupingMode==='regroup';
+  $('groupingMode').value=regroup?'regroup':'preserve';
+  $('groupingModeNotice').hidden=!regroup;
   $('groupingModeNotice').textContent=t(regroup?'Regroup mode: existing groups may be rebuilt.':'Keep existing groups');
   $('groupingModeNotice').classList.toggle('warning',regroup);
   $('groupedReason').hidden=regroup;
@@ -42,6 +44,14 @@ function renderSuggestions(){
   suggestions.forEach((suggestion,index)=>{const row=document.createElement('div');row.className='suggestion-row';const name=document.createElement('input');name.value=suggestion.title;name.maxLength=40;name.setAttribute('aria-label',t('Suggested category name'));const description=document.createElement('p');description.textContent=t('{count} matching tabs',{count:suggestion.tabIds.length});const button=document.createElement('button');button.textContent=t('Add category to preview');button.onclick=()=>run(async()=>{const result=await send({type:'acceptSuggestion',index,title:name.value,plan});plan=result.plan;suggestions=result.suggestions;render();status(t('Category added. Review and apply the groups.'));});row.append(name,description,tabList(suggestion.tabs||[]),button);$('suggestionRows').append(row);});
 }
 async function refresh(ai=false){const window=await chrome.windows.getCurrent();const result=await send({type:'preview',windowId:window.id,provider:provider.id,allWindows:$('scope').value==='all',ai,suggestNew:preferences.suggestNew});plan=result.plan;suggestions=result.suggestions||[];undoAvailable=result.undoAvailable;render();if(result.suggestionError)status(t('Groups are ready, but category suggestions failed.')+' '+result.suggestionError,true);return result;}
+$('groupingMode').onchange=()=>run(async()=>{
+  const previous=plan?.groupingMode || 'preserve';
+  try{await send({type:'setGroupingMode',groupingMode:$('groupingMode').value});}
+  catch(error){$('groupingMode').value=previous;throw error;}
+  plan=undefined;suggestions=[];controls();
+  status(t('Reading your tabs…'));await refresh();
+  status(t('Preview ready. Your tabs have not changed.'));
+});
 $('settings').onclick=()=>chrome.runtime.openOptionsPage();
 $('refresh').onclick=()=>run(async()=>{status(t('Reading your tabs…'));await refresh();status(t('Preview ready. Your tabs have not changed.'));});$('scope').onchange=$('refresh').onclick;
 $('aiPreview').onclick=async()=>{if(busy)return;try{const granted=await chrome.permissions.request({origins:[provider.origin]});if(!granted){status(t('Allow {provider} access to use AI preview.',{provider:provider.name}),true);return;}await run(async()=>{status(t('AI is sorting your tabs…'));const result=await refresh(true);if(!result.suggestionError)status(t('AI preview ready. Review before applying.'));});}catch(error){status(error.message,true);}};
