@@ -170,5 +170,7 @@
   "Invalid grouping mode.": "Geçersiz gruplandırma modu.",
   "Regroup existing groups": "Mevcut grupları yeniden grupla",
   "Ignore saved categories": "Kayıtlı kategorileri yok say",
-  "Skip saved AI categories without deleting them.": "Kayıtlı YZ kategorilerini silmeden atla."
+  "Skip saved AI categories without deleting them.": "Kayıtlı YZ kategorilerini silmeden atla.",
+  "Use existing group names": "Mevcut grup adlarını kullan",
+  "Use existing group names when classifying tabs, even when regrouping.": "Yeniden gruplandırırken de sekmeleri sınıflandırmak için mevcut grup adlarını kullan."
 }

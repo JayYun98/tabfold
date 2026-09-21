@@ -170,5 +170,7 @@
   "Invalid grouping mode.": "Mode de regroupement non valide.",
   "Regroup existing groups": "Reclasser les groupes existants",
   "Ignore saved categories": "Ignorer les catégories enregistrées",
-  "Skip saved AI categories without deleting them.": "Ignorer les catégories IA enregistrées sans les supprimer."
+  "Skip saved AI categories without deleting them.": "Ignorer les catégories IA enregistrées sans les supprimer.",
+  "Use existing group names": "Utiliser les noms des groupes existants",
+  "Use existing group names when classifying tabs, even when regrouping.": "Utilise les noms des groupes existants pour classer les onglets, même lors du regroupement."
 }

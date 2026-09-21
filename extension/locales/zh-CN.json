@@ -175,5 +175,7 @@
   "Invalid grouping mode.": "无效的分组模式。",
   "Regroup existing groups": "重新分类现有分组",
   "Ignore saved categories": "忽略已保存的分类",
-  "Skip saved AI categories without deleting them.": "跳过已保存的 AI 分类，但不删除它们。"
+  "Skip saved AI categories without deleting them.": "跳过已保存的 AI 分类，但不删除它们。",
+  "Use existing group names": "使用现有分组名称",
+  "Use existing group names when classifying tabs, even when regrouping.": "分类标签页时使用现有分组名称，重新分组时也适用。"
 }

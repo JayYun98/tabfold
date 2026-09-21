@@ -44,3 +44,26 @@ test('recurring descriptive phrases survive long titles across sites without mer
  assert.equal(result.get(10).clusterId,result.get(11).clusterId);assert.notEqual(result.get(10).clusterId,result.get(12).clusterId);
  assert.match(result.get(0).title,/speculative|decoding/);assert.equal(result.get(10).title,'opencodex');
 });
+
+test('category purpose routes media, copies names across windows, and reuses names without appending in regroup',()=>{
+ const media={id:80,windowId:1,title:'Media / SNS',color:'red',tabs:[]};
+ const input=[tab(1,'Piano solo','https://youtube.com/watch?v=1'),tab(2,'Guitar solo','https://youtube.com/watch?v=2',2)];
+ const result=clusterTabs(input,{existingGroups:[media]});assert.equal(result.get(1).targetGroupId,80);assert.equal(result.get(2).title,media.title);assert.equal(result.get(2).targetGroupId,undefined);assert.equal(result.get(2).clusterId,'template:80');
+ const regrouped=clusterTabs(input,{existingGroups:[media],regroup:true});assert.equal(regrouped.get(1).targetGroupId,undefined);assert.equal(regrouped.get(1).clusterId,'existing:80');
+ const ambiguous=clusterTabs(input.slice(0,1),{existingGroups:[media,{...media,id:81,title:'Videos'}]});assert.equal(ambiguous.get(1).targetGroupId,undefined);
+});
+test('exact repository project beats broad development and self samples cannot lock a wrong group',()=>{
+ const dev={id:80,windowId:1,title:'Development',color:'blue',tabs:[]};
+ const project={id:81,windowId:1,title:'Opencodex',color:'green',tabs:[tab(50,'Opencodex home','https://github.com/team/opencodex')]};
+ const input=[tab(1,'Fix menu','https://github.com/team/opencodex/pull/2')];
+ assert.equal(clusterTabs(input,{existingGroups:[dev,project]}).get(1).targetGroupId,81);
+ const wrong={id:90,windowId:1,title:'Wrong original',color:'red',tabs:input};
+ assert.notEqual(clusterTabs(input,{existingGroups:[wrong],regroup:true}).get(1).clusterId,'existing:90');
+});
+
+test('distinct tabs with duplicate titles and URLs remain useful context',()=>{
+ const sample=tab(20,'Atlas platform reference','https://atlas.test/docs');
+ const existing={id:80,windowId:1,title:'Atlas',color:'blue',tabs:[sample]};
+ assert.equal(clusterTabs([{...sample,id:21}],{existingGroups:[existing]}).get(21).targetGroupId,80);
+ assert.equal(clusterTabs([sample],{existingGroups:[existing]}).get(20).targetGroupId,undefined);
+});

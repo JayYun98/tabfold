@@ -20,7 +20,7 @@ try {
    const groups=Array.from({length:24},(_,i)=>({title:i?'Research '+i:'A very long research category title that must not stretch the popup',color:'blue',tabIds:[1,2],tabs:[{title:'A long paper title '.repeat(12),url:'https://example.com/paper'},{title:'Experiments',url:'https://example.com/experiments'}]}));
    const existingGroups=[{id:71,title:'Existing research',color:'green',windowId:1,collapsed:true,tabs:Array.from({length:18},(_,i)=>({id:100+i,title:'Saved paper '+i,url:'https://example.com/saved/'+i,windowId:1}))},{id:72,title:'Existing reading',color:'purple',windowId:1,collapsed:false,tabs:Array.from({length:11},(_,i)=>({id:200+i,title:'Saved article '+i,url:'https://example.org/'+i,windowId:1}))}];
    groups[1]={...groups[1],title:existingGroups[0].title,color:existingGroups[0].color,targetGroupId:71};
-   window.previewRequests=[];window.fixtureGroupingMode='preserve';window.fixturePreferences={suggestNew:true,ignoreCategories:false};
+   window.previewRequests=[];window.fixtureGroupingMode='preserve';window.fixturePreferences={suggestNew:true,ignoreCategories:false,useExistingGroups:true};
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async request=>{window.requestedOrigins=request.origins;return true;}},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
     if(request.type==='getSettings')return {ok:true,provider:'typesafe',groupingMode:window.fixtureGroupingMode,categories,keyConfigured:false,preferences:{...window.fixturePreferences}};
     if(request.type==='setPreferences'){if(window.failPreferences)return {ok:false,error:'Test save failure'};Object.assign(window.fixturePreferences,request.preferences);return {ok:true,preferences:{...window.fixturePreferences}};}
@@ -66,12 +66,16 @@ try {
   assert.equal(await page.evaluate(()=>window.savedGroupingMode),'preserve');
   assert.equal(await page.locator('#groupingModeNotice').isVisible(),false);
   await page.locator('#allWindows').check();await page.waitForFunction(()=>!document.querySelector('#allWindows').disabled);assert.equal(await page.evaluate(()=>window.previewRequests.at(-1).allWindows),true);
+  assert.equal(await page.locator('#useExistingGroups').isChecked(),true);
+  await page.locator('#useExistingGroups').uncheck();await page.waitForFunction(()=>!document.querySelector('#useExistingGroups').disabled);assert.equal(await page.evaluate(()=>window.fixturePreferences.useExistingGroups),false);
   await page.locator('#ignoreCategories').check();await page.waitForFunction(()=>!document.querySelector('#ignoreCategories').disabled);assert.equal(await page.evaluate(()=>window.fixturePreferences.ignoreCategories),true);
   await page.locator('#suggestNew').uncheck();await page.waitForFunction(()=>!document.querySelector('#suggestNew').disabled);assert.equal(await page.evaluate(()=>window.fixturePreferences.suggestNew),false);
   await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
+  assert.equal(await page.locator('#useExistingGroups').isChecked(),false);
   assert.equal(await page.locator('#ignoreCategories').isChecked(),true);assert.equal(await page.locator('#suggestNew').isChecked(),false);
   assert.equal(await page.evaluate(()=>window.previewRequests.every(request=>request.ai===false)),true,'Checkbox changes must never trigger AI');
-  assert.equal(await page.evaluate(()=>window.previewRequests.some(request=>'suggestNew' in request||'ignoreCategories' in request)),false,'Preferences come from backend settings');
+  assert.equal(await page.evaluate(()=>window.previewRequests.some(request=>'suggestNew' in request||'ignoreCategories' in request||'useExistingGroups' in request)),false,'Preferences come from backend settings');
+  await page.evaluate(()=>window.failPreferences=true);await page.locator('#useExistingGroups').click();await page.waitForFunction(()=>!document.querySelector('#useExistingGroups').disabled);assert.equal(await page.locator('#useExistingGroups').isChecked(),false);
   await page.evaluate(()=>window.failPreferences=true);await page.locator('#ignoreCategories').click();await page.waitForFunction(()=>!document.querySelector('#ignoreCategories').disabled);assert.equal(await page.locator('#ignoreCategories').isChecked(),true);
   await page.evaluate(()=>{window.failPreferences=false;window.failPreview=true;});await page.locator('#suggestNew').check();await page.waitForFunction(()=>!document.querySelector('#suggestNew').disabled);assert.equal(await page.locator('#apply').isDisabled(),true,'Failed preview must not apply stale plan');
   await page.evaluate(()=>window.failPreview=false);await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);

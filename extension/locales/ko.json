@@ -170,5 +170,7 @@
   "Invalid grouping mode.": "잘못된 그룹 정리 방식입니다.",
   "Regroup existing groups": "기존 그룹 재분류",
   "Ignore saved categories": "저장된 카테고리 무시",
-  "Skip saved AI categories without deleting them.": "저장된 AI 카테고리를 삭제하지 않고 이번 분류에서 제외합니다."
+  "Skip saved AI categories without deleting them.": "저장된 AI 카테고리를 삭제하지 않고 이번 분류에서 제외합니다.",
+  "Use existing group names": "기존 그룹 이름 활용",
+  "Use existing group names when classifying tabs, even when regrouping.": "재분류할 때도 기존 그룹 이름을 탭 분류에 활용합니다."
 }

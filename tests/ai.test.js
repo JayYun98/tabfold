@@ -213,11 +213,11 @@ test('existing groups are primary window-scoped choices with safe representative
     const choice=id===1?'group_113':'group_200';return response({[`tab_${id}`]:{type:'choice',choice,confidence:0.95}});
   },{existingGroups});
   assert.equal(requests.length,2);
-  assert.equal(requests[0].state.existingGroups.length,14);
-  assert.equal(requests[0].state.existingGroups[0].members.length,3);
+  assert.equal(requests[0].state.existingGroups.length,15);
+  assert.equal(requests[0].state.existingGroups[0].members.length,4);
   assert.deepEqual(requests[0].state.existingGroups[0].members[0],{title:'Member 0',url:'https://example.com/0'});
-  assert.equal(requests[0].questions.tab_1.criteria.group_200,undefined);
-  assert.equal(requests[1].questions.tab_2.criteria.group_100,undefined);
+  assert.match(requests[0].questions.tab_1.criteria.group_200,/Other window/);
+  assert.ok(requests[1].questions.tab_2.criteria.group_100);
   assert.equal(Object.keys(requests[0].questions.tab_1.criteria)[0],'group_100');
   assert.equal(result.get(1).targetGroupId,113);assert.equal(result.get(1).title,existingGroups[13].title);assert.equal(result.get(2).targetGroupId,200);
   assert.doesNotMatch(JSON.stringify(requests),/password|secret=yes|private.example|chrome:\/\/settings/);
@@ -259,5 +259,18 @@ test('Other and ignored categories use topics across hosts without collecting un
   assert.equal(result.get(1).clusterId,result.get(2).clusterId);
   assert.notEqual(result.get(1).clusterId,result.get(3).clusterId);
   assert.notEqual(result.get(1).clusterId,result.get(4).clusterId);
+ }
+});
+
+
+test('regroup and cross-window reuse names without returning cross-window append targets',async()=>{
+ const input=[{id:1,title:'Cooking video',url:'https://youtube.com/watch?v=1',windowId:2}];
+ const existingGroups=[{id:10,title:'Media / SNS',color:'red',windowId:1,tabs:[]}];
+ for(const regroup of [false,true]){
+  const result=await classifyTabs(input,'key',async(_url,options)=>{
+   const body=JSON.parse(options.body);assert.match(body.questions.tab_1.criteria.group_10,/Videos/);
+   return response({tab_1:{type:'choice',choice:'group_10',confidence:.95}});
+  },{existingGroups,ignoreCategories:true,regroup});
+  assert.equal(result.get(1).title,'Media / SNS');assert.equal(result.get(1).targetGroupId,undefined);
  }
 });

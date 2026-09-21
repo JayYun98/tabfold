@@ -172,14 +172,14 @@ test('settings reports key presence without exposing credentials and preserves c
   const defaults = await backend.handle({type:'getSettings'});
   assert.equal(defaults.ok, true);
   assert.equal(defaults.keyConfigured, false);
-  assert.deepEqual(defaults.preferences, {suggestNew:true,ignoreCategories:false});
+  assert.deepEqual(defaults.preferences, {useExistingGroups:true,suggestNew:true,ignoreCategories:false});
   assert.equal(defaults.categories[0].title, 'Development');
   const categories = [{title:'내 논문', criteria:'Research papers', color:'green'}];
   await backend.handle({type:'setCategories', categories});
   await backend.handle({type:'setKey', key:'private-test-key'});
   await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
   const configured = await backend.handle({type:'getSettings'});
-  assert.deepEqual(configured, {ok:true, provider:'openrouter', groupingMode:'preserve', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false,ignoreCategories:false}});
+  assert.deepEqual(configured, {ok:true, provider:'openrouter', groupingMode:'preserve', tabOrder:'current', keyConfigured:true, categories, preferences:{useExistingGroups:true,suggestNew:false,ignoreCategories:false}});
   assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
 });
 
@@ -274,7 +274,7 @@ function regroupFixture() {
   {id:3,windowId:1,index:2,title:'Atlas platform documentation playing',url:'https://atlas.example/c',groupId:10,audible:true},
   {id:4,windowId:1,index:3,title:'Atlas platform documentation tutorial',url:'https://atlas.example/d',groupId:11},
   {id:5,windowId:1,index:4,title:'Atlas platform documentation reference',url:'https://atlas.example/e'},
- ],{initialGroups:[{id:10,windowId:1,title:'First old',color:'red',collapsed:true},{id:11,windowId:1,title:'Second old',color:'green',collapsed:false}]});
+ ],{initialGroups:[{id:10,windowId:1,title:'first.example',color:'red',collapsed:true},{id:11,windowId:1,title:'second.example',color:'green',collapsed:false}]});
  return {chrome,backend:new TabfoldBackend(chrome)};
 }
 
@@ -295,7 +295,7 @@ test('regroup restores emptied original groups and metadata while leaving protec
  assert.equal(chrome._tabs.get(3).groupId,10);assert.equal(chrome._groups.has(11),false);
  assert.equal((await backend.handle({type:'undo'})).ok,true);
  assert.equal(chrome._tabs.get(1).groupId,10);assert.equal(chrome._tabs.get(2).groupId,10);assert.equal(chrome._tabs.get(3).groupId,10);assert.equal(chrome._tabs.get(5).groupId,-1);
- const recreated=chrome._groups.get(chrome._tabs.get(4).groupId);assert.equal(recreated.title,'Second old');assert.equal(recreated.color,'green');assert.equal(recreated.collapsed,false);
+ const recreated=chrome._groups.get(chrome._tabs.get(4).groupId);assert.equal(recreated.title,'second.example');assert.equal(recreated.color,'green');assert.equal(recreated.collapsed,false);
 });
 
 test('regroup rejects changed membership and undo preserves edited groups, navigated and moved tabs',async()=>{
@@ -322,14 +322,14 @@ test('regroup undo does not recreate an original group the user removed around p
 
 test('preferences merge strict booleans, invalidate previews, and protect against late preview races',async()=>{
  const {backend}=regroupFixture();
- assert.deepEqual(await backend.preferences(),{suggestNew:true,ignoreCategories:false});
+ assert.deepEqual(await backend.preferences(),{useExistingGroups:true,suggestNew:true,ignoreCategories:false});
  const previous=await backend.handle({type:'preview',suggestNew:false});assert.equal(previous.plan.preferences.suggestNew,true);
  assert.equal((await backend.handle({type:'setPreferences',preferences:{ignoreCategories:true}})).ok,true);
- assert.deepEqual(await backend.preferences(),{suggestNew:true,ignoreCategories:true});
+ assert.deepEqual(await backend.preferences(),{useExistingGroups:true,suggestNew:true,ignoreCategories:true});
  assert.equal((await backend.handle({type:'apply',plan:previous.plan})).ok,false);
  // A late request may rewrite its old plan after settings changed; matching the stored plan is insufficient.
  await backend.write('tabfoldPreview',{plan:previous.plan});assert.equal(await backend.matchesSavedPreview(previous.plan),false);
- await backend.handle({type:'setPreferences',preferences:{suggestNew:false}});assert.deepEqual(await backend.preferences(),{suggestNew:false,ignoreCategories:true});
+ await backend.handle({type:'setPreferences',preferences:{useExistingGroups:true,suggestNew:false}});assert.deepEqual(await backend.preferences(),{useExistingGroups:true,suggestNew:false,ignoreCategories:true});
  for(const preferences of [{ignoreCategories:1},{unknown:true},[],null]) assert.equal((await backend.handle({type:'setPreferences',preferences})).ok,false);
 });
 
@@ -338,5 +338,16 @@ test('AI preview uses saved preferences and keeps saved categories untouched',as
  const backend=new TabfoldBackend(chrome);const before=await backend.categories();
  await backend.handle({type:'setKey',key:'test'});await backend.handle({type:'setPreferences',preferences:{ignoreCategories:true,suggestNew:false}});
  const originalFetch=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('unexpected network call');};
- try {const result=await backend.handle({type:'preview',ai:true,suggestNew:true});assert.equal(result.ok,true);assert.equal(calls,0);assert.deepEqual(result.plan.preferences,{ignoreCategories:true,suggestNew:false});assert.deepEqual(await backend.categories(),before);}finally{globalThis.fetch=originalFetch;}
+ try {const result=await backend.handle({type:'preview',ai:true,suggestNew:true});assert.equal(result.ok,true);assert.equal(calls,0);assert.deepEqual(result.plan.preferences,{useExistingGroups:true,ignoreCategories:true,suggestNew:false});assert.deepEqual(await backend.categories(),before);}finally{globalThis.fetch=originalFetch;}
+});
+
+test('existing-name preference can disable category reuse independently from regroup',async()=>{
+ const tabs=[{id:1,windowId:1,groupId:40,title:'Social feed',url:'https://x.com/home'},{id:2,windowId:1,title:'Guitar video',url:'https://youtube.com/watch?v=2'}];
+ const chrome=mockChrome(tabs,{initialGroups:[{id:40,windowId:1,title:'Media / SNS',color:'red'}]});
+ const backend=new TabfoldBackend(chrome);
+ const before=await backend.handle({type:'preview'});assert.equal(before.plan.groups[0].targetGroupId,40);
+ await backend.handle({type:'setPreferences',preferences:{useExistingGroups:false}});
+ assert.equal((await backend.handle({type:'apply',plan:before.plan})).ok,false);
+ const after=await backend.handle({type:'preview'});assert.equal(after.plan.groups.length,0);assert.equal(after.plan.existingGroups.length,1);
+ assert.equal((await backend.handle({type:'setPreferences',preferences:{useExistingGroups:'yes'}})).ok,false);
 });

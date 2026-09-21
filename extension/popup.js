@@ -3,7 +3,7 @@ import { t, initI18n, applyI18n } from './i18n.js';
 const $ = id => document.getElementById(id);
 let plan, suggestions = [], busy = false, undoAvailable = false;
 let provider = getProvider();
-let preferences = {suggestNew:true,ignoreCategories:false};
+let preferences = {suggestNew:true,ignoreCategories:false,useExistingGroups:true};
 const colors = {grey:'#8190a5',blue:'#4d74cc',red:'#cf6977',yellow:'#c09c39',green:'#479278',pink:'#c375a3',purple:'#987ac5',cyan:'#469dab',orange:'#ce8c52'};
 function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
 async function send(message){const result=await chrome.runtime.sendMessage(message);if(!result?.ok)throw new Error(result?.error||t('No response. Reopen the extension.'));return result;}
@@ -31,6 +31,7 @@ function render(){
   preferences=plan.preferences||preferences;
   $('ignoreCategories').checked=!!preferences.ignoreCategories;
   $('suggestNew').checked=preferences.suggestNew!==false;
+  $('useExistingGroups').checked=preferences.useExistingGroups!==false;
   $('groupingModeNotice').hidden=!regroup;
   $('groupingModeNotice').textContent=t(regroup?'Regroup mode: existing groups may be rebuilt.':'Keep existing groups');
   $('groupingModeNotice').classList.toggle('warning',regroup);
@@ -57,8 +58,8 @@ $('regroup').onchange=()=>run(async()=>{
   catch(error){$('regroup').checked=previous;throw error;}
   await refreshAfterSetting();
 });
-for(const key of ['ignoreCategories','suggestNew'])$(key).onchange=()=>run(async()=>{
-  const previous=preferences[key];
+for(const key of ['ignoreCategories','suggestNew','useExistingGroups'])$(key).onchange=()=>run(async()=>{
+  const previous=key==='ignoreCategories'?!!preferences[key]:preferences[key]!==false;
   try{const result=await send({type:'setPreferences',preferences:{[key]:$(key).checked}});preferences=result.preferences;}
   catch(error){$(key).checked=previous;throw error;}
   await refreshAfterSetting();

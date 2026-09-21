@@ -59,19 +59,21 @@ export class TabfoldBackend {
   async preview(request) {
     const tabs = await this.chrome.tabs.query({});
     const existingGroups = await this.chrome.tabGroups.query({});
+    const availableGroups = existingGroups.map(group=>({...group,tabs:tabs.filter(tab=>tab.groupId===group.id && tab.windowId===group.windowId)}));
     const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
     const groupingMode=validateGroupingMode(await this.read('tabfoldGroupingMode','local'));
     const regroup=groupingMode==='regroup';
     const preferences=await this.preferences();
+    const contextGroups=preferences.useExistingGroups ? availableGroups : [];
     const initial = buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode});
     const selectedEligible = tabs.filter(tab => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab,{regroup}));
     const provider = getProvider(request.provider ?? await this.provider());
     const key = await this.read(provider.keyName);
-    let classifications = request.ai ? undefined : clusterTabs(selectedEligible,{existingGroups:regroup ? [] : initial.existingGroups,regroup});
+    let classifications = request.ai ? undefined : clusterTabs(selectedEligible,{existingGroups:contextGroups,regroup});
     if (request.ai) {
       if (!key) return message(false, t('Save your API key before using AI classification.'));
       try {
-        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:regroup ? [] : initial.existingGroups, suggestNew:preferences.suggestNew, ignoreCategories:preferences.ignoreCategories});
+        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:contextGroups, regroup, suggestNew:preferences.suggestNew, ignoreCategories:preferences.ignoreCategories});
       } catch (error) {
         return message(false, error?.message || t('Unable to complete AI classification.'));
       }
@@ -90,11 +92,11 @@ export class TabfoldBackend {
 
   async preferences() {
     const saved=await this.read('tabfoldPreferences','local');
-    return {suggestNew:typeof saved?.suggestNew==='boolean' ? saved.suggestNew : true,ignoreCategories:typeof saved?.ignoreCategories==='boolean' ? saved.ignoreCategories : false};
+    return {useExistingGroups:typeof saved?.useExistingGroups==='boolean' ? saved.useExistingGroups : true,suggestNew:typeof saved?.suggestNew==='boolean' ? saved.suggestNew : true,ignoreCategories:typeof saved?.ignoreCategories==='boolean' ? saved.ignoreCategories : false};
   }
 
   async setPreferences(changes) {
-    if(!changes || typeof changes!=='object' || Array.isArray(changes) || Object.entries(changes).some(([key,value])=>!['suggestNew','ignoreCategories'].includes(key) || typeof value!=='boolean')) throw new Error(t('Invalid AI classification options.'));
+    if(!changes || typeof changes!=='object' || Array.isArray(changes) || Object.entries(changes).some(([key,value])=>!['suggestNew','ignoreCategories','useExistingGroups'].includes(key) || typeof value!=='boolean')) throw new Error(t('Invalid AI classification options.'));
     const preferences={...await this.preferences(),...changes};
     await this.write('tabfoldPreferences',preferences,'local');
     await this.remove(PREVIEW_KEY);

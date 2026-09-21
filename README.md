@@ -35,13 +35,15 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 That’s it. Tabfold groups and folds tabs without merging windows or replacing your pages.
 
-By default, existing groups are preserved. Existing groups are visible before you run AI. AI prioritizes groups in the same window, using their names and example tab titles and URL paths. Matching ungrouped tabs are added to those groups; other tabs form new groups. Existing members, names, colors, and collapsed states stay unchanged. Undo removes only the tabs added by Tabfold from existing groups. The example titles and URL paths are sent to the selected AI provider.
+Existing groups are visible before AI runs. Preserve mode adds matching tabs to same-window groups without changing existing members or group styling. Named categories from other windows can become separate local groups; tabs never move between windows. Regroup rebuilds membership while retaining named groups’ purpose; raw-hostname groups are not category templates.
 
-Choose **Regroup all eligible tabs** to ignore existing group names and context and reassign eligible grouped and ungrouped tabs within each window. Pinned, audible, incognito and internal tabs stay protected. Undo restores original groups where possible; exact original tab order is not guaranteed. Only proposed groups are applied. New groups require at least two tabs; unmatched single tabs stay where they are.
+Pinned, audible, incognito and internal tabs remain protected. Only proposed groups are applied; new groups need at least two tabs and unmatched singletons stay put. Undo restores original groups where possible, without guaranteeing exact tab order.
 
-Quick preview uses statistical TF-IDF weights and cosine similarity over title/URL terms, entirely in your browser. It matches lexical similarities, not meanings translated across languages. This is not a pretrained neural or TensorFlow model: no dependencies, model downloads or server requests. The reusable JavaScript clustering module also runs in Node.js.
+Quick preview uses lightweight category-purpose rules (for example, Media/SNS for YouTube and JobRecruit for job listings), then local TF-IDF/cosine topic clustering for remaining tabs. It is lexical, not an embedding or pretrained neural model: no model download or server request. The JavaScript module also runs in Node.js.
 
-The popup independently remembers **Regroup existing groups**, **Ignore saved categories**, and **Suggest new categories**. Ignoring categories skips saved/default AI choices without deleting them; existing Chrome groups still provide context unless regrouping is enabled. With both ignore and regroup enabled, suggestions validate locally extracted topics through Jev; turning suggestions off still clusters by title and path topics. Shared websites alone never determine a local group.
+The popup independently remembers regrouping, ignoring saved categories, and new-category suggestions. Ignoring saved categories excludes saved/default AI choices without deleting them; existing Chrome group names remain context, including during regrouping. AI may receive group names, a broad purpose, and up to six diverse example titles and URL origins/paths without queries. New-topic candidates are proposed only for unmatched tabs and validated by Jev.
+
+**Use existing group names** is on by default: turn it off and enable regrouping for a full reset, independently of **Ignore saved categories**; no existing-group metadata or examples are sent when it is off, though eligible tabs’ titles and URLs still go to AI.
 
 ## Install
 

@@ -175,5 +175,7 @@
   "Invalid grouping mode.": "El modo de agrupación no es válido.",
   "Regroup existing groups": "Reagrupar grupos existentes",
   "Ignore saved categories": "Ignorar categorías guardadas",
-  "Skip saved AI categories without deleting them.": "Omitir las categorías de IA guardadas sin eliminarlas."
+  "Skip saved AI categories without deleting them.": "Omitir las categorías de IA guardadas sin eliminarlas.",
+  "Use existing group names": "Usar nombres de grupos existentes",
+  "Use existing group names when classifying tabs, even when regrouping.": "Usa los nombres de grupos existentes para clasificar pestañas, incluso al reagrupar."
 }

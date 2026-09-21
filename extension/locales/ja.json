@@ -170,5 +170,7 @@
   "Invalid grouping mode.": "無効なグループ化モードです。",
   "Regroup existing groups": "既存グループを再分類",
   "Ignore saved categories": "保存済みカテゴリを無視",
-  "Skip saved AI categories without deleting them.": "保存済みの AI カテゴリを削除せずに分類対象から外します。"
+  "Skip saved AI categories without deleting them.": "保存済みの AI カテゴリを削除せずに分類対象から外します。",
+  "Use existing group names": "既存のグループ名を使う",
+  "Use existing group names when classifying tabs, even when regrouping.": "再グループ化する場合も、既存のグループ名をタブの分類に使用します。"
 }

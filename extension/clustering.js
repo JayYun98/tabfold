@@ -1,3 +1,4 @@
+import {groupContext,matchExistingGroup,groupsForWindow,isNamedGroup} from './group-context.js';
 // Small corpus-fitted lexical model: no weights, network, or runtime dependencies.
 // ponytail: quadratic comparisons suit hundreds of tabs; use a nearest-neighbor index for thousands.
 const STOP = new Set('the a an and or for of to in on with from by is are home page new tab com www html https http index github google youtube search 검색 検索 搜索 watch results result official repository pull pulls issues issue blob tree main master docs documentation tutorial guide examples introduction getting started request openreview blog www arxiv abs pdf'.split(' '));
@@ -36,21 +37,35 @@ function topicSimilarity(a,b) {
 }
 function normalized(terms){const norm=Math.hypot(...terms.values());return new Map([...terms].map(([term,weight])=>[term,norm?weight/norm:0]));}
 export function clusterTabs(tabs,{existingGroups=[],regroup=false}={}) {
-  const groups=regroup?[]:existingGroups;
-  const samples=groups.flatMap(group=>(group.tabs||[]).filter(tab=>!tab.incognito && /^https?:/.test(tab.url||'')).slice(0,3).map(tab=>({...tab,group})));
+  const groups=[...new Set(tabs.map(tab=>tab.windowId))].flatMap(windowId=>groupsForWindow(regroup ? existingGroups.filter(isNamedGroup) : existingGroups,windowId));
+  const samples=groups.flatMap(group=>groupContext(group).members.map(tab=>({...tab,windowId:group.windowId,group})));
   const documents=[...tabs,...samples].map(tab=>({...features(tab),tab}));
   const frequency=new Map();
   for(const {terms}of documents)for(const term of terms.keys())frequency.set(term,(frequency.get(term)||0)+1);
   for(const doc of documents)doc.vector=normalized(new Map([...doc.terms].map(([term,weight])=>[term,weight*(1+Math.log((1+documents.length)/(1+frequency.get(term))))])));
   const result=new Map(),buckets=[];
   for(const doc of documents.slice(0,tabs.length).sort((a,b)=>a.tab.windowId-b.tab.windowId || a.words.join(' ').localeCompare(b.words.join(' '),'en') || String(a.tab.url).localeCompare(String(b.tab.url),'en') || a.tab.id-b.tab.id)){
-    const candidates=groups.filter(group=>group.windowId===doc.tab.windowId).map(group=>{
-      const examples=documents.slice(tabs.length).filter(sample=>sample.tab.group.id===group.id);
-      return {group,score:Math.max(0,...examples.map(sample=>topicSimilarity(doc,sample)))};
+    const available=groups.filter(group=>group.windowId===doc.tab.windowId);
+    const clear=matchExistingGroup(doc.tab,available);
+    const semanticMatches=available.filter(group=>matchExistingGroup(doc.tab,[group]));
+    const candidates=available.map(group=>{
+      const examples=groupContext({...group,tabs:(group.tabs || []).filter(tab=>tab.id!==doc.tab.id)}).members.map(tab=>{
+        const sample=features(tab);
+        sample.vector=normalized(new Map([...sample.terms].map(([term,weight])=>[term,weight*(1+Math.log((1+documents.length)/(1+(frequency.get(term)||0))))])));
+        return sample;
+      });
+      const repo=[...doc.terms.keys()].filter(term=>term.startsWith('repo:'));
+      return {group,score:Math.max(0,...examples.map(sample=>topicSimilarity(doc,sample))),sameRepo:repo.length>0 && examples.some(sample=>repo.some(term=>sample.terms.has(term)))};
     }).sort((a,b)=>b.score-a.score);
     const best=candidates[0];
-    const target=best && best.score>=.48 && best.score-(candidates[1]?.score||0)>=.1 ? best.group : null;
-    if(target){result.set(doc.tab.id,{title:target.title,color:target.color,targetGroupId:target.id});continue;}
+    const lexical=best && best.score>=.48 && best.score-(candidates[1]?.score||0)>=.1 ? best.group : null;
+    const exact=candidates.filter(candidate=>candidate.sameRepo && candidate.score>=.85 && candidate.group!==clear && !/\b(dev|development|coding|programming|repositories)\b|개발|코딩|프로그래밍/i.test(candidate.group.title));
+    const broadDev=clear && /\b(dev|development|coding|programming|repositories)\b|개발|코딩|프로그래밍/i.test(clear.title);
+    const target=clear ? (broadDev && exact.length===1 ? exact[0].group : clear) : semanticMatches.length>1 ? null : lexical;
+    if(target){
+      result.set(doc.tab.id,{title:target.title,color:target.color,...(regroup || target.template ? {clusterId:`${target.template?'template':'existing'}:${target.id}`} : {targetGroupId:target.id})});
+      continue;
+    }
     let match=null,score=.38;
     for(const bucket of buckets){
       if(bucket.windowId!==doc.tab.windowId)continue;

@@ -35,13 +35,15 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 
 Hepsi bu. Tabfold, pencereleri birleştirmeden veya sayfalarınızı değiştirmeden sekmeleri gruplar ve daraltır.
 
-Varsayılan olarak mevcut gruplar korunur. Mevcut gruplar YZ çalıştırılmadan önce görünür. YZ, grup adlarını ve örnek sekme başlıkları ile URL yollarını kullanarak aynı penceredeki gruplara öncelik verir. Eşleşen gruplanmamış sekmeler bu gruplara eklenir; diğerleri yeni gruplar oluşturur. Mevcut üyeler, adlar, renkler ve daraltma durumları değişmez. Geri alma, mevcut gruplardan yalnızca Tabfold tarafından eklenen sekmeleri çıkarır. Örnek başlıklar ve URL yolları seçilen YZ sağlayıcısına gönderilir.
+Gruplar YZ çalışmadan önce görünür. Koruma modu mevcut üyeleri ve görünümü değiştirmeden eşleşen sekmeleri aynı penceredeki gruplara ekler. Diğer pencerelerdeki adlandırılmış kategoriler ayrı yerel gruplar oluşturabilir; sekmeler pencereler arasında taşınmaz. Yeniden gruplandırma, adlandırılmış grupların amacını koruyarak üyeleri yeniden düzenler; yalnızca ana makine adı taşıyan gruplar kategori şablonu sayılmaz.
 
-**Tüm uygun sekmeleri yeniden grupla** seçeneği, mevcut grup adlarını ve bağlamını yok sayarak her penceredeki uygun gruplanmış ve gruplanmamış sekmeleri yeniden düzenler. Sabitlenmiş, ses çalan, gizli ve dahili sekmeler korunur. Geri alma, mümkün olduğunda özgün grupları geri yükler; sekmelerin tam özgün sırası garanti edilmez. Yalnızca önerilen gruplar uygulanır. Yeni gruplar en az iki sekme gerektirir; eşleşmeyen tek sekmeler yerinde kalır.
+Sabitlenmiş, ses çalan, gizli ve dahili sekmeler korunur. Yalnızca önerilen gruplar uygulanır; yeni gruplar en az iki sekme gerektirir, eşleşmeyen tek sekmeler yerinde kalır. Geri alma, mümkün olduğunda özgün grupları geri yükler; tam sekme sırası garanti edilmez.
 
-Hızlı önizleme, başlık/URL terimleri üzerinde istatistiksel TF-IDF ağırlıklarını ve kosinüs benzerliğini tamamen tarayıcıda hesaplar. Diller arasında çevrilmiş anlamları değil, sözcüksel benzerlikleri karşılaştırır. Önceden eğitilmiş bir sinir ağı veya TensorFlow modeli değildir: bağımlılık, model indirme veya sunucu isteği yoktur. Yeniden kullanılabilir JavaScript kümeleme modülü Node.js üzerinde de çalışır.
+Hızlı önizleme, kategori amacına yönelik hafif kurallar (YouTube için Media/SNS, iş ilanları için JobRecruit) ve kalan sekmeler için yerel TF-IDF/kosinüs kümelemesi kullanır. Sözcüksel bir yöntemdir; embedding veya önceden eğitilmiş sinir ağı, model indirme ya da sunucu isteği yoktur. JavaScript modülü Node.js üzerinde de çalışır.
 
-Açılır pencere **Mevcut grupları yeniden grupla**, **Kayıtlı kategorileri yok say** ve **Yeni kategoriler öner** seçeneklerini bağımsız kaydeder. Kategorileri yok saymak kayıtlı ve varsayılan YZ seçeneklerini silmeden atlar; yeniden gruplandırma açık değilse mevcut Chrome grupları bağlam olarak kullanılır. İki seçenek de açıkken öneriler, yerel çıkarılan konuları Jev ile doğrular; öneriler kapalıysa alan adlarına göre gruplandırılır.
+Açılır pencere yeniden gruplandırmayı, kayıtlı kategorileri yok saymayı ve önerileri ayrı kaydeder. Kategorileri yok saymak kayıtlı/varsayılan YZ seçeneklerini silmeden dışlar; mevcut Chrome grup adları yeniden gruplandırmada da bağlam olarak kalır. YZ grup adlarını, genel amacı ve en fazla altı farklı örneğin başlıklarıyla sorgusuz URL kaynak/yollarını alabilir. Yeni konu adayları yalnızca eşleşmeyen sekmelerden çıkarılır ve Jev ile doğrulanır.
+
+**Mevcut grup adlarını kullan** varsayılan olarak açıktır: **Kayıtlı kategorileri yok say** seçeneğinden bağımsız olarak, yeniden gruplandırmayla birlikte kapatıldığında eski grup bağlamı olmadan başlanır; mevcut grup bilgileri ve örnekleri gönderilmez, ancak uygun sekmelerin başlıkları ve URL’leri YZ’ye gönderilmeye devam eder.
 
 ## Kurulum
 

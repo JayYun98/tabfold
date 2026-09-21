@@ -170,5 +170,7 @@
   "Invalid grouping mode.": "Недопустимый режим группировки.",
   "Regroup existing groups": "Перегруппировать существующие группы",
   "Ignore saved categories": "Игнорировать сохранённые категории",
-  "Skip saved AI categories without deleting them.": "Пропускать сохранённые категории ИИ, не удаляя их."
+  "Skip saved AI categories without deleting them.": "Пропускать сохранённые категории ИИ, не удаляя их.",
+  "Use existing group names": "Использовать имена существующих групп",
+  "Use existing group names when classifying tabs, even when regrouping.": "Использовать имена существующих групп при классификации вкладок, в том числе при перегруппировке."
 }
