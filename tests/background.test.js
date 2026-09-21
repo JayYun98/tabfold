@@ -68,8 +68,8 @@ function mockChrome(initialTabs, { reorderStorage = false, initialGroups = [] } 
 
 test('apply rejects a stale snapshot before mutation', async () => {
   const chrome = mockChrome([
-    { id: 1, windowId: 1, url: 'https://example.com/a' },
-    { id: 2, windowId: 1, url: 'https://example.com/b' },
+    { id: 1, windowId: 1, title: 'Atlas platform documentation A', url: 'https://example.com/a' },
+    { id: 2, windowId: 1, title: 'Atlas platform documentation B', url: 'https://example.com/b' },
   ]);
   const backend = new TabfoldBackend(chrome);
   const preview = await backend.preview({ windowId: 1 });
@@ -81,8 +81,8 @@ test('apply rejects a stale snapshot before mutation', async () => {
 
 test('apply and undo change only the created group', async () => {
   const chrome = mockChrome([
-    { id: 1, windowId: 1, url: 'https://example.com/a' },
-    { id: 2, windowId: 1, url: 'https://example.com/b' },
+    { id: 1, windowId: 1, title: 'Atlas platform documentation A', url: 'https://example.com/a' },
+    { id: 2, windowId: 1, title: 'Atlas platform documentation B', url: 'https://example.com/b' },
   ]);
   const backend = new TabfoldBackend(chrome);
   const preview = await backend.preview({ windowId: 1 });
@@ -94,8 +94,8 @@ test('apply and undo change only the created group', async () => {
 
 test('apply creates each group in its source window', async () => {
   const chrome = mockChrome([
-    { id: 1, windowId: 7, url: 'https://example.com/a' },
-    { id: 2, windowId: 7, url: 'https://example.com/b' },
+    { id: 1, windowId: 7, title: 'Atlas platform documentation A', url: 'https://example.com/a' },
+    { id: 2, windowId: 7, title: 'Atlas platform documentation B', url: 'https://example.com/b' },
   ]);
   const backend = new TabfoldBackend(chrome);
   const preview = await backend.preview({ windowId: 7 });
@@ -105,8 +105,8 @@ test('apply creates each group in its source window', async () => {
 
 test('apply accepts an authoritative plan after storage reorders object keys', async () => {
   const chrome = mockChrome([
-    { id: 1, windowId: 1, url: 'https://example.com/a' },
-    { id: 2, windowId: 1, url: 'https://example.com/b' },
+    { id: 1, windowId: 1, title: 'Atlas platform documentation A', url: 'https://example.com/a' },
+    { id: 2, windowId: 1, title: 'Atlas platform documentation B', url: 'https://example.com/b' },
   ], { reorderStorage: true });
   const backend = new TabfoldBackend(chrome);
   const preview = await backend.preview({ windowId: 1 });
@@ -229,10 +229,10 @@ test('saved sorting matches apply order inside each window and never moves prote
 
 function existingFixture() {
   const chrome=mockChrome([
-    {id:1,index:0,windowId:1,groupId:40,title:'Original A',url:'https://project.test/a'},
-    {id:2,index:1,windowId:1,groupId:40,title:'Original B',url:'https://project.test/b'},
-    {id:3,index:2,windowId:1,title:'New Z',url:'https://project.test/z'},
-    {id:4,index:3,windowId:1,title:'New A',url:'https://project.test/new'},
+    {id:1,index:0,windowId:1,groupId:40,title:'Atlas platform Original A',url:'https://project.test/a'},
+    {id:2,index:1,windowId:1,groupId:40,title:'Atlas platform Original B',url:'https://project.test/b'},
+    {id:3,index:2,windowId:1,title:'Atlas platform New Z',url:'https://project.test/z'},
+    {id:4,index:3,windowId:1,title:'Atlas platform New A',url:'https://project.test/new'},
     {id:5,index:4,windowId:1,title:'Pinned',url:'https://project.test/pinned',pinned:true},
     {id:6,index:0,windowId:2,title:'Other window',url:'https://project.test/else'},
   ],{initialGroups:[{id:40,windowId:1,title:'My project',color:'purple',collapsed:false}]});

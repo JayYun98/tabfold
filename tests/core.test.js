@@ -1,13 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildPreview, classifyTab, findDuplicateCandidates } from '../extension/core.js';
+import { buildPreview, findDuplicateCandidates } from '../extension/core.js';
 
-const tab = (id, url, extra = {}) => ({ id, windowId: 1, title: '', url, groupId: -1, ...extra });
-
-test('classifier uses a known category before falling back to domain', () => {
-  assert.deepEqual(classifyTab(tab(1, 'https://github.com/openai')), { key: 'work', title: 'Work', color: 'blue' });
-  assert.deepEqual(classifyTab(tab(2, 'https://example.com/a')).title, 'example.com');
-});
+const tab = (id, url, extra = {}) => ({ id, windowId: 1, title: 'Atlas platform guide', url, groupId: -1, ...extra });
 
 test('preview never groups protected tabs and does not mix windows', () => {
   const plan = buildPreview([
@@ -32,7 +27,7 @@ test('duplicates retain an active or protected survivor and match full URL only'
 });
 
 test('group preview sorting is stable, numeric by title, and unknown activity goes last',()=>{
-  const input=[tab(1,'https://example.com/1',{index:2,title:'Page 10',lastAccessed:300}),tab(2,'https://example.com/2',{index:1,title:'Page 2',lastAccessed:100}),tab(3,'https://example.com/3',{index:0,title:'Page 1'}),tab(4,'https://example.com/4',{index:3,title:'Page 2',lastAccessed:100})];
+  const input=[tab(1,'https://example.com/1',{index:2,title:'Atlas platform page 10',lastAccessed:300}),tab(2,'https://example.com/2',{index:1,title:'Atlas platform page 2',lastAccessed:100}),tab(3,'https://example.com/3',{index:0,title:'Atlas platform page 1'}),tab(4,'https://example.com/4',{index:3,title:'Atlas platform page 2',lastAccessed:100})];
   const ids=order=>buildPreview(input,{tabOrder:order}).groups[0].tabIds;
   assert.deepEqual(ids('current'),[3,2,1,4]);
   assert.deepEqual(ids('title'),[3,2,4,1]);
@@ -41,12 +36,12 @@ test('group preview sorting is stable, numeric by title, and unknown activity go
   assert.throws(()=>ids('invalid'),/Invalid tab order/);
 });
 
-test('existing groups are visible and a unique same-window hostname accepts one new tab',()=>{
+test('existing groups are visible and a matching same-window topic accepts one new tab',()=>{
   const input=[tab(1,'https://github.com/a',{groupId:10}),tab(2,'https://github.com/b'),tab(3,'https://github.com/c',{windowId:2}),tab(4,'https://private.example',{groupId:20,incognito:true}),tab(5,'https://safe.example',{pinned:true})];
   const existingGroups=[{id:10,windowId:1,title:'My project',color:'cyan',collapsed:true},{id:20,windowId:1,title:'Private',color:'red'}];
   const plan=buildPreview(input,{allWindows:true,existingGroups});
   assert.equal(plan.groups.length,1);assert.equal(plan.groups[0].targetGroupId,10);assert.deepEqual(plan.groups[0].tabIds,[2]);
-  assert.deepEqual(plan.existingGroups[0],{...existingGroups[0],tabs:[{id:1,windowId:1,title:'',url:'https://github.com/a'}]});
+  assert.deepEqual(plan.existingGroups[0],{...existingGroups[0],tabs:[{id:1,windowId:1,title:'Atlas platform guide',url:'https://github.com/a'}]});
   assert.equal(plan.groupedCount,2);assert.equal(plan.protectedCount,3);assert.equal(plan.otherProtectedCount,1);
   assert.deepEqual(input.map(t=>t.groupId),[10,-1,-1,20,-1]);
 });

@@ -29,17 +29,17 @@ test('sends the Jev Alpha Decisions contract without tab secrets', async () => {
   assert.deepEqual(result.get(1), { title: 'Development', color: 'blue' });
 });
 
-test('limits paths and uses hostname for low-confidence choices', async () => {
+test('limits paths and uses local clusters for low-confidence choices', async () => {
   let body;
   const result = await classifyTabs([{ id: 1, title: '긴 경로', url: `https://example.com/${'a'.repeat(2_000)}?private=value` }], 'key', async (_url, options) => {
     body = JSON.parse(options.body);
     return response({ tab_1: { type: 'choice', choice: 'work', confidence: 0.69 } });
   });
   assert.equal(body.state.tabs[0].url.length, 1000);
-  assert.deepEqual(result.get(1), { title: 'example.com', color: 'grey' });
+  assert.match(result.get(1).clusterId, /^local:/);
 });
 
-test('batches sequentially at 20 tabs and falls back from other to hostname', async () => {
+test('batches sequentially at 20 tabs and falls back from other to local clusters', async () => {
   const calls = [];
   const result = await classifyTabs(tabs(41), 'key', async (_url, options) => {
     const body = JSON.parse(options.body);
@@ -47,7 +47,7 @@ test('batches sequentially at 20 tabs and falls back from other to hostname', as
     return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, { type: 'choice', choice: tab.id === 1 ? 'other' : 'work' }])));
   });
   assert.deepEqual(calls, [Array.from({ length: 20 }, (_, i) => i + 1), Array.from({ length: 20 }, (_, i) => i + 21), [41]]);
-  assert.deepEqual(result.get(1), { title: 'example1.com', color: 'grey' });
+  assert.match(result.get(1).clusterId, /^local:/);
   assert.deepEqual(result.get(41), { title: 'Work', color: 'purple' });
 });
 
@@ -126,7 +126,8 @@ test('suggests only repeated strong-other tabs in one window and never changes t
     return response(Object.fromEntries(body.state.tabs.map((tab) => [`tab_${tab.id}`, { type: 'choice', choice: 'candidate_0', confidence: 0.9 }])));
   }, { suggestNew: true });
   assert.equal(calls, 2);
-  assert.deepEqual(result.get(1), { title: 'atlas.example', color: 'grey' });
+  assert.equal(result.get(1).clusterId, result.get(2).clusterId);
+  assert.notEqual(result.get(1).title, 'atlas.example');
   assert.equal(result.otherCount, 2);
   assert.equal(result.suggestions.length, 1);
   assert.deepEqual(result.suggestions[0].tabIds, [1, 2]);
@@ -181,7 +182,8 @@ test('keeps the first classification when optional suggestion validation is malf
     return response({ tab_1: { type: 'choice', choice: 'candidate_0', confidence: 0.9 }, unknown_tab: { type: 'choice', choice: 'other', confidence: 0.9 } });
   }, { suggestNew: true });
   assert.equal(calls, 2);
-  assert.deepEqual(result.get(1), { title: 'atlas.example', color: 'grey' });
+  assert.equal(result.get(1).clusterId, result.get(2).clusterId);
+  assert.notEqual(result.get(1).title, 'atlas.example');
   assert.deepEqual(result.suggestions, []);
   assert.match(result.suggestionError, /Unable to validate new category suggestions/);
 });
@@ -227,7 +229,7 @@ test('ignoring saved categories keeps existing choices and skips a pointless Oth
  let calls=0;
  const noRequests=async()=>{calls++;throw new Error('unexpected request');};
  const fallback=await classifyTabs(input,'key',noRequests,{categories,ignoreCategories:true,suggestNew:false});
- assert.equal(calls,0);assert.equal(fallback.get(1).title,'atlas.example');assert.equal(fallback.otherCount,2);assert.deepEqual(fallback.suggestions,[]);
+ assert.equal(calls,0);assert.equal(fallback.get(1).clusterId,fallback.get(2).clusterId);assert.equal(fallback.otherCount,2);assert.deepEqual(fallback.suggestions,[]);
  const suggested=await classifyTabs(input,'key',async(_url,options)=>{
   calls++;const body=JSON.parse(options.body);const choices=Object.keys(body.questions.tab_1.criteria);assert.deepEqual(choices,['candidate_0','other']);
   return response(Object.fromEntries(input.map(tab=>[`tab_${tab.id}`,{type:'choice',choice:'candidate_0',confidence:.95}])));
@@ -239,4 +241,23 @@ test('ignoring saved categories keeps existing choices and skips a pointless Oth
  },{categories,ignoreCategories:true,existingGroups:[{id:10,windowId:1,title:'Existing',color:'green',tabs:[]}]});
  assert.equal(existing.get(1).targetGroupId,10);assert.equal(categories[0].title,'Saved category');
  await assert.rejects(classifyTabs(input,'key',noRequests,{ignoreCategories:'yes'}),/Invalid AI classification options/);
+});
+
+
+test('Other and ignored categories use topics across hosts without collecting unrelated same-host tabs',async()=>{
+ const input=[
+  {id:1,windowId:1,title:'Speculative decoding training guide - Google Search',url:'https://www.google.com/search'},
+  {id:2,windowId:1,title:'Speculative decoding training methods',url:'https://arxiv.org/abs/123'},
+  {id:3,windowId:1,title:'Sourdough bread recipe - Google Search',url:'https://www.google.com/search'},
+  {id:4,windowId:2,title:'Speculative decoding training methods',url:'https://arxiv.org/abs/456'},
+ ];
+ for(const ignoreCategories of [false,true]){
+  const result=await classifyTabs(input,'key',async(_url,options)=>{
+   const body=JSON.parse(options.body);
+   return response(Object.fromEntries(body.state.tabs.map(tab=>[`tab_${tab.id}`,{type:'choice',choice:'other',confidence:.9}])));
+  },{ignoreCategories});
+  assert.equal(result.get(1).clusterId,result.get(2).clusterId);
+  assert.notEqual(result.get(1).clusterId,result.get(3).clusterId);
+  assert.notEqual(result.get(1).clusterId,result.get(4).clusterId);
+ }
 });

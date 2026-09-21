@@ -41,7 +41,7 @@ Choose **Regroup all eligible tabs** to ignore existing group names and context 
 
 Quick preview uses statistical TF-IDF weights and cosine similarity over title/URL terms, entirely in your browser. It matches lexical similarities, not meanings translated across languages. This is not a pretrained neural or TensorFlow model: no dependencies, model downloads or server requests. The reusable JavaScript clustering module also runs in Node.js.
 
-The popup independently remembers **Regroup existing groups**, **Ignore saved categories**, and **Suggest new categories**. Ignoring categories skips saved/default AI choices without deleting them; existing Chrome groups still provide context unless regrouping is enabled. With both ignore and regroup enabled, suggestions validate locally extracted topics through Jev; turning suggestions off falls back to domains.
+The popup independently remembers **Regroup existing groups**, **Ignore saved categories**, and **Suggest new categories**. Ignoring categories skips saved/default AI choices without deleting them; existing Chrome groups still provide context unless regrouping is enabled. With both ignore and regroup enabled, suggestions validate locally extracted topics through Jev; turning suggestions off still clusters by title and path topics. Shared websites alone never determine a local group.
 
 ## Install
 

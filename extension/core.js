@@ -1,15 +1,8 @@
 import { t } from './i18n.js';
+import { clusterTabs } from './clustering.js';
 
 const GROUP_NONE = -1;
 const COLORS = ['blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange', 'grey'];
-
-const KEYWORDS = [
-  ['work', 'Work', 'blue', /\b(github|gitlab|notion|figma|docs?|sheets?|slides?|jira|linear|stackoverflow)\b/i],
-  ['video', 'Video', 'red', /\b(youtube|netflix|vimeo|twitch)\b/i],
-  ['shopping', 'Shopping', 'orange', /\b(amazon|ebay|etsy|shopping|store|shop|coupang)\b/i],
-  ['reading', 'Reading', 'green', /\b(news|medium|substack|blog|article|wiki)\b/i],
-  ['social', 'Social', 'purple', /\b(slack|discord|mail|gmail|outlook|reddit|x\.com|twitter)\b/i],
-];
 
 export function normalUrl(url) {
   try {
@@ -26,16 +19,6 @@ export function isUngrouped(tab) {
 
 export function isEligible(tab, {regroup = false} = {}) {
   return Boolean(tab && Number.isInteger(tab.id) && normalUrl(tab.url) && !tab.pinned && !tab.audible && !tab.incognito && (regroup || isUngrouped(tab)));
-}
-
-export function classifyTab(tab) {
-  const url = normalUrl(tab.url);
-  if (!url) return null;
-  const text = `${tab.title || ''} ${url.hostname}${url.pathname}`;
-  const keyword = KEYWORDS.find(([, , , pattern]) => pattern.test(text));
-  if (keyword) return { key: keyword[0], title: t(keyword[1]), color: keyword[2] };
-  const host = url.hostname.toLowerCase().replace(/^www\./, '');
-  return { key: `domain:${host}`, title: host, color: 'grey' };
 }
 
 function publicTab(tab) {
@@ -69,20 +52,20 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
   const snapshots = existingGroups
     .filter(group => Number.isInteger(group.id) && (allWindows || windowId === undefined || group.windowId === windowId))
     .map(group => ({id:group.id, windowId:group.windowId, title:group.title || '', color:validGroupColor(group.color), collapsed:Boolean(group.collapsed), tabs:selected.filter(tab => tab.groupId === group.id && tab.windowId === group.windowId).map(publicTab)}));
+  const local = clusterTabs(selected.filter(tab => isEligible(tab,{regroup})), {existingGroups:snapshots,regroup});
   const buckets = new Map();
   for (const tab of selected) {
     if (!isEligible(tab,{regroup})) continue;
-    const override = classifications?.get(tab.id);
+    const override = classifications?.get(tab.id) ?? local.get(tab.id);
     const sameWindow = (regroup ? [] : snapshots).filter(group => group.windowId === tab.windowId);
-    const matches = sameWindow.filter(group => group.tabs.some(member => !member.incognito && normalUrl(member.url)?.hostname === normalUrl(tab.url)?.hostname));
     const existing = Number.isInteger(override?.targetGroupId)
       ? sameWindow.find(group => group.id === override.targetGroupId)
-      : !classifications && matches.length === 1 ? matches[0] : undefined;
+      : undefined;
     const category = existing
       ? {key:`existing:${existing.id}`,title:existing.title,color:existing.color,targetGroupId:existing.id}
       : typeof override?.title === 'string' && override.title.trim()
       ? { key: `ai:${override.clusterId ?? override.title.trim()}\u0000${validGroupColor(override.color)}`, title: override.title.trim().slice(0, 80), color: validGroupColor(override.color) }
-      : classifyTab(tab);
+      : {key:`single:${tab.id}`,title:tab.title || 'Tabs',color:'grey'};
     const bucketKey = `${tab.windowId}\u0000${category.key}`;
     const bucket = buckets.get(bucketKey) || { ...category, tabs: [] };
     bucket.tabs.push(tab);
