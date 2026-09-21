@@ -62,6 +62,7 @@ export class TabfoldBackend {
     const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
     const groupingMode=validateGroupingMode(await this.read('tabfoldGroupingMode','local'));
     const regroup=groupingMode==='regroup';
+    const preferences=await this.preferences();
     const initial = buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode});
     const selectedEligible = tabs.filter(tab => (request.allWindows || request.windowId === undefined || tab.windowId === request.windowId) && isEligible(tab,{regroup}));
     const provider = getProvider(request.provider ?? await this.provider());
@@ -70,7 +71,7 @@ export class TabfoldBackend {
     if (request.ai) {
       if (!key) return message(false, t('Save your API key before using AI classification.'));
       try {
-        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:regroup ? [] : initial.existingGroups, suggestNew: request.suggestNew !== false});
+        classifications = await classifyTabs(selectedEligible, key, fetch, {provider:provider.id, categories: await this.categories(), existingGroups:regroup ? [] : initial.existingGroups, suggestNew:preferences.suggestNew, ignoreCategories:preferences.ignoreCategories});
       } catch (error) {
         return message(false, error?.message || t('Unable to complete AI classification.'));
       }
@@ -81,9 +82,23 @@ export class TabfoldBackend {
       }
     }
     const plan = classifications ? buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode}, classifications) : initial;
+    plan.preferences=preferences;
     await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(tab=>isEligible(tab,{regroup})).map(({id,title,url,windowId,index,lastAccessed,groupId})=>({id,title,url,windowId,index,lastAccessed,groupId})), categories: await this.categories() });
     const undo = await this.read(UNDO_KEY);
     return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
+  }
+
+  async preferences() {
+    const saved=await this.read('tabfoldPreferences','local');
+    return {suggestNew:typeof saved?.suggestNew==='boolean' ? saved.suggestNew : true,ignoreCategories:typeof saved?.ignoreCategories==='boolean' ? saved.ignoreCategories : false};
+  }
+
+  async setPreferences(changes) {
+    if(!changes || typeof changes!=='object' || Array.isArray(changes) || Object.entries(changes).some(([key,value])=>!['suggestNew','ignoreCategories'].includes(key) || typeof value!=='boolean')) throw new Error(t('Invalid AI classification options.'));
+    const preferences={...await this.preferences(),...changes};
+    await this.write('tabfoldPreferences',preferences,'local');
+    await this.remove(PREVIEW_KEY);
+    return {ok:true,preferences};
   }
 
   async categories() {
@@ -190,7 +205,7 @@ export class TabfoldBackend {
 
   async matchesSavedPreview(plan) {
     const saved = await this.read(PREVIEW_KEY);
-    return Boolean(saved?.plan && stableJson(saved.plan) === stableJson(plan));
+    return Boolean(saved?.plan && stableJson(saved.plan) === stableJson(plan) && stableJson(plan.preferences) === stableJson(await this.preferences()));
   }
 
   async revalidateGroup(group, regroup = false) {
@@ -414,7 +429,8 @@ export class TabfoldBackend {
   async handle(request = {}) {
     try {
       await initI18n();
-      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, groupingMode:validateGroupingMode(await this.read('tabfoldGroupingMode','local')), tabOrder:validateTabOrder(await this.read('tabfoldTabOrder','local')), keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.read('tabfoldPreferences','local') || {suggestNew:true} }; }
+      if (request.type === 'getSettings') { const provider=getProvider(await this.provider()); return { ok: true, provider:provider.id, groupingMode:validateGroupingMode(await this.read('tabfoldGroupingMode','local')), tabOrder:validateTabOrder(await this.read('tabfoldTabOrder','local')), keyConfigured:Boolean(await this.read(provider.keyName)), categories:await this.categories(), preferences:await this.preferences() }; }
+      if(request.type==='setPreferences') return await this.mutate(()=>this.setPreferences(request.preferences));
       if(request.type==='setGroupingMode') return await this.mutate(async()=>{const groupingMode=validateGroupingMode(request.groupingMode);await this.write('tabfoldGroupingMode',groupingMode,'local');await this.remove(PREVIEW_KEY);return {ok:true,groupingMode};});
       if (request.type === 'setTabOrder') return await this.mutate(async()=>{const tabOrder=validateTabOrder(request.tabOrder);await this.write('tabfoldTabOrder',tabOrder,'local');await this.remove(PREVIEW_KEY);return {ok:true,tabOrder};});
       if (request.type === 'setProvider') return await this.mutate(() => this.setProvider(request.provider));

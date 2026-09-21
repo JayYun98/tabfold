@@ -41,6 +41,8 @@ Varsayılan olarak mevcut gruplar korunur. Mevcut gruplar YZ çalıştırılmada
 
 Hızlı önizleme, başlık/URL terimleri üzerinde istatistiksel TF-IDF ağırlıklarını ve kosinüs benzerliğini tamamen tarayıcıda hesaplar. Diller arasında çevrilmiş anlamları değil, sözcüksel benzerlikleri karşılaştırır. Önceden eğitilmiş bir sinir ağı veya TensorFlow modeli değildir: bağımlılık, model indirme veya sunucu isteği yoktur. Yeniden kullanılabilir JavaScript kümeleme modülü Node.js üzerinde de çalışır.
 
+Açılır pencere **Mevcut grupları yeniden grupla**, **Kayıtlı kategorileri yok say** ve **Yeni kategoriler öner** seçeneklerini bağımsız kaydeder. Kategorileri yok saymak kayıtlı ve varsayılan YZ seçeneklerini silmeden atlar; yeniden gruplandırma açık değilse mevcut Chrome grupları bağlam olarak kullanılır. İki seçenek de açıkken öneriler, yerel çıkarılan konuları Jev ile doğrular; öneriler kapalıysa alan adlarına göre gruplandırılır.
+
 ## Kurulum
 
 1. Bu depoyu indirin veya klonlayın.

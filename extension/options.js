@@ -36,7 +36,7 @@ $('exportCategories').onclick=()=>run(async()=>{
 });
 $('addCategory').onclick=()=>addCategoryRow();
 $('resetCategories').onclick=()=>{renderCategories(DEFAULT_CATEGORIES);status(t('Defaults restored. Save to keep these changes.'));};
-$('saveCategories').onclick=()=>run(async()=>{const categories=readCategories();const result=await send({type:'setCategories',categories});await chrome.storage.local.set({tabfoldPreferences:{suggestNew:$('suggestNew').checked}});renderCategories(result.categories);status(t('Saved. Your next AI preview will use these settings.'));});
+$('saveCategories').onclick=()=>run(async()=>{const categories=readCategories();const result=await send({type:'setCategories',categories});await send({type:'setPreferences',preferences:{suggestNew:$('suggestNew').checked}});renderCategories(result.categories);status(t('Saved. Your next AI preview will use these settings.'));});
 $('saveKey').onclick=()=>run(async()=>{const key=$('apiKey').value.trim();await send({type:'setKey',key,provider:$('provider').value});$('apiKey').value='';keyState(!!key);status(t(key?'API key saved for this session.':'API key removed.'));});
 $('clearKey').onclick=()=>run(async()=>{await send({type:'setKey',key:'',provider:$('provider').value});$('apiKey').value='';keyState(false);status(t('API key removed.'));});
 function providerInfo(){const provider=getProvider($('provider').value);$('providerInfo').textContent=provider.name+' · '+provider.model;}

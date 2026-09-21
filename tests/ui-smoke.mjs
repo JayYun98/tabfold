@@ -20,13 +20,14 @@ try {
    const groups=Array.from({length:24},(_,i)=>({title:i?'Research '+i:'A very long research category title that must not stretch the popup',color:'blue',tabIds:[1,2],tabs:[{title:'A long paper title '.repeat(12),url:'https://example.com/paper'},{title:'Experiments',url:'https://example.com/experiments'}]}));
    const existingGroups=[{id:71,title:'Existing research',color:'green',windowId:1,collapsed:true,tabs:Array.from({length:18},(_,i)=>({id:100+i,title:'Saved paper '+i,url:'https://example.com/saved/'+i,windowId:1}))},{id:72,title:'Existing reading',color:'purple',windowId:1,collapsed:false,tabs:Array.from({length:11},(_,i)=>({id:200+i,title:'Saved article '+i,url:'https://example.org/'+i,windowId:1}))}];
    groups[1]={...groups[1],title:existingGroups[0].title,color:existingGroups[0].color,targetGroupId:71};
-   window.previewRequests=[];window.fixtureGroupingMode='preserve';
+   window.previewRequests=[];window.fixtureGroupingMode='preserve';window.fixturePreferences={suggestNew:true,ignoreCategories:false};
    window.chrome={storage:{local:{get:async key=>({[key]:data[key]}),set:async value=>Object.assign(data,value)}},windows:{getCurrent:async()=>({id:1})},permissions:{request:async request=>{window.requestedOrigins=request.origins;return true;}},runtime:{openOptionsPage:()=>{window.settingsOpened=true;},sendMessage:async request=>{
-    if(request.type==='getSettings')return {ok:true,provider:'typesafe',groupingMode:window.fixtureGroupingMode,categories,keyConfigured:false,preferences:{suggestNew:true}};
+    if(request.type==='getSettings')return {ok:true,provider:'typesafe',groupingMode:window.fixtureGroupingMode,categories,keyConfigured:false,preferences:{...window.fixturePreferences}};
+    if(request.type==='setPreferences'){if(window.failPreferences)return {ok:false,error:'Test save failure'};Object.assign(window.fixturePreferences,request.preferences);return {ok:true,preferences:{...window.fixturePreferences}};}
     if(request.type==='setGroupingMode'){window.fixtureGroupingMode=request.groupingMode;window.savedGroupingMode=request.groupingMode;return {ok:true,groupingMode:request.groupingMode};}
     if(request.type==='setTabOrder'){window.savedTabOrder=request.tabOrder;return {ok:true,tabOrder:request.tabOrder};}
     if(request.type==='setProvider')return {ok:true,provider:request.provider,keyConfigured:false};
-    if(request.type==='preview'){window.previewRequests.push(request);return {ok:true,plan:{total:213,groupingMode:window.fixtureGroupingMode,protectedCount:window.fixtureGroupingMode==='regroup'?5:34,groupedCount:29,otherProtectedCount:5,existingGroups,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};}
+    if(request.type==='preview'){window.previewRequests.push(request);if(window.failPreview)return {ok:false,error:'Test preview failure'};return {ok:true,plan:{total:213,preferences:{...window.fixturePreferences},groupingMode:window.fixtureGroupingMode,protectedCount:window.fixtureGroupingMode==='regroup'?5:34,groupedCount:29,otherProtectedCount:5,existingGroups,groups,duplicates:[{title:'Duplicate test',url:'https://example.com/'}]},suggestions:[],undoAvailable:true};}
     if(request.type==='setCategories'){window.savedCategories=request.categories;return {ok:true,categories:request.categories};}
     return {ok:true,message:'Done'};
    }}};
@@ -52,8 +53,8 @@ try {
   assert.notEqual(await page.locator('#groups [data-action="append"] .group-action').textContent(),await page.locator('#groups [data-action="new"] .group-action').first().textContent());
   await page.locator('#groups .group summary').first().click();assert.equal(await page.locator('body').evaluate(e=>e.scrollWidth),380);
   assert.equal(await page.locator('#groupingModeNotice').evaluate(e=>e.classList.contains('warning')),false);
-  assert.equal(await page.locator('#groupingMode').inputValue(),'preserve');
-  await page.locator('#groupingMode').selectOption('regroup');await page.waitForFunction(()=>!document.querySelector('#groupingMode').disabled);
+  assert.equal(await page.locator('#regroup').isChecked(),false);
+  await page.locator('#regroup').check();await page.waitForFunction(()=>!document.querySelector('#regroup').disabled);
   assert.equal(await page.evaluate(()=>window.savedGroupingMode),'regroup');
   assert.equal(await page.evaluate(()=>window.previewRequests.at(-1).ai),false);
   assert.equal(await page.locator('#groupingModeNotice').evaluate(e=>e.classList.contains('warning')),true);
@@ -61,9 +62,19 @@ try {
   assert.match(await page.locator('#excludedSummary').textContent(),/5/);
   assert.ok((await page.locator('#apply').boundingBox()).y+(await page.locator('#apply').boundingBox()).height<=560);
   assert.equal(await page.evaluate(()=>Object.hasOwn(window.previewRequests.at(-1),'groupingMode')),false,'Backend settings decide mode, not popup requests');
-  await page.locator('#groupingMode').selectOption('preserve');await page.waitForFunction(()=>!document.querySelector('#groupingMode').disabled);
+  await page.locator('#regroup').uncheck();await page.waitForFunction(()=>!document.querySelector('#regroup').disabled);
   assert.equal(await page.evaluate(()=>window.savedGroupingMode),'preserve');
   assert.equal(await page.locator('#groupingModeNotice').isVisible(),false);
+  await page.locator('#allWindows').check();await page.waitForFunction(()=>!document.querySelector('#allWindows').disabled);assert.equal(await page.evaluate(()=>window.previewRequests.at(-1).allWindows),true);
+  await page.locator('#ignoreCategories').check();await page.waitForFunction(()=>!document.querySelector('#ignoreCategories').disabled);assert.equal(await page.evaluate(()=>window.fixturePreferences.ignoreCategories),true);
+  await page.locator('#suggestNew').uncheck();await page.waitForFunction(()=>!document.querySelector('#suggestNew').disabled);assert.equal(await page.evaluate(()=>window.fixturePreferences.suggestNew),false);
+  await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
+  assert.equal(await page.locator('#ignoreCategories').isChecked(),true);assert.equal(await page.locator('#suggestNew').isChecked(),false);
+  assert.equal(await page.evaluate(()=>window.previewRequests.every(request=>request.ai===false)),true,'Checkbox changes must never trigger AI');
+  assert.equal(await page.evaluate(()=>window.previewRequests.some(request=>'suggestNew' in request||'ignoreCategories' in request)),false,'Preferences come from backend settings');
+  await page.evaluate(()=>window.failPreferences=true);await page.locator('#ignoreCategories').click();await page.waitForFunction(()=>!document.querySelector('#ignoreCategories').disabled);assert.equal(await page.locator('#ignoreCategories').isChecked(),true);
+  await page.evaluate(()=>{window.failPreferences=false;window.failPreview=true;});await page.locator('#suggestNew').check();await page.waitForFunction(()=>!document.querySelector('#suggestNew').disabled);assert.equal(await page.locator('#apply').isDisabled(),true,'Failed preview must not apply stale plan');
+  await page.evaluate(()=>window.failPreview=false);await page.locator('#refresh').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled);
   await page.locator('#aiPreview').click();await page.waitForFunction(()=>!document.querySelector('#aiPreview').disabled);assert.deepEqual(await page.evaluate(()=>window.requestedOrigins),['https://api.typesafe.ai/*']);
   await page.locator('#settings').click();assert.equal(await page.evaluate(()=>window.settingsOpened),true);
   if(colorScheme==='light' && ['en','ko'].includes(language))await page.screenshot({path:new URL('../docs/assets/popup-'+language+'.png',import.meta.url).pathname});

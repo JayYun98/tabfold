@@ -41,6 +41,8 @@ Elige **Reagrupar todas las pestañas elegibles** para ignorar los nombres y el 
 
 La vista rápida calcula pesos estadísticos TF-IDF y similitud coseno sobre términos de títulos y URL, dentro del navegador. Compara semejanzas léxicas, no significados traducidos entre idiomas. No es un modelo neuronal preentrenado ni de TensorFlow: no requiere dependencias, descargas de modelos ni solicitudes al servidor. El módulo JavaScript reutilizable también funciona en Node.js.
 
+La ventana emergente recuerda por separado **Reagrupar grupos existentes**, **Ignorar categorías guardadas** y **Sugerir nuevas categorías**. Ignorar categorías omite las opciones de IA guardadas y predeterminadas sin borrarlas; los grupos de Chrome siguen aportando contexto salvo que se active la reagrupación. Al activar ambas opciones, las sugerencias validan temas extraídos localmente mediante Jev; sin sugerencias, se agrupa por dominio.
+
 ## Instalación
 
 1. Descarga o clona este repositorio.

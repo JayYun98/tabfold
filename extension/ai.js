@@ -46,7 +46,8 @@ export function validateCategories(value) {
 function categoryConfig(options) {
   if (!options || typeof options !== 'object' || Array.isArray(options)) throw error(t('Invalid AI classification options.'));
   const custom = Object.hasOwn(options, 'categories') && options.categories !== undefined;
-  const categories = custom ? validateCategories(options.categories) : DEFAULT_CATEGORIES;
+  if (options.ignoreCategories !== undefined && typeof options.ignoreCategories !== 'boolean') throw error(t('Invalid AI classification options.'));
+  const categories = options.ignoreCategories ? [] : custom ? validateCategories(options.categories) : DEFAULT_CATEGORIES;
   if (options.suggestNew !== undefined && typeof options.suggestNew !== 'boolean') throw error(t('Invalid suggestion option.'));
   return {
     categories: categories.map((category, index) => ({ ...category, id: custom ? `c${index}` : LEGACY_KEYS[index] })),
@@ -234,6 +235,10 @@ export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
   let otherCount = 0;
   for (const [windowId, windowTabs] of windows) {
     const categories = [...existingCategories(existing,windowId), ...config.categories];
+    if (!categories.length) {
+      for (const tab of windowTabs) { fallback(tab,groups); otherCount++; if(config.suggestNew) strongTabs.push(tab); }
+      continue;
+    }
     const byId = new Map(categories.map(category => [category.id,category]));
     for (let index = 0; index < windowTabs.length; index += BATCH_SIZE) {
       const batch = windowTabs.slice(index, index + BATCH_SIZE);

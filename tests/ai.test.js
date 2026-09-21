@@ -220,3 +220,23 @@ test('existing groups are primary window-scoped choices with safe representative
   assert.equal(result.get(1).targetGroupId,113);assert.equal(result.get(1).title,existingGroups[13].title);assert.equal(result.get(2).targetGroupId,200);
   assert.doesNotMatch(JSON.stringify(requests),/password|secret=yes|private.example|chrome:\/\/settings/);
 });
+
+test('ignoring saved categories keeps existing choices and skips a pointless Other-only request',async()=>{
+ const input=[{id:1,windowId:1,title:'Atlas migration guide',url:'https://atlas.example/a'},{id:2,windowId:1,title:'Atlas migration guide',url:'https://atlas.example/b'}];
+ const categories=[{title:'Saved category',criteria:'Saved criteria',color:'red'}];
+ let calls=0;
+ const noRequests=async()=>{calls++;throw new Error('unexpected request');};
+ const fallback=await classifyTabs(input,'key',noRequests,{categories,ignoreCategories:true,suggestNew:false});
+ assert.equal(calls,0);assert.equal(fallback.get(1).title,'atlas.example');assert.equal(fallback.otherCount,2);assert.deepEqual(fallback.suggestions,[]);
+ const suggested=await classifyTabs(input,'key',async(_url,options)=>{
+  calls++;const body=JSON.parse(options.body);const choices=Object.keys(body.questions.tab_1.criteria);assert.deepEqual(choices,['candidate_0','other']);
+  return response(Object.fromEntries(input.map(tab=>[`tab_${tab.id}`,{type:'choice',choice:'candidate_0',confidence:.95}])));
+ },{categories,ignoreCategories:true,suggestNew:true});
+ assert.equal(calls,1);assert.equal(suggested.suggestions.length,1);
+ const existing=await classifyTabs(input,'key',async(_url,options)=>{
+  const body=JSON.parse(options.body);assert.deepEqual(Object.keys(body.questions.tab_1.criteria),['group_10','other']);assert.doesNotMatch(options.body,/Saved category|Saved criteria/);
+  return response(Object.fromEntries(input.map(tab=>[`tab_${tab.id}`,{type:'choice',choice:'group_10',confidence:.95}])));
+ },{categories,ignoreCategories:true,existingGroups:[{id:10,windowId:1,title:'Existing',color:'green',tabs:[]}]});
+ assert.equal(existing.get(1).targetGroupId,10);assert.equal(categories[0].title,'Saved category');
+ await assert.rejects(classifyTabs(input,'key',noRequests,{ignoreCategories:'yes'}),/Invalid AI classification options/);
+});

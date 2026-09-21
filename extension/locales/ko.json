@@ -167,5 +167,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "그룹 정리 방식을 저장했습니다. 미리보기를 새로 만들면 적용됩니다.",
   "Regroup mode: existing groups may be rebuilt.": "재분류 모드: 기존 그룹을 다시 구성할 수 있습니다.",
   "Review the new groups before applying. Protected tabs stay in place.": "새 그룹을 확인한 뒤 적용하세요. 보호된 탭은 유지합니다.",
-  "Invalid grouping mode.": "잘못된 그룹 정리 방식입니다."
+  "Invalid grouping mode.": "잘못된 그룹 정리 방식입니다.",
+  "Regroup existing groups": "기존 그룹 재분류",
+  "Ignore saved categories": "저장된 카테고리 무시",
+  "Skip saved AI categories without deleting them.": "저장된 AI 카테고리를 삭제하지 않고 이번 분류에서 제외합니다."
 }

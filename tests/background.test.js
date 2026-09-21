@@ -172,14 +172,14 @@ test('settings reports key presence without exposing credentials and preserves c
   const defaults = await backend.handle({type:'getSettings'});
   assert.equal(defaults.ok, true);
   assert.equal(defaults.keyConfigured, false);
-  assert.deepEqual(defaults.preferences, {suggestNew:true});
+  assert.deepEqual(defaults.preferences, {suggestNew:true,ignoreCategories:false});
   assert.equal(defaults.categories[0].title, 'Development');
   const categories = [{title:'내 논문', criteria:'Research papers', color:'green'}];
   await backend.handle({type:'setCategories', categories});
   await backend.handle({type:'setKey', key:'private-test-key'});
   await backend.write('tabfoldPreferences', {suggestNew:false}, 'local');
   const configured = await backend.handle({type:'getSettings'});
-  assert.deepEqual(configured, {ok:true, provider:'openrouter', groupingMode:'preserve', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false}});
+  assert.deepEqual(configured, {ok:true, provider:'openrouter', groupingMode:'preserve', tabOrder:'current', keyConfigured:true, categories, preferences:{suggestNew:false,ignoreCategories:false}});
   assert.equal(JSON.stringify(configured).includes('private-test-key'), false);
 });
 
@@ -318,4 +318,25 @@ test('regroup undo does not recreate an original group the user removed around p
  assert.equal(chrome._tabs.get(1).groupId,destination);
  assert.equal(chrome._tabs.get(2).groupId,destination);
  assert.equal(chrome._tabs.get(3).groupId,-1);
+});
+
+test('preferences merge strict booleans, invalidate previews, and protect against late preview races',async()=>{
+ const {backend}=regroupFixture();
+ assert.deepEqual(await backend.preferences(),{suggestNew:true,ignoreCategories:false});
+ const previous=await backend.handle({type:'preview',suggestNew:false});assert.equal(previous.plan.preferences.suggestNew,true);
+ assert.equal((await backend.handle({type:'setPreferences',preferences:{ignoreCategories:true}})).ok,true);
+ assert.deepEqual(await backend.preferences(),{suggestNew:true,ignoreCategories:true});
+ assert.equal((await backend.handle({type:'apply',plan:previous.plan})).ok,false);
+ // A late request may rewrite its old plan after settings changed; matching the stored plan is insufficient.
+ await backend.write('tabfoldPreview',{plan:previous.plan});assert.equal(await backend.matchesSavedPreview(previous.plan),false);
+ await backend.handle({type:'setPreferences',preferences:{suggestNew:false}});assert.deepEqual(await backend.preferences(),{suggestNew:false,ignoreCategories:true});
+ for(const preferences of [{ignoreCategories:1},{unknown:true},[],null]) assert.equal((await backend.handle({type:'setPreferences',preferences})).ok,false);
+});
+
+test('AI preview uses saved preferences and keeps saved categories untouched',async()=>{
+ const chrome=mockChrome([{id:1,windowId:1,title:'Atlas',url:'https://atlas.example/a'},{id:2,windowId:1,title:'Atlas',url:'https://atlas.example/b'}]);
+ const backend=new TabfoldBackend(chrome);const before=await backend.categories();
+ await backend.handle({type:'setKey',key:'test'});await backend.handle({type:'setPreferences',preferences:{ignoreCategories:true,suggestNew:false}});
+ const originalFetch=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('unexpected network call');};
+ try {const result=await backend.handle({type:'preview',ai:true,suggestNew:true});assert.equal(result.ok,true);assert.equal(calls,0);assert.deepEqual(result.plan.preferences,{ignoreCategories:true,suggestNew:false});assert.deepEqual(await backend.categories(),before);}finally{globalThis.fetch=originalFetch;}
 });

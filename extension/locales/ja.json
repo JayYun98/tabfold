@@ -167,5 +167,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "グループ化モードを保存しました。プレビューを更新すると適用されます。",
   "Regroup mode: existing groups may be rebuilt.": "再グループ化モード：既存グループが再構成される場合があります。",
   "Review the new groups before applying. Protected tabs stay in place.": "適用前に新しいグループを確認してください。保護対象のタブはそのまま保持します。",
-  "Invalid grouping mode.": "無効なグループ化モードです。"
+  "Invalid grouping mode.": "無効なグループ化モードです。",
+  "Regroup existing groups": "既存グループを再分類",
+  "Ignore saved categories": "保存済みカテゴリを無視",
+  "Skip saved AI categories without deleting them.": "保存済みの AI カテゴリを削除せずに分類対象から外します。"
 }

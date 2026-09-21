@@ -172,5 +172,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "已儲存分組模式。重新整理預覽後生效。",
   "Regroup mode: existing groups may be rebuilt.": "重新分組模式：現有群組可能會重新建立。",
   "Review the new groups before applying. Protected tabs stay in place.": "套用前請檢查新群組。受保護的分頁保持不變。",
-  "Invalid grouping mode.": "無效的分組模式。"
+  "Invalid grouping mode.": "無效的分組模式。",
+  "Regroup existing groups": "重新分類現有群組",
+  "Ignore saved categories": "忽略已儲存的分類",
+  "Skip saved AI categories without deleting them.": "略過已儲存的 AI 分類，但不刪除它們。"
 }

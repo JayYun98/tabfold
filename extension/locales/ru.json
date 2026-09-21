@@ -167,5 +167,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "Режим группировки сохранён. Обновите предварительный просмотр.",
   "Regroup mode: existing groups may be rebuilt.": "Режим перегруппировки: существующие группы могут быть пересозданы.",
   "Review the new groups before applying. Protected tabs stay in place.": "Проверьте новые группы перед применением. Защищённые вкладки остаются на месте.",
-  "Invalid grouping mode.": "Недопустимый режим группировки."
+  "Invalid grouping mode.": "Недопустимый режим группировки.",
+  "Regroup existing groups": "Перегруппировать существующие группы",
+  "Ignore saved categories": "Игнорировать сохранённые категории",
+  "Skip saved AI categories without deleting them.": "Пропускать сохранённые категории ИИ, не удаляя их."
 }

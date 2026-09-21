@@ -41,6 +41,8 @@ Choisissez **Regrouper tous les onglets admissibles** pour ignorer les noms et l
 
 L’aperçu rapide calcule les poids statistiques TF-IDF et la similarité cosinus des termes des titres et URL dans le navigateur. Il compare le vocabulaire, pas les sens traduits entre langues. Ce n’est ni un réseau neuronal préentraîné ni un modèle TensorFlow : aucune dépendance, aucun téléchargement de modèle ni requête serveur. Le module JavaScript réutilisable fonctionne aussi sous Node.js.
 
+La fenêtre mémorise séparément **Reclasser les groupes existants**, **Ignorer les catégories enregistrées** et **Proposer de nouvelles catégories**. Ignorer les catégories exclut les choix IA enregistrés et par défaut sans les supprimer ; les groupes Chrome restent un contexte sauf si le reclassement est activé. Avec les deux options activées, les suggestions valident via Jev des sujets extraits localement ; sans suggestions, le regroupement se fait par domaine.
+
 ## Installation
 
 1. Téléchargez ou clonez ce dépôt.

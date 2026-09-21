@@ -93,3 +93,10 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 
 - Added the existing preserve/regroup selector directly above Apply in the popup, sharing the saved setting with the options page. Changing it invalidates the old plan and automatically refreshes local preview without an AI request or tab mutation. Regroup retains its warning; preserve hides the redundant notice.
 - All 41 tests, syntax checks, and 18 language/theme UI checks passed. UI checks now operate the actual popup selector in both directions and verify saved mode, automatic local preview, warning visibility, and footer bounds.
+
+## v0.9.0 popup checkboxes
+
+- Popup exposes All windows, Regroup existing groups, Ignore saved categories, and Suggest new categories in a compact checkbox grid; Collapse groups remains a checkbox. Regroup and AI preferences persist independently. Scope and collapse remain popup-local selections.
+- Ignoring categories preserves their stored definitions and omits their AI choices; existing Chrome-group context remains unless regroup is enabled. With no category choices, the initial Other-only API call is skipped: optional local-topic candidates can still be validated, otherwise hostname fallback is used.
+- Preference changes merge validated booleans through the backend and invalidate previews. Options-page saves preserve unrelated preferences. Checkbox changes refresh local preview without calling AI or applying groups. Failed saves restore the checkbox; failed refreshes disable Apply rather than retain a stale plan.
+- All 44 unit/regression checks, syntax checks, 18 language/theme UI combinations, and isolated native Chromium append/regroup/undo scenarios passed. UI failure checks cover rejected saves and failed preview refresh. No user tabs or live AI requests were used.

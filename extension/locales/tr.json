@@ -167,5 +167,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "Gruplandırma modu kaydedildi. Kullanmak için önizlemeyi yenileyin.",
   "Regroup mode: existing groups may be rebuilt.": "Yeniden gruplandırma modu: mevcut gruplar yeniden oluşturulabilir.",
   "Review the new groups before applying. Protected tabs stay in place.": "Uygulamadan önce yeni grupları inceleyin. Korunan sekmeler yerinde kalır.",
-  "Invalid grouping mode.": "Geçersiz gruplandırma modu."
+  "Invalid grouping mode.": "Geçersiz gruplandırma modu.",
+  "Regroup existing groups": "Mevcut grupları yeniden grupla",
+  "Ignore saved categories": "Kayıtlı kategorileri yok say",
+  "Skip saved AI categories without deleting them.": "Kayıtlı YZ kategorilerini silmeden atla."
 }

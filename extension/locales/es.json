@@ -172,5 +172,8 @@
   "Grouping mode saved. Refresh the preview to use it.": "Modo de agrupación guardado. Actualiza la vista previa para usarlo.",
   "Regroup mode: existing groups may be rebuilt.": "Modo de reagrupación: los grupos existentes pueden reconstruirse.",
   "Review the new groups before applying. Protected tabs stay in place.": "Revisa los grupos nuevos antes de aplicar. Las pestañas protegidas se mantienen en su sitio.",
-  "Invalid grouping mode.": "El modo de agrupación no es válido."
+  "Invalid grouping mode.": "El modo de agrupación no es válido.",
+  "Regroup existing groups": "Reagrupar grupos existentes",
+  "Ignore saved categories": "Ignorar categorías guardadas",
+  "Skip saved AI categories without deleting them.": "Omitir las categorías de IA guardadas sin eliminarlas."
 }
