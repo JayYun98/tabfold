@@ -274,3 +274,15 @@ test('regroup and cross-window reuse names without returning cross-window append
   assert.equal(result.get(1).title,'Media / SNS');assert.equal(result.get(1).targetGroupId,undefined);
  }
 });
+
+test('local fallback that finds an existing group does not suggest a redundant new category',async()=>{
+ const input=[{id:1,windowId:1,title:'Atlas platform reference',url:'https://atlas.example/a'},{id:2,windowId:1,title:'Atlas platform tutorial',url:'https://atlas.example/b'}];
+ const existingGroups=[{id:10,windowId:1,title:'Atlas project',color:'blue',tabs:[{id:3,title:'Atlas platform documentation',url:'https://atlas.example/c',windowId:1}]}];
+ let calls=0;
+ const result=await classifyTabs(input,'key',async(_url,options)=>{
+  calls++;const body=JSON.parse(options.body);
+  return response(Object.fromEntries(body.state.tabs.map(t=>[`tab_${t.id}`,{type:'choice',choice:'other',confidence:.95}])));
+ },{existingGroups,suggestNew:true});
+ assert.equal(result.get(1).targetGroupId,10);assert.equal(result.get(2).targetGroupId,10);
+ assert.equal(calls,1);assert.deepEqual(result.suggestions,[]);
+});

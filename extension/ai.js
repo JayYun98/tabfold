@@ -249,8 +249,9 @@ export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
   // Includes both explicit Other choices and low-confidence category choices.
   groups.otherCount = otherCount;
   groups.suggestions = [];
-  if (config.suggestNew && strongTabs.length >= 2) {
-    try { groups.suggestions = await suggestCategories(strongTabs, config.categories, key.trim(), fetchImpl, provider); }
+  const unmatched=strongTabs.filter(tab=>{const group=groups.get(tab.id);return !Number.isInteger(group?.targetGroupId) && !/^(existing|template):/.test(group?.clusterId || '');});
+  if (config.suggestNew && unmatched.length >= 2) {
+    try { groups.suggestions = await suggestCategories(unmatched, config.categories, key.trim(), fetchImpl, provider); }
     catch (cause) { groups.suggestionError = t('Unable to validate new category suggestions: {error}', { error: cause.message }); }
   }
   return groups;
