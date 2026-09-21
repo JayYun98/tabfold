@@ -1,3 +1,4 @@
+import {preferredGroup} from './preferred-groups.js';
 import {groupContext,matchExistingGroup,groupsForWindow,isNamedGroup} from './group-context.js';
 // Small corpus-fitted lexical model: no weights, network, or runtime dependencies.
 // ponytail: quadratic comparisons suit hundreds of tabs; use a nearest-neighbor index for thousands.
@@ -45,6 +46,8 @@ export function clusterTabs(tabs,{existingGroups=[],regroup=false}={}) {
   for(const doc of documents)doc.vector=normalized(new Map([...doc.terms].map(([term,weight])=>[term,weight*(1+Math.log((1+documents.length)/(1+frequency.get(term))))])));
   const result=new Map(),buckets=[];
   for(const doc of documents.slice(0,tabs.length).sort((a,b)=>a.tab.windowId-b.tab.windowId || a.words.join(' ').localeCompare(b.words.join(' '),'en') || String(a.tab.url).localeCompare(String(b.tab.url),'en') || a.tab.id-b.tab.id)){
+    const preferred=preferredGroup(doc.tab,existingGroups,{regroup});
+    if(preferred){result.set(doc.tab.id,preferred);continue;}
     const available=groups.filter(group=>group.windowId===doc.tab.windowId);
     const clear=matchExistingGroup(doc.tab,available);
     const semanticMatches=available.filter(group=>matchExistingGroup(doc.tab,[group]));

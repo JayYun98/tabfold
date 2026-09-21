@@ -246,9 +246,9 @@ test('ignoring saved categories keeps existing choices and skips a pointless Oth
 
 test('Other and ignored categories use topics across hosts without collecting unrelated same-host tabs',async()=>{
  const input=[
-  {id:1,windowId:1,title:'Speculative decoding training guide - Google Search',url:'https://www.google.com/search'},
+  {id:1,windowId:1,title:'Speculative decoding training guide - Google Search',url:'https://search.example/search'},
   {id:2,windowId:1,title:'Speculative decoding training methods',url:'https://arxiv.org/abs/123'},
-  {id:3,windowId:1,title:'Sourdough bread recipe - Google Search',url:'https://www.google.com/search'},
+  {id:3,windowId:1,title:'Sourdough bread recipe - Google Search',url:'https://search.example/search'},
   {id:4,windowId:2,title:'Speculative decoding training methods',url:'https://arxiv.org/abs/456'},
  ];
  for(const ignoreCategories of [false,true]){

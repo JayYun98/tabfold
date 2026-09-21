@@ -1,5 +1,6 @@
 import { t } from './i18n.js';
 import { clusterTabs } from './clustering.js';
+import { preferredGroup } from './preferred-groups.js';
 
 const GROUP_NONE = -1;
 const COLORS = ['blue', 'red', 'yellow', 'green', 'pink', 'purple', 'cyan', 'orange', 'grey'];
@@ -53,10 +54,18 @@ export function buildPreview(tabs, { windowId, allWindows = false, tabOrder = 'c
     .filter(group => Number.isInteger(group.id) && (allWindows || windowId === undefined || group.windowId === windowId))
     .map(group => ({id:group.id, windowId:group.windowId, title:group.title || '', color:validGroupColor(group.color), collapsed:Boolean(group.collapsed), tabs:selected.filter(tab => tab.groupId === group.id && tab.windowId === group.windowId).map(publicTab)}));
   const local = clusterTabs(selected.filter(tab => isEligible(tab,{regroup})), {existingGroups:snapshots,regroup});
+  const preferred = new Map();
+  const nameKey=(tab,title)=>`${tab.windowId}\u0000${title.trim().toLowerCase()}`;
+  for(const tab of selected.filter(tab=>isEligible(tab,{regroup}))){
+    const rule=preferredGroup(tab),classification=classifications?.get(tab.id) ?? local.get(tab.id);
+    if(rule && classification && !classification.clusterId?.startsWith('preferred:ambiguous:')) preferred.set(nameKey(tab,rule.title),classification);
+  }
   const buckets = new Map();
   for (const tab of selected) {
     if (!isEligible(tab,{regroup})) continue;
-    const override = classifications?.get(tab.id) ?? local.get(tab.id);
+    let override = classifications?.get(tab.id) ?? local.get(tab.id);
+    // One preferred name has one identity, even when AI chose a different color.
+    if(!Number.isInteger(override?.targetGroupId) && typeof override?.title==='string' && !override.clusterId?.startsWith('preferred:ambiguous:')) override=preferred.get(nameKey(tab,override.title)) ?? override;
     const sameWindow = (regroup ? [] : snapshots).filter(group => group.windowId === tab.windowId);
     const existing = Number.isInteger(override?.targetGroupId)
       ? sameWindow.find(group => group.id === override.targetGroupId)

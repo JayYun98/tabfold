@@ -1,3 +1,4 @@
+import {preferredGroup} from './preferred-groups.js';
 import { t } from './i18n.js';
 import { clusterTabs } from './clustering.js';
 import { groupContext, groupsForWindow, isNamedGroup, matchExistingGroup } from './group-context.js';
@@ -221,6 +222,8 @@ export async function classifyTabs(tabs, key, fetchImpl = fetch, options = {}) {
   for (const [windowId, allWindowTabs] of windows) {
     const context=groupsForWindow(existing.filter(group=>!options.regroup || isNamedGroup(group)),windowId);
     const windowTabs=allWindowTabs.filter(tab=>{
+      const preferred=preferredGroup(tab,existing,{regroup:options.regroup===true});
+      if(preferred){groups.set(tab.id,preferred);return false;}
       const clear=matchExistingGroup(tab,context);
       // Clear broad media/jobs intent beats noisy topic fragments and needs no paid decision.
       if(!clear || !/^(?:media(?:\s*[/&]\s*sns)?|sns|social|jobs?|job recruit|careers?|채용|취업|미디어|소셜)$/i.test(clear.title.trim())) return true;

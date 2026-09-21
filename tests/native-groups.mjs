@@ -11,6 +11,7 @@ try {
  context=await chromium.launchPersistentContext(profile,{channel:'chromium',headless:true,args:[`--disable-extensions-except=${extension}`,`--load-extension=${extension}`]});
  await context.route(url=>url.hostname.endsWith('.invalid'),route=>route.fulfill({contentType:'text/html',body:'<title>Atlas platform documentation guide</title>'}));
  await context.route(url=>url.hostname==='www.youtube.com',route=>route.fulfill({contentType:'text/html',body:'<title>Unrelated video title</title>'}));
+ await context.route(url=>['www.google.com','www.tossinvest.com'].includes(url.hostname),route=>route.fulfill({contentType:'text/html',body:'<title>Unrelated test title</title>'}));
  const worker=context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
  const id=new URL(worker.url()).host;
  const page=await context.newPage();await page.goto(`chrome-extension://${id}/options.html`);
@@ -101,5 +102,43 @@ try {
  assert.deepEqual(purpose.restored,[{windowId:purpose.windows[0],groupId:-1},{windowId:purpose.windows[1],groupId:-1},{windowId:purpose.windows[1],groupId:-1}]);
  assert.deepEqual(purpose.after,purpose.before);assert.equal(purpose.originalMember,purpose.original);
  console.log('Native Chromium: named Media append and cross-window category copy preserve windows and undo');
+
+ const preferred=await page.evaluate(async()=>{
+  const send=async request=>{const result=await chrome.runtime.sendMessage(request);if(!result.ok)throw new Error(result.error);return result;};
+  const win=await chrome.windows.create({url:'about:blank',focused:false});
+  const make=async(url,pinned=false)=>{
+   const tab=await chrome.tabs.create({windowId:win.id,url:'about:blank',active:false,pinned});
+   await new Promise(resolve=>setTimeout(resolve,150));
+   await chrome.tabs.update(tab.id,{url});
+   for(let i=0;i<100;i++){const fresh=await chrome.tabs.get(tab.id);if(fresh.status==='complete'&&fresh.url.startsWith('https:'))return fresh;await new Promise(resolve=>setTimeout(resolve,50));}
+   throw new Error('Preferred test tab did not load');
+  };
+  try {
+   const google=await make('https://www.google.com/search?q=Jev');
+   const googleTwo=await make('https://www.google.com/search?q=speculative+decoding');
+   const toss=await make('https://www.tossinvest.com/stocks/US1');
+   const tossTwo=await make('https://www.tossinvest.com/stocks/US2');
+   const pinned=await make('https://www.google.com/search?q=protected',true);
+   const tabs=[google,googleTwo,toss,tossTwo];
+   const {plan}=await send({type:'preview',windowId:win.id});
+   await send({type:'apply',plan});
+   const applied=await Promise.all(tabs.map(tab=>chrome.tabs.get(tab.id)));
+   if(applied.some(tab=>tab.groupId<0))throw new Error(JSON.stringify({plan:plan.groups.map(g=>({title:g.title,ids:g.tabIds})),tabs:applied.map(t=>({id:t.id,url:t.url,groupId:t.groupId}))}));
+   const appliedNames=await Promise.all(applied.map(async tab=>(await chrome.tabGroups.get(tab.groupId)).title));
+   const protectedAfter=await chrome.tabs.get(pinned.id);
+   await send({type:'undo'});
+   const restored=await Promise.all(tabs.map(tab=>chrome.tabs.get(tab.id)));
+   const protectedRestored=await chrome.tabs.get(pinned.id);
+   return {windowId:win.id,ids:tabs.map(t=>t.id),groups:plan.groups.map(g=>({title:g.title,ids:g.tabIds})),appliedNames,windows:applied.map(t=>t.windowId),restored:restored.map(t=>({windowId:t.windowId,groupId:t.groupId})),protectedAfter:{windowId:protectedAfter.windowId,pinned:protectedAfter.pinned,groupId:protectedAfter.groupId},protectedRestored:{windowId:protectedRestored.windowId,pinned:protectedRestored.pinned,groupId:protectedRestored.groupId}};
+  }finally{await chrome.windows.remove(win.id);}
+ });
+ assert.equal(preferred.groups.length,2);
+ assert.deepEqual(preferred.groups.find(g=>g.title==='Google search').ids,preferred.ids.slice(0,2));
+ assert.deepEqual(preferred.groups.find(g=>g.title==='Investment').ids,preferred.ids.slice(2));
+ assert.deepEqual(preferred.appliedNames,['Google search','Google search','Investment','Investment']);
+ assert.ok(preferred.windows.every(id=>id===preferred.windowId));
+ assert.deepEqual(preferred.restored,preferred.ids.map(()=>({windowId:preferred.windowId,groupId:-1})));
+ assert.deepEqual(preferred.protectedAfter,{windowId:preferred.windowId,pinned:true,groupId:-1});assert.deepEqual(preferred.protectedRestored,preferred.protectedAfter);
+ console.log('Native Chromium: explicit Google Search and Toss Investment groups apply/undo without moving windows or pinned tabs');
 
 } finally {await context?.close();await rm(profile,{recursive:true,force:true});}

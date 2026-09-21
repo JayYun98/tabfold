@@ -26,3 +26,16 @@ Audit prevents self-membership and duplicate URL/title leakage when evaluating e
 - Full local245-tab batch measured437ms and~15MiB Node heap in one local run; not a browser latency guarantee. Hot path recomputes diverse lexical examples per tab; no new model download or dependency.
 - Promote A+B; discard C name-only standalone on objective regression; embedding family deferred, not declared inferior without measurement. No additional paid trials.
 - Existing Chrome groups contain prior automatic errors, so no global accuracy percentage is claimed. User tabs were read only. Review artifact remains local and ignored.
+
+## Preferred-label optimization (parent a8230b8)
+
+User gold: Toss Invest→Investment; Google search results→Google search, including technical/garbled queries. These explicit preferences outrank topic similarity and model decisions. New budget: local-only tests/replay,0paid requests; stop when supplied gold+negative boundaries pass and independent reviewer has no blocking case.
+
+- Beam1 topic inference (parent) missed20/20 targeted snapshot labels.
+- Beam2 explicit host/path preferences passes6/6supplied examples and20/20related snapshot tabs,0off-target assignments. Do not broaden to all Google or all Toss services.
+- Combined beam adds stable preferred identity in shared preview to avoid duplicate groups from AI/custom colors. Reviewer found this defect in round2 and verified correction in round3. Ambiguous duplicate physical targets abstain rather than form a third group.
+- Full local clustering+preview measured481ms in one run. No embedding dependency or new API call. Other245-tab candidate rows are cached-answer replay, not reverified ground truth.
+
+- [20260922T022348+0900_preferred-policy.md](../submit_logs/20260922T022348+0900_preferred-policy.md)
+- [20260922T022348+0900_duplicate-review.md](../submit_logs/20260922T022348+0900_duplicate-review.md)
+- [20260922T022348+0900_preferred-integrated.md](../submit_logs/20260922T022348+0900_preferred-integrated.md)

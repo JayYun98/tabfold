@@ -106,3 +106,7 @@ Plain JavaScript, native Chrome APIs, no runtime dependencies, and no remote cod
 ---
 
 **Folding is visual compaction, not content summarization or guaranteed memory reduction.**
+
+### Explicit grouping preferences
+
+Google Search result tabs (`google.com` / `google.co.kr`, `/search`) use **Google search**; Toss Invest uses **Investment**. These explicit preferences take priority in Quick and AI preview, even when existing names or saved AI categories are ignored. They do not classify Google Docs, Gmail, or a page merely mentioning a company. Matching existing groups are reused in the same window; ambiguous duplicate names are left unassigned instead of creating a third group.

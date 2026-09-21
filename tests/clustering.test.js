@@ -18,9 +18,9 @@ test('local model uses same-window existing examples, ignores them for regroup, 
  assert.deepEqual([...clusterTabs([])],[]);
 });
 
-test('site boilerplate and common host never combine unrelated topics or append to unrelated existing groups',()=>{
- const tabs=[tab(1,'Sourdough bread starter - Google Search','https://google.com/search?q=bread'),tab(2,'Speculative decoding inference - Google Search','https://google.com/search?q=decode'),tab(3,'Meditation piano music - YouTube','https://youtube.com/watch?v=1'),tab(4,'Kubernetes deployment tutorial - YouTube','https://youtube.com/watch?v=2')];
- const existingGroups=[{id:20,windowId:1,title:'Coding',color:'blue',tabs:[tab(50,'Python type checking - Google Search','https://google.com/search?q=python')]}];
+test('sites without preferred rules: boilerplate and common host never combine unrelated topics or append to unrelated existing groups',()=>{
+ const tabs=[tab(1,'Sourdough bread starter - Google Search','https://search.example/search?q=bread'),tab(2,'Speculative decoding inference - Google Search','https://search.example/search?q=decode'),tab(3,'Meditation piano music - YouTube','https://youtube.com/watch?v=1'),tab(4,'Kubernetes deployment tutorial - YouTube','https://youtube.com/watch?v=2')];
+ const existingGroups=[{id:20,windowId:1,title:'Coding',color:'blue',tabs:[tab(50,'Python type checking - Google Search','https://search.example/search?q=python')]}];
  const result=clusterTabs(tabs,{existingGroups});
  assert.equal(new Set([...result.values()].map(v=>v.clusterId)).size,4);
  assert.ok([...result.values()].every(v=>v.targetGroupId===undefined));
@@ -28,7 +28,7 @@ test('site boilerplate and common host never combine unrelated topics or append 
 });
 
 test('cross-host topics cluster across search, papers and repositories independently of input order',()=>{
- const tabs=[tab(1,'Speculative decoding inference - Google Search','https://google.com/search?q=speculative'),tab(2,'Speculative decoding inference acceleration','https://arxiv.org/abs/2401.00001'),tab(3,'Speculative decoding inference - GitHub','https://github.com/lab/speculative-decoding'),tab(4,'Opencodex extension rendering bug - GitHub','https://github.com/team/opencodex/issues/21'),tab(5,'Opencodex extension rendering fix - GitHub','https://github.com/team/opencodex/pull/22')];
+ const tabs=[tab(1,'Speculative decoding inference - Google Search','https://search.example/search?q=speculative'),tab(2,'Speculative decoding inference acceleration','https://arxiv.org/abs/2401.00001'),tab(3,'Speculative decoding inference - GitHub','https://github.com/lab/speculative-decoding'),tab(4,'Opencodex extension rendering bug - GitHub','https://github.com/team/opencodex/issues/21'),tab(5,'Opencodex extension rendering fix - GitHub','https://github.com/team/opencodex/pull/22')];
  const result=clusterTabs(tabs),reversed=clusterTabs([...tabs].reverse());
  assert.equal(result.get(1).clusterId,result.get(2).clusterId);assert.equal(result.get(1).clusterId,result.get(3).clusterId);
  assert.equal(result.get(4).clusterId,result.get(5).clusterId);assert.notEqual(result.get(3).clusterId,result.get(4).clusterId);
