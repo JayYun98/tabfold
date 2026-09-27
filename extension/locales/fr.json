@@ -172,5 +172,20 @@
   "Ignore saved categories": "Ignorer les catégories enregistrées",
   "Skip saved AI categories without deleting them.": "Ignorer les catégories IA enregistrées sans les supprimer.",
   "Use existing group names": "Utiliser les noms des groupes existants",
-  "Use existing group names when classifying tabs, even when regrouping.": "Utilise les noms des groupes existants pour classer les onglets, même lors du regroupement."
+  "Use existing group names when classifying tabs, even when regrouping.": "Utilise les noms des groupes existants pour classer les onglets, même lors du regroupement.",
+  "Duplicates and recovery": "Doublons et restauration",
+  "Window {number}": "Fenêtre {number}",
+  "Tabs stay in their original windows.": "Les onglets restent dans leur fenêtre d’origine.",
+  "Preview first. Apply when ready.": "Vérifiez l’aperçu, puis appliquez.",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "Aucun changement proposé. Activez le regroupement pour reclasser les onglets déjà groupés.",
+  "Quick preview ready. Run AI preview again to update AI results.": "Aperçu rapide prêt. Relancez l’aperçu IA pour actualiser ses résultats.",
+  "Set up AI": "Configurer l’IA",
+  "Add an API key in Settings": "Ajoutez une clé API dans les paramètres",
+  "No tabs in this scope.": "Aucun onglet dans cette sélection.",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "Aucun onglet à classer. Les onglets épinglés, en lecture, privés et internes restent inchangés.",
+  "New group names: GPT-4.1 via OpenRouter.": "Nouveaux noms de groupes : GPT-4.1 via OpenRouter.",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter utilise Jev pour le classement et GPT-4.1 pour les nouveaux noms de groupes. Des appels API supplémentaires peuvent être nécessaires.",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "Les nouveaux groupes OpenRouter apparaissent dans l’aperçu sans modifier les catégories enregistrées. TypeSafe propose des groupes avec Jev uniquement.",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "L’aperçu IA transmet les titres des onglets, les origines et chemins des URL ainsi que les critères de classement au fournisseur choisi. OpenRouter utilise TypeSafe Jev et, pour les nouveaux noms, OpenAI GPT-4.1. Les clés restent séparées et limitées à la session. Des frais d’API peuvent s’appliquer.",
+  "Apply groups ({count} tabs)": "Appliquer les groupes ({count} onglets)"
 }

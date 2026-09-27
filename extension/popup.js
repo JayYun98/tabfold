@@ -2,13 +2,15 @@ import { getProvider } from './ai.js';
 import { t, initI18n, applyI18n } from './i18n.js';
 const $ = id => document.getElementById(id);
 let plan, suggestions = [], busy = false, undoAvailable = false;
-let provider = getProvider();
+let provider = getProvider(), keyConfigured = false, previewIsAI = false;
+let windowLabels = new Map();
 let preferences = {suggestNew:true,ignoreCategories:false,useExistingGroups:true};
 const colors = {grey:'#8190a5',blue:'#4d74cc',red:'#cf6977',yellow:'#c09c39',green:'#479278',pink:'#c375a3',purple:'#987ac5',cyan:'#469dab',orange:'#ce8c52'};
-function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
+function status(message,error=false){$('status').setAttribute('role',error?'alert':'status');$('status').textContent=message;$('status').classList.toggle('error',error);}
 async function send(message){const result=await chrome.runtime.sendMessage(message);if(!result?.ok)throw new Error(result?.error||t('No response. Reopen the extension.'));return result;}
-function controls(){document.querySelectorAll('button,input,select').forEach(el=>el.disabled=busy);$('apply').disabled=busy||!plan?.groups.length;$('duplicates').disabled=busy||!plan?.duplicates.length;$('undo').disabled=busy||!undoAvailable;}
+function controls(){$('results').setAttribute('aria-busy',String(busy));document.querySelectorAll('button,input,select').forEach(el=>el.disabled=busy);$('apply').disabled=busy||!plan?.groups.length;const affected=new Set((plan?.groups||[]).flatMap(group=>group.tabIds)).size;$('apply').textContent=t(affected?'Apply groups ({count} tabs)':'Apply groups',{count:affected});$('duplicates').disabled=busy||!plan?.duplicates.length;$('dedupe').disabled=busy||!plan?.duplicates.length;$('undo').disabled=busy||!undoAvailable;}
 async function run(action){if(busy)return;busy=true;controls();try{await action();}catch(error){status(error.message,true);}finally{busy=false;controls();}}
+function invalidate(){plan=undefined;suggestions=[];$('groups').replaceChildren();$('groupCount').textContent='—';$('previewKind').textContent='';$('empty').hidden=true;$('existingSection').hidden=true;$('excluded').hidden=true;$('duplicateReview').hidden=true;$('duplicateCount').textContent='—';$('total').textContent='—';renderSuggestions();controls();}
 function tabList(tabs){const list=document.createElement('ul');for(const tab of tabs){const li=document.createElement('li');li.textContent=tab.title||tab.url;li.title=tab.url;list.append(li);}return list;}
 function groupRow(group,existing=false){
   const item=document.createElement('details');item.className='group';
@@ -19,12 +21,19 @@ function groupRow(group,existing=false){
   const title=document.createElement('span');title.className='group-title';title.textContent=group.title||t('Unnamed group');title.title=title.textContent;
   const count=document.createElement('span');count.className='count';count.textContent=existing?group.tabs.length:group.tabIds.length;
   summary.append(dot,title);
+  if($('allWindows').checked&&windowLabels.has(group.windowId)){const badge=document.createElement('span');badge.className='window-label';badge.textContent=t('Window {number}',{number:windowLabels.get(group.windowId)});summary.append(badge);}
   if(!existing){const action=document.createElement('span');action.className='group-action';action.textContent=t(group.targetGroupId==null?'New group':'Add tabs');summary.append(action);}
   summary.append(count);item.append(summary,tabList(group.tabs));return item;
 }
 function render(){
+  $('existingSection').hidden=false;$('excluded').hidden=false;
   $('total').textContent=plan.total;$('groupCount').textContent=plan.groups.length;$('duplicateCount').textContent=plan.duplicates.length;
   const existing=plan.existingGroups||[];
+  windowLabels=new Map([...new Set([...existing,...plan.groups].map(group=>group.windowId).filter(Number.isInteger))].sort((a,b)=>a-b).map((id,index)=>[id,index+1]));
+  $('scopeName').textContent=t($('allWindows').checked?'All windows':'This window');
+  $('previewKind').textContent=t(previewIsAI?'AI preview':'Quick preview');
+  $('previewHint').textContent=t($('allWindows').checked?'Tabs stay in their original windows.':'Preview first. Apply when ready.');
+  if(previewIsAI && provider.id==='openrouter' && (plan.preferences||preferences).suggestNew!==false) $('previewHint').textContent+=' '+t('New group names: GPT-4.1 via OpenRouter.');
   $('existingCount').textContent=existing.length;$('existingGroups').replaceChildren(...existing.map(group=>groupRow(group,true)));$('noExisting').hidden=!!existing.length;
   const regroup=plan.groupingMode==='regroup';
   $('regroup').checked=regroup;
@@ -32,7 +41,7 @@ function render(){
   $('ignoreCategories').checked=!!preferences.ignoreCategories;
   $('suggestNew').checked=preferences.suggestNew!==false;
   $('useExistingGroups').checked=preferences.useExistingGroups!==false;
-  $('groupingModeNotice').hidden=!regroup;
+  $('groupingModeNotice').hidden=false;
   $('groupingModeNotice').textContent=t(regroup?'Regroup mode: existing groups may be rebuilt.':'Keep existing groups');
   $('groupingModeNotice').classList.toggle('warning',regroup);
   $('groupedReason').hidden=regroup;
@@ -41,16 +50,17 @@ function render(){
   $('groupedReason').textContent=t('{count} already grouped — members stay in place.',{count:grouped});
   $('otherProtectedReason').textContent=t('{count} protected — pinned, playing, incognito or internal tabs.',{count:other});
   $('groups').replaceChildren(...plan.groups.map(group=>groupRow(group)));
-  $('empty').hidden=!!plan.groups.length;$('duplicateReview').hidden=true;renderSuggestions();controls();
+  $('empty').hidden=!!plan.groups.length;
+  $('empty').textContent=t(plan.total===0?'No tabs in this scope.':plan.total<=plan.protectedCount&&(regroup||!grouped)?'No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.':!regroup&&grouped>0?'No changes proposed. Enable Regroup to reconsider existing group members.':'No groups to create. Try AI preview or another window.');$('duplicateReview').hidden=true;renderSuggestions();controls();
 }
 function renderSuggestions(){
   $('suggestionsSection').hidden=!suggestions.length;$('suggestionRows').replaceChildren();
-  suggestions.forEach((suggestion,index)=>{const row=document.createElement('div');row.className='suggestion-row';const name=document.createElement('input');name.value=suggestion.title;name.maxLength=40;name.setAttribute('aria-label',t('Suggested category name'));const description=document.createElement('p');description.textContent=t('{count} matching tabs',{count:suggestion.tabIds.length});const button=document.createElement('button');button.textContent=t('Add category to preview');button.onclick=()=>run(async()=>{const result=await send({type:'acceptSuggestion',index,title:name.value,plan});plan=result.plan;suggestions=result.suggestions;render();status(t('Category added. Review and apply the groups.'));});row.append(name,description,tabList(suggestion.tabs||[]),button);$('suggestionRows').append(row);});
+  suggestions.forEach((suggestion,index)=>{const row=document.createElement('div');row.className='suggestion-row';const name=document.createElement('input');name.value=suggestion.title;name.maxLength=40;name.setAttribute('aria-label',t('Suggested category name'));const description=document.createElement('p');description.textContent=t('{count} matching tabs',{count:suggestion.tabIds.length});const button=document.createElement('button');button.textContent=t('Add category to preview');button.onclick=()=>run(async()=>{const result=await send({type:'acceptSuggestion',index,title:name.value,plan});plan=result.plan;suggestions=result.suggestions;render();status(t('Category added. Review and apply the groups.'));});const members=document.createElement('details');const summary=document.createElement('summary');summary.textContent=description.textContent;members.append(summary,tabList(suggestion.tabs||[]));row.append(name,members,button);$('suggestionRows').append(row);});
 }
-async function refresh(ai=false){const window=await chrome.windows.getCurrent();const result=await send({type:'preview',windowId:window.id,provider:provider.id,allWindows:$('allWindows').checked,ai});plan=result.plan;suggestions=result.suggestions||[];undoAvailable=result.undoAvailable;render();if(result.suggestionError)status(t('Groups are ready, but category suggestions failed.')+' '+result.suggestionError,true);return result;}
+async function refresh(ai=false){invalidate();const window=await chrome.windows.getCurrent();const result=await send({type:'preview',windowId:window.id,provider:provider.id,allWindows:$('allWindows').checked,ai});plan=result.plan;previewIsAI=ai;suggestions=result.suggestions||[];undoAvailable=result.undoAvailable;render();if(result.suggestionError)status((plan.groups.length?t('Groups are ready, but category suggestions failed.')+' ':'')+result.suggestionError,true);return result;}
 async function refreshAfterSetting(){
-  plan=undefined;suggestions=[];$('groups').replaceChildren();renderSuggestions();controls();
-  status(t('Reading your tabs…'));await refresh();status(t('Preview ready. Your tabs have not changed.'));
+  invalidate();
+  status(t('Reading your tabs…'));const result=await refresh();if(!result.suggestionError)status(t('Quick preview ready. Run AI preview again to update AI results.'));
 }
 $('regroup').onchange=()=>run(async()=>{
   const previous=plan?.groupingMode==='regroup';
@@ -65,11 +75,11 @@ for(const key of ['ignoreCategories','suggestNew','useExistingGroups'])$(key).on
   await refreshAfterSetting();
 });
 $('settings').onclick=()=>chrome.runtime.openOptionsPage();
-$('refresh').onclick=()=>run(async()=>{status(t('Reading your tabs…'));await refresh();status(t('Preview ready. Your tabs have not changed.'));});$('allWindows').onchange=()=>run(refreshAfterSetting);
-$('aiPreview').onclick=async()=>{if(busy)return;try{const granted=await chrome.permissions.request({origins:[provider.origin]});if(!granted){status(t('Allow {provider} access to use AI preview.',{provider:provider.name}),true);return;}await run(async()=>{status(t('AI is sorting your tabs…'));const result=await refresh(true);if(!result.suggestionError)status(t('AI preview ready. Review before applying.'));});}catch(error){status(error.message,true);}};
-$('apply').onclick=()=>run(async()=>{const result=await send({type:'apply',plan,collapse:$('collapse').checked});await refresh();status(result.message);});
-$('undo').onclick=()=>run(async()=>{const result=await send({type:'undo'});await refresh();status(result.message);});
+$('refresh').onclick=()=>run(async()=>{status(t('Reading your tabs…'));const result=await refresh();if(!result.suggestionError)status(t('Preview ready. Your tabs have not changed.'));});$('allWindows').onchange=()=>run(refreshAfterSetting);
+$('aiPreview').onclick=async()=>{if(busy)return;if(!keyConfigured){await chrome.runtime.openOptionsPage();return;}try{const granted=await chrome.permissions.request({origins:[provider.origin]});if(!granted){status(t('Allow {provider} access to use AI preview.',{provider:provider.name}),true);return;}await run(async()=>{status(t('AI is sorting your tabs…'));const result=await refresh(true);if(!result.suggestionError)status(t('AI preview ready. Review before applying.'));});}catch(error){status(error.message,true);}};
+$('apply').onclick=()=>run(async()=>{let result;try{result=await send({type:'apply',plan,collapse:$('collapse').checked});}catch(error){await refresh();throw error;}const preview=await refresh();if(!preview.suggestionError)status(result.message);});
+$('undo').onclick=()=>run(async()=>{const result=await send({type:'undo'});const preview=await refresh();if(!preview.suggestionError)status(result.message);});
 $('duplicates').onclick=()=>{$('duplicateList').replaceChildren(...tabList(plan.duplicates).children);$('duplicateReview').hidden=!$('duplicateReview').hidden;if(!$('duplicateReview').hidden)$('duplicateReview').scrollIntoView({block:'nearest'});};
-$('dedupe').onclick=()=>run(async()=>{const result=await send({type:'dedupe',plan});await refresh();status(result.message);});
-$('restore').onclick=()=>run(async()=>{const result=await send({type:'restore'});await refresh();status(result.message);});
-await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);preferences=settings.preferences||preferences;await refresh();status(t(plan.groupingMode==='regroup'?'Review the new groups before applying. Protected tabs stay in place.':'Only ungrouped tabs change. Existing group members stay in place.'));});
+$('dedupe').onclick=()=>run(async()=>{const result=await send({type:'dedupe',plan});const preview=await refresh();if(!preview.suggestionError)status(result.message);});
+$('restore').onclick=()=>run(async()=>{const result=await send({type:'restore'});const preview=await refresh();if(!preview.suggestionError)status(result.message);});
+await initI18n();applyI18n();await run(async()=>{const settings=await send({type:'getSettings'});provider=getProvider(settings.provider);keyConfigured=!!settings.keyConfigured;$('aiPreview').textContent=t(keyConfigured?'AI preview':'Set up AI');$('aiPreview').title=t(keyConfigured?'AI preview':'Add an API key in Settings');preferences=settings.preferences||preferences;const preview=await refresh();if(!preview.suggestionError)status(t(plan.groupingMode==='regroup'?'Review the new groups before applying. Protected tabs stay in place.':'Only ungrouped tabs change. Existing group members stay in place.'));});

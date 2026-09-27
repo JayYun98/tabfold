@@ -205,11 +205,11 @@ test('provider keys are isolated, old OpenRouter keys remain usable, and selecti
 test('saved sorting matches apply order inside each window and never moves protected tabs',async()=>{
   const chrome=mockChrome([
     {id:90,windowId:1,index:0,url:'https://protected.test',pinned:true},
-    {id:1,windowId:1,index:1,url:'https://example.com/1',title:'Atlas platform documentation Zulu',lastAccessed:30},
-    {id:2,windowId:1,index:2,url:'https://example.com/2',title:'Atlas platform documentation Alpha',lastAccessed:10},
-    {id:3,windowId:1,index:3,url:'https://example.com/3',title:'Atlas platform documentation Beta',lastAccessed:20},
-    {id:4,windowId:2,index:0,url:'https://example.com/4',title:'Atlas platform documentation Delta',lastAccessed:40},
-    {id:5,windowId:2,index:1,url:'https://example.com/5',title:'Atlas platform documentation Charlie',lastAccessed:20},
+    {id:1,windowId:1,index:1,url:'https://example.com/1.png',title:'Atlas platform documentation Zulu',lastAccessed:30},
+    {id:2,windowId:1,index:2,url:'https://example.com/2.png',title:'Atlas platform documentation Alpha',lastAccessed:10},
+    {id:3,windowId:1,index:3,url:'https://example.com/3.png',title:'Atlas platform documentation Beta',lastAccessed:20},
+    {id:4,windowId:2,index:0,url:'https://example.com/4.png',title:'Atlas platform documentation Delta',lastAccessed:40},
+    {id:5,windowId:2,index:1,url:'https://example.com/5.png',title:'Atlas platform documentation Charlie',lastAccessed:20},
   ]);
   const backend=new TabfoldBackend(chrome);
   const old=await backend.preview({allWindows:true});
@@ -269,11 +269,11 @@ test('changed target metadata, membership, or window rejects append before any m
 
 function regroupFixture() {
  const chrome=mockChrome([
-  {id:1,windowId:1,index:0,title:'Atlas platform documentation docs',url:'https://atlas.example/a',groupId:10},
-  {id:2,windowId:1,index:1,title:'Atlas platform documentation guide',url:'https://atlas.example/b',groupId:10},
-  {id:3,windowId:1,index:2,title:'Atlas platform documentation playing',url:'https://atlas.example/c',groupId:10,audible:true},
-  {id:4,windowId:1,index:3,title:'Atlas platform documentation tutorial',url:'https://atlas.example/d',groupId:11},
-  {id:5,windowId:1,index:4,title:'Atlas platform documentation reference',url:'https://atlas.example/e'},
+  {id:1,windowId:1,index:0,title:'Atlas platform documentation docs',url:'https://atlas.example/a.png',groupId:10},
+  {id:2,windowId:1,index:1,title:'Atlas platform documentation guide',url:'https://atlas.example/b.png',groupId:10},
+  {id:3,windowId:1,index:2,title:'Atlas platform documentation playing',url:'https://atlas.example/c.png',groupId:10,audible:true},
+  {id:4,windowId:1,index:3,title:'Atlas platform documentation tutorial',url:'https://atlas.example/d.png',groupId:11},
+  {id:5,windowId:1,index:4,title:'Atlas platform documentation reference',url:'https://atlas.example/e.png'},
  ],{initialGroups:[{id:10,windowId:1,title:'first.example',color:'red',collapsed:true},{id:11,windowId:1,title:'second.example',color:'green',collapsed:false}]});
  return {chrome,backend:new TabfoldBackend(chrome)};
 }
@@ -342,7 +342,7 @@ test('AI preview uses saved preferences and keeps saved categories untouched',as
 });
 
 test('existing-name preference can disable category reuse independently from regroup',async()=>{
- const tabs=[{id:1,windowId:1,groupId:40,title:'Social feed',url:'https://x.com/home'},{id:2,windowId:1,title:'Guitar video',url:'https://youtube.com/watch?v=2'}];
+ const tabs=[{id:1,windowId:1,groupId:40,title:'Atlas database migration deployment reference',url:'https://x.com/home'},{id:2,windowId:1,title:'Atlas database migration deployment reference',url:'https://youtube.com/watch?v=2'}];
  const chrome=mockChrome(tabs,{initialGroups:[{id:40,windowId:1,title:'Media / SNS',color:'red'}]});
  const backend=new TabfoldBackend(chrome);
  const before=await backend.handle({type:'preview'});assert.equal(before.plan.groups[0].targetGroupId,40);
@@ -350,4 +350,62 @@ test('existing-name preference can disable category reuse independently from reg
  assert.equal((await backend.handle({type:'apply',plan:before.plan})).ok,false);
  const after=await backend.handle({type:'preview'});assert.equal(after.plan.groups.length,0);assert.equal(after.plan.existingGroups.length,1);
  assert.equal((await backend.handle({type:'setPreferences',preferences:{useExistingGroups:'yes'}})).ok,false);
+});
+
+test('generated preview groups do not fill or modify the saved category list',async t=>{
+ const chrome=mockChrome([1,2].map(id=>({id,windowId:1,title:'Atlas reference '+id,url:'https://example.test/'+id,index:id-1})));
+ const backend=new TabfoldBackend(chrome);
+ const saved=Array.from({length:12},(_,i)=>({title:'Saved '+i,criteria:'Explicit saved scope '+i,color:'blue'}));
+ await backend.write('tabfoldCategories',saved,'local');await backend.write('openrouterKey','test');await backend.setPreferences({ignoreCategories:true,useExistingGroups:false,suggestNew:true});
+ const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original;});
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body);
+  if(url.endsWith('/completions'))return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:JSON.stringify({categories:[{title:'Atlas references',criteria:'Atlas project reference material'}]})}}]})};
+  return {ok:true,json:async()=>({answers:Object.fromEntries(Object.entries(body.questions).map(([id,q])=>{const choice=Object.keys(q.criteria)[0];return [id,{type:'choice',choice,confidence:.9,probabilities:Object.fromEntries(Object.keys(q.criteria).map(key=>[key,key===choice?.9:.1]))}];}))})};
+ };
+ const result=await backend.preview({ai:true,allWindows:true});assert.equal(result.ok,true);assert.equal(result.plan.groups.length,1);assert.equal(result.plan.groups[0].title,'Atlas references');assert.deepEqual(await backend.categories(),saved);assert.equal(chrome._groupCalls.length,0);
+ const applied=await backend.handle({type:'apply',plan:result.plan});assert.equal(applied.ok,true);assert.deepEqual(await backend.categories(),saved);
+});
+
+test('late AI responses cannot overwrite invalidated or newer previews',async t=>{
+ const original=globalThis.fetch;t.after(()=>{globalThis.fetch=original;});
+ for(const action of ['preferences','groupingMode','provider','quick']){
+  const chrome=mockChrome([{id:1,windowId:1,index:0,title:'Atlas reference A',url:'https://example.test/a'},{id:2,windowId:1,index:1,title:'Atlas reference B',url:'https://example.test/b'}]);
+  const backend=new TabfoldBackend(chrome);await backend.write('openrouterKey','test');await backend.setPreferences({ignoreCategories:true,useExistingGroups:false,suggestNew:true});
+  let release,started;const fetched=new Promise(resolve=>{started=resolve;});
+  globalThis.fetch=async()=>{started();await new Promise(resolve=>{release=resolve;});return {ok:true,status:200,json:async()=>({choices:[{finish_reason:'stop',message:{content:'{"categories":[]}'}}]})};};
+  const pending=backend.handle({type:'preview',ai:true,allWindows:true});await fetched;
+  if(action==='preferences')await backend.handle({type:'setPreferences',preferences:{suggestNew:false}});
+  if(action==='groupingMode')await backend.handle({type:'setGroupingMode',groupingMode:'regroup'});
+  if(action==='provider')await backend.handle({type:'setProvider',provider:'typesafe'});
+  if(action==='quick')assert.equal((await backend.handle({type:'preview',allWindows:true})).ok,true);
+  const expected=await backend.read('tabfoldPreview');release();const stale=await pending;
+  assert.equal(stale.ok,false,action+' must reject late result');
+  assert.deepEqual(await backend.read('tabfoldPreview'),expected,action+' must preserve current saved state');
+ }
+});
+
+test('metadata update failure retains a working undo for preserve and regroup',async()=>{
+ for(const mode of ['preserve','regroup']) {
+  const chrome=mockChrome([1,2].map(id=>({id,windowId:1,title:'Atlas platform documentation '+id,url:'https://example.com/'+id})));
+  const backend=new TabfoldBackend(chrome);
+  await backend.handle({type:'setGroupingMode',groupingMode:mode});
+  const {plan}=await backend.preview({windowId:1});
+  chrome.tabGroups.update=async()=>{throw new Error('metadata failure');};
+  assert.equal((await backend.handle({type:'apply',plan})).ok,false);
+  assert.ok([...chrome._tabs.values()].every(tab=>tab.groupId>=0));
+  assert.equal((await backend.handle({type:'undo'})).ok,true);
+  assert.ok([...chrome._tabs.values()].every(tab=>tab.groupId===-1));
+ }
+});
+
+test('incognito group names never enter ordinary-window AI requests',async()=>{
+ const chrome=mockChrome([{id:1,windowId:1,title:'Public page',url:'https://public.test/'},{id:2,windowId:2,incognito:true,groupId:99,title:'Private tab',url:'https://private.test/'}],{initialGroups:[{id:99,windowId:2,title:'PRIVATE-GROUP',color:'blue'}]});
+ const backend=new TabfoldBackend(chrome);
+ await backend.setKey('fake');await backend.setPreferences({suggestNew:false});
+ const original=globalThis.fetch;
+ try {
+  globalThis.fetch=async(_url,options)=>{assert.ok(!options.body.includes('PRIVATE-GROUP'));return {ok:true,json:async()=>({answers:{tab_1:{type:'choice',choice:'other',confidence:1}}})};};
+  assert.equal((await backend.preview({windowId:1,ai:true})).ok,true);
+ }finally{globalThis.fetch=original;}
 });

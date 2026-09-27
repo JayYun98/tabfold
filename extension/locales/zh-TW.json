@@ -177,5 +177,20 @@
   "Ignore saved categories": "忽略已儲存的分類",
   "Skip saved AI categories without deleting them.": "略過已儲存的 AI 分類，但不刪除它們。",
   "Use existing group names": "使用現有群組名稱",
-  "Use existing group names when classifying tabs, even when regrouping.": "分類分頁時使用現有群組名稱，重新分組時亦適用。"
+  "Use existing group names when classifying tabs, even when regrouping.": "分類分頁時使用現有群組名稱，重新分組時亦適用。",
+  "Duplicates and recovery": "重複分頁與還原",
+  "Window {number}": "視窗 {number}",
+  "Tabs stay in their original windows.": "分頁會保留在原本的視窗中。",
+  "Preview first. Apply when ready.": "先預覽，確認後再套用。",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "暫無變更建議。啟用重新分組可重新分類現有群組中的分頁。",
+  "Quick preview ready. Run AI preview again to update AI results.": "快速預覽已就緒。請重新執行 AI 預覽以更新 AI 結果。",
+  "Set up AI": "設定 AI",
+  "Add an API key in Settings": "在設定中新增 API 金鑰",
+  "No tabs in this scope.": "此範圍內沒有分頁。",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "沒有可分類的分頁。釘選、播放中、無痕及瀏覽器內部分頁保持不變。",
+  "New group names: GPT-4.1 via OpenRouter.": "新群組名稱：透過 OpenRouter 使用 GPT-4.1。",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter 使用 Jev 分類，使用 GPT-4.1 產生新群組名稱，可能需要額外的 API 呼叫。",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "OpenRouter 的新群組顯示於預覽，不會修改已儲存的分類。TypeSafe 的建議僅使用 Jev。",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "AI 預覽會將分頁標題、URL 來源與路徑及分類條件傳送給所選供應商。OpenRouter 使用 TypeSafe Jev，並以 OpenAI GPT-4.1 產生新群組名稱。各供應商的金鑰分開儲存，僅保留於目前工作階段。可能產生 API 費用。",
+  "Apply groups ({count} tabs)": "套用分組（{count} 個分頁）"
 }

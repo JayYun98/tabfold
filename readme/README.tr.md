@@ -19,7 +19,7 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 ## Neden Tabfold?
 
 - **Önce önizleme** — Tabfold sekmelerinize dokunmadan önerilen grupları görün.
-- **YZ olmadan çalışır** — TF-IDF ve kosinüs benzerliğiyle başlık/URL terimlerini yerel olarak kümeler; API anahtarı gerekmez.
+- **YZ olmadan çalışır** — API anahtarı gerektirmeden başlıkları TF-IDF ve kosinüs benzerliğiyle temkinli biçimde kümeler.
 - **İstediğinizde YZ** — daha akıllı sınıflandırma için Jev'i OpenRouter veya TypeSafe üzerinden kullanın.
 - **Bağlamınız korunur** — sekmeler özgün pencerelerinde kalır; gruplar yalnızca dağınıklığı azaltmak için daraltılır.
 - **Varsayılan olarak güvenli** — sabitlenmiş, ses çalan, gizli, tarayıcı içi ve zaten gruplanmış sekmeler korunur.
@@ -39,9 +39,9 @@ Gruplar YZ çalışmadan önce görünür. Koruma modu mevcut üyeleri ve görü
 
 Sabitlenmiş, ses çalan, gizli ve dahili sekmeler korunur. Yalnızca önerilen gruplar uygulanır; yeni gruplar en az iki sekme gerektirir, eşleşmeyen tek sekmeler yerinde kalır. Geri alma, mümkün olduğunda özgün grupları geri yükler; tam sekme sırası garanti edilmez.
 
-Hızlı önizleme, kategori amacına yönelik hafif kurallar (YouTube için Media/SNS, iş ilanları için JobRecruit) ve kalan sekmeler için yerel TF-IDF/kosinüs kümelemesi kullanır. Sözcüksel bir yöntemdir; embedding veya önceden eğitilmiş sinir ağı, model indirme ya da sunucu isteği yoktur. JavaScript modülü Node.js üzerinde de çalışır.
+Hızlı önizleme, başlıkları TF-IDF, kosinüs benzerliği ve tam bağlantı (complete-link) yöntemiyle temkinli biçimde kümeler. Embedding veya önceden eğitilmiş sinir ağı kullanmaz; model indirmez ve sunucuya istek göndermez. Tek sabit sınıflandırma kuralı, görsel dosyalarını uzantılarına göre **Images** altında toplamaktır. Siteler veya konular için sabit kategori eşleştirmeleri yoktur.
 
-Açılır pencere yeniden gruplandırmayı, kayıtlı kategorileri yok saymayı ve önerileri ayrı kaydeder. Kategorileri yok saymak kayıtlı/varsayılan YZ seçeneklerini silmeden dışlar; mevcut Chrome grup adları yeniden gruplandırmada da bağlam olarak kalır. YZ grup adlarını, genel amacı ve en fazla altı farklı örneğin başlıklarıyla sorgusuz URL kaynak/yollarını alabilir. Yeni konu adayları yalnızca eşleşmeyen sekmelerden çıkarılır ve Jev ile doğrulanır.
+Yeniden gruplandırma, kayıtlı kategorileri yok sayma, mevcut grup adlarını kullanma ve yeni öneriler ayrı ayrı ayarlanır. YZ kararsızsa sekme sınıflandırılmadan kalır; sözcüksel kümelemeye başvurulmaz. Mevcut adlar kullanılırken grup adları, açıklamalar, örnek başlıklar ve sorgu parametreleri çıkarılmış URL’ler gönderilebilir. Yeni grup önerileri deneyseldir; doğruluk garantisi yoktur, kabul etmeden veya uygulamadan önce inceleyin.
 
 **Mevcut grup adlarını kullan** varsayılan olarak açıktır: **Kayıtlı kategorileri yok say** seçeneğinden bağımsız olarak, yeniden gruplandırmayla birlikte kapatıldığında eski grup bağlamı olmadan başlanır; mevcut grup bilgileri ve örnekleri gönderilmez, ancak uygun sekmelerin başlıkları ve URL’leri YZ’ye gönderilmeye devam eder.
 
@@ -73,7 +73,9 @@ Yerel önizleme tamamen tarayıcınızda kalır.
 
 YZ önizlemesi için **Ayarlar → YZ bağlantısı** bölümünde **OpenRouter** veya **TypeSafe** seçin ve ilgili sağlayıcının API anahtarını ekleyin.
 
-- OpenRouter, **Decisions API** kullanır
+**Yeni grup önerileri** açıkken OpenRouter, adları ve ölçütleri GPT-4.1 ile üretir, sekmeleri Jev ile sınıflandırır. Yeni gruplar yalnızca bu önizlemeye eklenir; kayıtlı kategoriler değişmez. Ek çağrılar ve ücretler oluşabilir. Doğrudan TypeSafe bağlantısı yalnızca Jev kullanır ve otomatik olarak OpenRouter’a geçmez.
+
+- OpenRouter sınıflandırma için Jev, yeni grup adları için GPT-4.1 kullanır. Ek API çağrıları gerekebilir.
 - TypeSafe, **Jev 1.13** kullanır
 - API anahtarları Chrome'un **oturum depolamasında** tutulur ve tarayıcı kapandığında silinir
 - **Başka bir sağlayıcıya otomatik geçiş yapılmaz**

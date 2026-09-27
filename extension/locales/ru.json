@@ -172,5 +172,20 @@
   "Ignore saved categories": "Игнорировать сохранённые категории",
   "Skip saved AI categories without deleting them.": "Пропускать сохранённые категории ИИ, не удаляя их.",
   "Use existing group names": "Использовать имена существующих групп",
-  "Use existing group names when classifying tabs, even when regrouping.": "Использовать имена существующих групп при классификации вкладок, в том числе при перегруппировке."
+  "Use existing group names when classifying tabs, even when regrouping.": "Использовать имена существующих групп при классификации вкладок, в том числе при перегруппировке.",
+  "Duplicates and recovery": "Дубликаты и восстановление",
+  "Window {number}": "Окно {number}",
+  "Tabs stay in their original windows.": "Вкладки останутся в исходных окнах.",
+  "Preview first. Apply when ready.": "Проверьте результат и примените изменения.",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "Изменений нет. Включите перегруппировку, чтобы заново распределить вкладки существующих групп.",
+  "Quick preview ready. Run AI preview again to update AI results.": "Быстрый просмотр готов. Повторите ИИ-просмотр, чтобы обновить его результаты.",
+  "Set up AI": "Настроить ИИ",
+  "Add an API key in Settings": "Добавьте ключ API в настройках",
+  "No tabs in this scope.": "В этой области нет вкладок.",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "Нет вкладок для классификации. Закреплённые, воспроизводящие, приватные и внутренние вкладки не изменяются.",
+  "New group names: GPT-4.1 via OpenRouter.": "Новые названия групп: GPT-4.1 через OpenRouter.",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter использует Jev для классификации и GPT-4.1 для новых названий групп. Возможны дополнительные вызовы API.",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "Новые группы OpenRouter появляются в предварительном просмотре, не меняя сохранённые категории. Предложения TypeSafe используют только Jev.",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "Предварительный просмотр с ИИ отправляет заголовки вкладок, источники и пути URL и критерии категорий выбранному провайдеру. OpenRouter использует TypeSafe Jev, а для новых названий — OpenAI GPT-4.1. Ключи хранятся раздельно и только в рамках сеанса. Возможна плата за API.",
+  "Apply groups ({count} tabs)": "Применить группы ({count} вкладок)"
 }

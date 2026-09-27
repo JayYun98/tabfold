@@ -2,7 +2,7 @@ import { DEFAULT_CATEGORIES, validateCategories, getProvider } from './ai.js';
 import { t, initI18n, applyI18n, setLanguage, getLanguage, LANGUAGES } from './i18n.js';
 const $=id=>document.getElementById(id);
 let busy=false, keyConfigured=false;
-function status(message,error=false){$('status').textContent=message;$('status').classList.toggle('error',error);}
+function status(message,error=false){$('status').setAttribute('role',error?'alert':'status');$('status').textContent=message;$('status').classList.toggle('error',error);}
 async function send(message){const result=await chrome.runtime.sendMessage(message);if(!result?.ok)throw new Error(result?.error||t('No response. Reopen the extension.'));return result;}
 async function run(action){if(busy)return;busy=true;document.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=true);try{await action();}catch(error){status(error.message,true);}finally{busy=false;document.querySelectorAll('button,input,select,textarea').forEach(el=>el.disabled=false);}}
 function keyState(configured){keyConfigured=configured;$('keyState').textContent=t(configured?'A key is saved for this browser session.':'No API key saved.');}
@@ -39,11 +39,11 @@ $('resetCategories').onclick=()=>{renderCategories(DEFAULT_CATEGORIES);status(t(
 $('saveCategories').onclick=()=>run(async()=>{const categories=readCategories();const result=await send({type:'setCategories',categories});await send({type:'setPreferences',preferences:{suggestNew:$('suggestNew').checked}});renderCategories(result.categories);status(t('Saved. Your next AI preview will use these settings.'));});
 $('saveKey').onclick=()=>run(async()=>{const key=$('apiKey').value.trim();await send({type:'setKey',key,provider:$('provider').value});$('apiKey').value='';keyState(!!key);status(t(key?'API key saved for this session.':'API key removed.'));});
 $('clearKey').onclick=()=>run(async()=>{await send({type:'setKey',key:'',provider:$('provider').value});$('apiKey').value='';keyState(false);status(t('API key removed.'));});
-function providerInfo(){const provider=getProvider($('provider').value);$('providerInfo').textContent=provider.name+' · '+provider.model;}
+function providerInfo(){const provider=getProvider($('provider').value);$('providerInfo').textContent=provider.id==='openrouter'?t('OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.'):provider.name+' · '+provider.model;}
 $('provider').onchange=()=>run(async()=>{const result=await send({type:'setProvider',provider:$('provider').value});$('apiKey').value='';keyState(result.keyConfigured);providerInfo();status(t('AI provider saved. Use a key from the selected provider.'));});
 $('groupingMode').onchange=()=>run(async()=>{const result=await send({type:'setGroupingMode',groupingMode:$('groupingMode').value});$('groupingMode').value=result.groupingMode;status(t('Grouping mode saved. Refresh the preview to use it.'));});
 $('tabOrder').onchange=()=>run(async()=>{await send({type:'setTabOrder',tabOrder:$('tabOrder').value});status(t('Tab order saved. Refresh the preview to use it.'));});
-$('language').onchange=()=>run(async()=>{const draft=readCategories();await setLanguage($('language').value);applyI18n();renderCategories(draft);keyState(keyConfigured);status('');});
+$('language').onchange=()=>run(async()=>{const draft=readCategories();await setLanguage($('language').value);applyI18n();renderCategories(draft);keyState(keyConfigured);providerInfo();status('');});
 await initI18n();applyI18n();
 for(const language of LANGUAGES){const option=document.createElement('option');option.value=language.code;option.textContent=language.name;$('language').append(option);}
 $('language').value=getLanguage();

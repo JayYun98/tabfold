@@ -73,10 +73,15 @@ try {
  const purpose=await page.evaluate(async()=>{
   const send=async request=>{const result=await chrome.runtime.sendMessage(request);if(!result.ok)throw new Error(result.error);return result;};
   const one=await chrome.windows.create({url:'about:blank',focused:false});
+  await new Promise(resolve=>setTimeout(resolve,150));
+  await chrome.tabs.update(one.tabs[0].id,{url:'https://www.youtube.com/watch?v=original'});
+  for(let i=0;i<100;i++){if((await chrome.tabs.get(one.tabs[0].id)).title==='Unrelated video title')break;await new Promise(resolve=>setTimeout(resolve,50));}
   const two=await chrome.windows.create({url:'about:blank',focused:false});
   const make=async(windowId,key)=>{
-   const tab=await chrome.tabs.create({windowId,url:'https://www.youtube.com/watch?v='+key,active:false});
-   for(let i=0;i<100;i++){const fresh=await chrome.tabs.get(tab.id);if(fresh.status==='complete'&&fresh.url.startsWith('https:'))return fresh;await new Promise(resolve=>setTimeout(resolve,50));}
+   const tab=await chrome.tabs.create({windowId,url:'about:blank',active:false});
+   await new Promise(resolve=>setTimeout(resolve,150));
+   await chrome.tabs.update(tab.id,{url:'https://www.youtube.com/watch?v='+key});
+   for(let i=0;i<100;i++){const fresh=await chrome.tabs.get(tab.id);if(fresh.status==='complete'&&fresh.title==='Unrelated video title')return fresh;await new Promise(resolve=>setTimeout(resolve,50));}
    throw new Error('Media test tab did not load');
   };
   try {
@@ -114,11 +119,11 @@ try {
    throw new Error('Preferred test tab did not load');
   };
   try {
-   const google=await make('https://www.google.com/search?q=Jev');
-   const googleTwo=await make('https://www.google.com/search?q=speculative+decoding');
+   const google=await make('https://images.invalid/first.png');
+   const googleTwo=await make('https://images.invalid/second.webp');
    const toss=await make('https://www.tossinvest.com/stocks/US1');
    const tossTwo=await make('https://www.tossinvest.com/stocks/US2');
-   const pinned=await make('https://www.google.com/search?q=protected',true);
+   const pinned=await make('https://images.invalid/protected.png',true);
    const tabs=[google,googleTwo,toss,tossTwo];
    const {plan}=await send({type:'preview',windowId:win.id});
    await send({type:'apply',plan});
@@ -133,12 +138,31 @@ try {
   }finally{await chrome.windows.remove(win.id);}
  });
  assert.equal(preferred.groups.length,2);
- assert.deepEqual(preferred.groups.find(g=>g.title==='Google search').ids,preferred.ids.slice(0,2));
- assert.deepEqual(preferred.groups.find(g=>g.title==='Investment').ids,preferred.ids.slice(2));
- assert.deepEqual(preferred.appliedNames,['Google search','Google search','Investment','Investment']);
+ assert.deepEqual(preferred.groups.find(g=>g.title==='Images').ids,preferred.ids.slice(0,2));
+ assert.deepEqual(preferred.groups.find(g=>g.title==='Unrelated test title').ids,preferred.ids.slice(2));
+ assert.deepEqual(preferred.appliedNames,['Images','Images','Unrelated test title','Unrelated test title']);
  assert.ok(preferred.windows.every(id=>id===preferred.windowId));
  assert.deepEqual(preferred.restored,preferred.ids.map(()=>({windowId:preferred.windowId,groupId:-1})));
  assert.deepEqual(preferred.protectedAfter,{windowId:preferred.windowId,pinned:true,groupId:-1});assert.deepEqual(preferred.protectedRestored,preferred.protectedAfter);
- console.log('Native Chromium: explicit Google Search and Toss Investment groups apply/undo without moving windows or pinned tabs');
+ console.log('Native Chromium: image rule and coherent title groups apply/undo without moving windows or pinned tabs');
+
+
+ // Exercise the popup through the real extension worker and native tab-group APIs.
+ await page.evaluate(async()=>{await chrome.runtime.sendMessage({type:'setGroupingMode',groupingMode:'preserve'});await chrome.runtime.sendMessage({type:'setPreferences',preferences:{useExistingGroups:false}});});
+ const popupTabs=[];
+ for(const suffix of ['popup-a','popup-b']){const tab=await context.newPage();await tab.goto('https://popup-ux.invalid/'+suffix);popupTabs.push(tab);}
+ await page.goto(`chrome-extension://${id}/popup.html`);
+ await page.waitForFunction(()=>!document.querySelector('#refresh').disabled&&document.querySelector('#total').textContent!=='—');
+ assert.equal(await page.locator('#existingSection').getAttribute('open'),null);
+ assert.equal(await page.locator('#aiPreview').textContent(),'Set up AI');
+ assert.equal(await page.locator('#apply').isEnabled(),true);
+ const nativeMembers=()=>page.evaluate(async()=>(await chrome.tabs.query({})).filter(t=>t.url?.startsWith('https://popup-ux.invalid/')).map(t=>({id:t.id,groupId:t.groupId,windowId:t.windowId})));
+ const popupBefore=await nativeMembers();assert.equal(popupBefore.length,2);assert.ok(popupBefore.every(t=>t.groupId===-1));
+ await page.locator('#apply').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled&&document.querySelector('#undo').disabled===false);
+ const popupAfter=await nativeMembers();assert.ok(popupAfter.every(t=>t.groupId>=0));assert.equal(popupAfter[0].groupId,popupAfter[1].groupId);
+ assert.deepEqual(popupAfter.map(t=>t.windowId),popupBefore.map(t=>t.windowId));
+ await page.locator('#undo').click();await page.waitForFunction(()=>!document.querySelector('#refresh').disabled&&document.querySelector('#undo').disabled);
+ assert.deepEqual(await nativeMembers(),popupBefore);
+ console.log('Native Chromium popup: real worker preview, Apply and Undo preserve tabs and windows');
 
 } finally {await context?.close();await rm(profile,{recursive:true,force:true});}

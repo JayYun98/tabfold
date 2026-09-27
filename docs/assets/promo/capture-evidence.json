@@ -1,0 +1,63 @@
+{
+  "revision": "b3f3eb5",
+  "workingTree": "Uncommitted working tree at capture; revision is the base commit, not a clean-commit claim.",
+  "browser": "151.0.7922.34",
+  "deviceScaleFactor": 2,
+  "source": "Unmodified extension UI; synthetic demo webpages; real extension worker and Chrome tab/group APIs.",
+  "shots": [
+    {
+      "file": "01-quick-preview.png",
+      "caption": "Local quick preview, before tabs change. No API key and no AI request."
+    },
+    {
+      "file": "02-review-group-members.png",
+      "caption": "Expand a proposed group to review its sample tabs."
+    },
+    {
+      "file": "03-applied-groups.png",
+      "caption": "Real Apply result: native Chrome groups created; Undo is available."
+    },
+    {
+      "file": "04-undo-grouping.png",
+      "caption": "Real Undo result: original tab group assignments restored."
+    },
+    {
+      "file": "05-regroup-preview.png",
+      "caption": "Regroup mode previews rebuilding existing groups; protected tabs are excluded."
+    },
+    {
+      "file": "06-all-windows.png",
+      "caption": "All windows scope, with window labels on proposed groups."
+    },
+    {
+      "file": "07-review-duplicates.png",
+      "caption": "Explicit duplicate review with the unsaved-edits warning."
+    },
+    {
+      "file": "08-settings-language-sorting.png",
+      "caption": "Settings: language, preservation mode, and least-recently-used-first ordering."
+    },
+    {
+      "file": "09-openrouter-privacy.png",
+      "caption": "Optional OpenRouter configuration, empty key field, session-only storage and privacy disclosure."
+    },
+    {
+      "file": "10-typesafe-privacy.png",
+      "caption": "Optional TypeSafe configuration, empty key field, same privacy disclosure."
+    },
+    {
+      "file": "11-categories-json-import.png",
+      "caption": "Three demo categories imported into the form. They remain drafts until Save."
+    },
+    {
+      "file": "12-categories-saved.png",
+      "caption": "Saved category preferences with Import/Export JSON controls and real save confirmation."
+    }
+  ],
+  "checks": [
+    "Apply created native groups for all 9 demo tabs and retained their window; Undo restored every original group assignment.",
+    "Duplicate review identified 1 demo duplicate; Close removed it and Restore reopened its URL.",
+    "Category JSON imported as draft, saved through the UI, and exported with identical content.",
+    "No uncaught page errors. No API key entered and no provider call made."
+  ]
+}

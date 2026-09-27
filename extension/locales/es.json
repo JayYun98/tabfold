@@ -177,5 +177,20 @@
   "Ignore saved categories": "Ignorar categorías guardadas",
   "Skip saved AI categories without deleting them.": "Omitir las categorías de IA guardadas sin eliminarlas.",
   "Use existing group names": "Usar nombres de grupos existentes",
-  "Use existing group names when classifying tabs, even when regrouping.": "Usa los nombres de grupos existentes para clasificar pestañas, incluso al reagrupar."
+  "Use existing group names when classifying tabs, even when regrouping.": "Usa los nombres de grupos existentes para clasificar pestañas, incluso al reagrupar.",
+  "Duplicates and recovery": "Duplicados y recuperación",
+  "Window {number}": "Ventana {number}",
+  "Tabs stay in their original windows.": "Las pestañas permanecen en sus ventanas originales.",
+  "Preview first. Apply when ready.": "Revisa la vista previa y luego aplica.",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "No hay cambios propuestos. Activa Reagrupar para reclasificar las pestañas ya agrupadas.",
+  "Quick preview ready. Run AI preview again to update AI results.": "Vista previa rápida lista. Vuelve a ejecutar la vista previa con IA para actualizar sus resultados.",
+  "Set up AI": "Configurar IA",
+  "Add an API key in Settings": "Añade una clave API en Ajustes",
+  "No tabs in this scope.": "No hay pestañas en este ámbito.",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "No hay pestañas que clasificar. Las fijadas, en reproducción, de incógnito e internas no se modifican.",
+  "New group names: GPT-4.1 via OpenRouter.": "Nuevos nombres de grupos: GPT-4.1 mediante OpenRouter.",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter usa Jev para clasificar y GPT-4.1 para crear nombres de grupos. Puede requerir llamadas adicionales a la API.",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "Los nuevos grupos de OpenRouter aparecen en la vista previa sin modificar las categorías guardadas. TypeSafe genera sugerencias solo con Jev.",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "La vista previa con IA envía títulos, orígenes y rutas de URL y criterios de categorías al proveedor seleccionado. OpenRouter usa TypeSafe Jev y, para los nuevos nombres, OpenAI GPT-4.1. Las claves se mantienen separadas y solo durante la sesión. Pueden aplicarse cargos de API.",
+  "Apply groups ({count} tabs)": "Aplicar grupos ({count} pestañas)"
 }

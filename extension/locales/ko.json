@@ -172,5 +172,20 @@
   "Ignore saved categories": "저장된 카테고리 무시",
   "Skip saved AI categories without deleting them.": "저장된 AI 카테고리를 삭제하지 않고 이번 분류에서 제외합니다.",
   "Use existing group names": "기존 그룹 이름 활용",
-  "Use existing group names when classifying tabs, even when regrouping.": "재분류할 때도 기존 그룹 이름을 탭 분류에 활용합니다."
+  "Use existing group names when classifying tabs, even when regrouping.": "재분류할 때도 기존 그룹 이름을 탭 분류에 활용합니다.",
+  "Duplicates and recovery": "중복 탭과 복구",
+  "Window {number}": "창 {number}",
+  "Tabs stay in their original windows.": "탭은 원래 창에 유지됩니다.",
+  "Preview first. Apply when ready.": "미리 보고 준비되면 적용하세요.",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "제안된 변경이 없습니다. 기존 그룹도 다시 분류하려면 재그룹화를 켜세요.",
+  "Quick preview ready. Run AI preview again to update AI results.": "빠른 미리보기입니다. AI 결과를 갱신하려면 AI 미리보기를 다시 실행하세요.",
+  "Set up AI": "AI 설정",
+  "Add an API key in Settings": "설정에서 API 키를 추가하세요",
+  "No tabs in this scope.": "이 범위에 탭이 없습니다.",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "분류할 탭이 없습니다. 고정·재생 중·시크릿·브라우저 내부 탭은 유지됩니다.",
+  "New group names: GPT-4.1 via OpenRouter.": "새 그룹 이름: OpenRouter를 통한 GPT-4.1.",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter는 분류에 Jev를, 새 그룹 이름 생성에 GPT-4.1을 사용합니다. 추가 API 호출이 발생할 수 있습니다.",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "OpenRouter의 새 그룹은 저장된 카테고리를 변경하지 않고 미리보기에 표시됩니다. TypeSafe의 제안은 Jev만 사용합니다.",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "AI 미리보기는 탭 제목, URL 출처·경로, 카테고리 기준을 선택한 제공자에게 전송합니다. OpenRouter는 TypeSafe Jev를 사용하며 새 그룹 이름에는 OpenAI GPT-4.1을 사용합니다. 키는 제공자별로 분리해 세션에만 저장합니다. API 요금이 발생할 수 있습니다.",
+  "Apply groups ({count} tabs)": "그룹 적용 (탭 {count}개)"
 }
