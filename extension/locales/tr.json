@@ -172,5 +172,20 @@
   "Ignore saved categories": "Kayıtlı kategorileri yok say",
   "Skip saved AI categories without deleting them.": "Kayıtlı YZ kategorilerini silmeden atla.",
   "Use existing group names": "Mevcut grup adlarını kullan",
-  "Use existing group names when classifying tabs, even when regrouping.": "Yeniden gruplandırırken de sekmeleri sınıflandırmak için mevcut grup adlarını kullan."
+  "Use existing group names when classifying tabs, even when regrouping.": "Yeniden gruplandırırken de sekmeleri sınıflandırmak için mevcut grup adlarını kullan.",
+  "Duplicates and recovery": "Yinelenenler ve kurtarma",
+  "Window {number}": "Pencere {number}",
+  "Tabs stay in their original windows.": "Sekmeler kendi pencerelerinde kalır.",
+  "Preview first. Apply when ready.": "Önizlemeyi inceleyip hazır olduğunuzda uygulayın.",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "Önerilen değişiklik yok. Mevcut grup üyelerini yeniden sınıflandırmak için yeniden gruplamayı açın.",
+  "Quick preview ready. Run AI preview again to update AI results.": "Hızlı önizleme hazır. Yapay zekâ sonuçlarını güncellemek için yapay zekâ önizlemesini yeniden çalıştırın.",
+  "Set up AI": "Yapay zekâyı ayarla",
+  "Add an API key in Settings": "Ayarlardan bir API anahtarı ekleyin",
+  "No tabs in this scope.": "Bu kapsamda sekme yok.",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "Sınıflandırılacak sekme yok. Sabitlenmiş, oynatılan, gizli ve tarayıcı içi sekmeler değişmez.",
+  "New group names: GPT-4.1 via OpenRouter.": "Yeni grup adları: OpenRouter üzerinden GPT-4.1.",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter sınıflandırma için Jev, yeni grup adları için GPT-4.1 kullanır. Ek API çağrıları gerekebilir.",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "Yeni OpenRouter grupları kayıtlı kategorileri değiştirmeden önizlemede görünür. TypeSafe önerileri yalnızca Jev kullanır.",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "YZ önizlemesi sekme başlıklarını, URL kaynaklarını ve yollarını, kategori ölçütlerini seçilen sağlayıcıya gönderir. OpenRouter, TypeSafe Jev kullanır; yeni grup adları için OpenAI GPT-4.1 kullanır. Anahtarlar ayrı tutulur ve yalnızca oturum boyunca saklanır. API ücretleri uygulanabilir.",
+  "Apply groups ({count} tabs)": "Grupları uygula ({count} sekme)"
 }

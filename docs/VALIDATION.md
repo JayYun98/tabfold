@@ -139,3 +139,54 @@ Chrome 웹 스토어 심사·배포는 진행하지 않았습니다. 자동 테�
 - Previously observed245-tab snapshot replay: all7Ashby/Nebius pages → Job Recruit. Existing media9/9, LinkedIn job11/11, and project8/8 targeted checks remain passing. This does not establish overall grouping accuracy. No new paid API calls or actual user-tab changes.
 
 - Mixed Ashby + LinkedIn singleton candidates now share the reused recruiting name identity; Quick/AI preview regression passes.
+
+
+## Current uncommitted rule-free candidate (2026-09-22)
+
+This section supersedes earlier routing/fallback descriptions for the current working tree; prior version receipts above remain historical evidence.
+
+- Only image-file extensions force a category. Media/jobs/search/investment site routing has been removed.
+- Quick preview uses conservative title-word TF-IDF and complete-link cosine comparisons within each window. It is not an embedding model; earlier centroid timing measurements do not describe this implementation.
+- AI uncertain decisions remain unassigned, without lexical fallback. Existing-name context is independently toggleable during preserve and regroup modes. Identical full metadata shares one decision within a window; sanitized URL equality alone does not merge distinct query resources.
+- Latest unit suite:94passed. The popup's18locale/theme scenarios and five isolated Chromium grouping/undo flows passed, as detailed in `ux-review.md`. User-installed Chrome reload remains unverified.
+- Multiple all-tab private comparisons found material semantic errors or insufficient coverage. The working tree now integrates optional GPT-4.1 category discovery through OpenRouter, followed by Jev classification; TypeSafe direct retains Jev-only discovery. Generated names appear in the review preview without changing saved categories. This integration has not passed semantic promotion. A selective borderline audit was removed after fresh data contradicted its cached gain. No production-quality accuracy claim is made.
+
+### Earlier three-pass integration: actual metadata validation (superseded below)
+
+- Read-only classification used 234 HTTP(S) tabs from a 245-tab, seven-window native Chrome snapshot. Fresh regroup ignored saved and existing names. No tabs were moved. The snapshot lacks pinned/audio eligibility flags and is not an Apply plan.
+- Independent frozen-rubric evaluation: 144 classifier assignments = 120 correct, 10 wrong, 14 ambiguous; known-case precision 92.31%. This excludes ambiguous cases from the precision denominator and is not an overall accuracy rate. Only 142 tabs form 41 same-window groups of at least two; two image singletons cannot form fresh groups.
+- Before the same-window minimum, 183 decisions = 148 correct, 14 wrong, 21 ambiguous. Eleven cases were labeled before this run; four survived the window minimum, including two with lost project identity. Broad-topic leniency does not bring precision to 95%. Default recommendation/promotion was rejected.
+- The run used 39 completed logical requests, costing a known $0.09119105, plus one timed-out request with unknown cost. Exact cached request/response continuation avoided paying again after local title validation and atomic-checkpoint fixes; this is one continued run, not an independent repeat.
+- A failed later discovery pass now retains only the previous fully validated pass. First-pass failure remains an error; partial assignments never replace a complete pass. Complete names up to the existing 80-character product limit are accepted without truncation.
+- 94 unit/regression tests, syntax checks, 18 locale/theme UI checks and five isolated Chromium scenarios passed. These checks establish behavior, not semantic quality. Installed Chrome reload and real toolbar behavior remain unverified.
+
+### Current single-pass review candidate
+
+- Replaced three additive discovery passes with one fresh GPT-4.1 vocabulary (up to38 categories), followed by Jev classification in20-tab batches. Generic instructions prioritize page activity over incidental subject and explicitly matching project artifacts over broad tooling. No site/category examples or gold labels were inserted. Images remain the only deterministic category rule.
+- Independent evaluation on the same native234 snapshot: before window minimum187=164correct/6wrong/17ambiguous (96.47% known precision,78.47% clear-case correct coverage). After the minimum143=135correct/0wrong/8ambiguous in34window-local groups. Zero observed errors among135judgeable assignments is not a general100%accuracy claim. Tabfold/Investment omissions and Laya splitting remain, so full promotion/completion is not approved.
+- Exact request-body and URL replay of13actual paid responses through the current `classifyTabs` and `buildPreview` paths reproduced the143-tab projection, with no new API cost. This verifies wiring against actual responses, not an independent new API run. Snapshot eligibility lacks pinned/audio flags and real group IDs; the preview projection assumes fresh groups and is not authorization to apply those stored IDs.
+- Full94unit/regression suite and syntax checks pass. Previous18locale/theme and5isolated native checks remain relevant to unchanged UI/mutation code; they were not rerun for this isolated algorithm revision. A failed generation/classification batch returns no partial generated plan; existing initial classifications remain handled by the parent flow.
+- This comparison cycle used76new API requests costing $0.178143354. Production request count for the compared snapshot decreases from39to13; other input sizes/settings differ. No user Chrome tabs moved, no release or installed-extension reload verified.
+
+### Independent refresh: promotion rejected
+
+A new native read confirmed245tabs/234HTTP(S)/7windows, with only two trading-price title changes and no added, removed, URL-changed or moved tabs. An uncached13-request current-product run cost $0.023005564 and failed to reproduce the previous result. Actual same-window projection154=117correct/29wrong/8ambiguous (80.14% known precision); before the window minimum179=130/34/15(79.27%). The new planner omitted named-project categories and mixed projects into generic repository, pull-request and localhost groups. This contradicts production-level stability; the earlier zero-error sample must not be treated as a promoted quality claim. No user tabs moved.
+
+### Evaluation terminology audit
+
+Independent review found that some summaries used “project preservation” too broadly. The frozen diagnostic gate prohibits confirmed cross-project contamination under a specific project name; it is not a user-authored requirement that every coherent two-page project cluster retain an exact name. Generic but coherent labels, source-based mixtures, named-project contamination, abstention and per-window singleton loss are now reported separately. Existing gold, scores and thresholds are unchanged. Reported precision is strict purpose-and-label agreement, not a pure semantic-coherence measure. This clarification does not rescue the failed80.14%current-product repeat.
+
+
+2026-09-22 — Fixed an observed asynchronous preview race. A deferred AI response previously returned success and restored the saved preview after a preference/provider/grouping-mode change. Preview generations now invalidate superseded requests; only the short final storage commit uses the existing mutation queue. AI waits do not block settings or newer previews. Regression covers three setting changes and an intervening completed Quick preview. Root verification:95/95 tests, syntax checks, diff check, and all5isolated native Chromium preview/apply/undo scenarios passed. User-installed Chrome was not changed. This safety fix does not establish semantic accuracy.
+
+### 2026-09-22 runtime evidence correction
+
+The fresh research pipeline recorded response headers within 1.336 seconds for every request, while the longest JSON body took 54.756 seconds. Total `response.json()` duration alone therefore does not demonstrate Chrome's documented >30-second fetch-response-arrival termination condition. Official documentation does not precisely distinguish headers from body completion here. Native MV3 survival without debugger attachment remains unverified; earlier no-attach probe failed during browser setup. The current 45-second application timeout would nevertheless reject a 54.756-second body. This research run is not installed-extension validation.
+
+## 2026-09-27 final review fixes
+
+- Exclude incognito-window groups from all preview context before cross-window AI templates are built; redact credentials in URL-shaped titles with uppercase schemes.
+- Journal newly created groups with their initial Chrome metadata, then persist successful metadata updates. A failed metadata update remains undoable in preserve/regroup modes. Refresh popup recovery state after an Apply failure.
+- Remove obsolete Google/Toss/Job deterministic-rule claims from the English README.
+- Three new regression checks failed before the fixes and passed afterwards: full suite 98/98, syntax and diff checks, 18 locale/theme UI combinations, and five isolated native Chromium scenarios passed.
+- Fault injection/privacy edge cases use synthetic Chrome/network responses. No new paid API evaluation or user-tab mutation. Prior semantic-quality instability remains; merging these fixes does not establish production classification accuracy.

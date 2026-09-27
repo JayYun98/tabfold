@@ -19,7 +19,7 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 ## Why Tabfold
 
 - **Preview first** — see the proposed groups before Tabfold touches your tabs.
-- **Works without AI** — local TF-IDF and cosine similarity cluster title/URL terms with no API key.
+- **Works without AI** — local title similarity proposes groups without an API key.
 - **AI when you want it** — use Jev through OpenRouter or TypeSafe for smarter classification.
 - **Keeps your context** — tabs stay in their original windows; groups simply collapse to reduce clutter.
 - **Safe by default** — pinned, audible, incognito, internal, and already-grouped tabs are protected.
@@ -35,13 +35,13 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 That’s it. Tabfold groups and folds tabs without merging windows or replacing your pages.
 
-Existing groups are visible before AI runs. Preserve mode adds matching tabs to same-window groups without changing existing members or group styling. Named categories from other windows can become separate local groups; tabs never move between windows. Regroup rebuilds membership while retaining named groups’ purpose; raw-hostname groups are not category templates.
+Existing groups are visible before AI runs. Preserve mode adds matching tabs to same-window groups without changing existing members or group styling. Named categories from other windows can become separate local groups; tabs never move between windows. Regroup rebuilds membership. Existing names guide it only when **Use existing group names** is enabled; raw-hostname groups are not category templates.
 
 Pinned, audible, incognito and internal tabs remain protected. Only proposed groups are applied; new groups need at least two tabs and unmatched singletons stay put. Undo restores original groups where possible, without guaranteeing exact tab order.
 
-Quick preview uses lightweight category-purpose rules (for example, Media/SNS for YouTube and JobRecruit for job listings), then local TF-IDF/cosine topic clustering for remaining tabs. It is lexical, not an embedding or pretrained neural model: no model download or server request. The JavaScript module also runs in Node.js.
+Quick preview compares title words locally using TF-IDF and cosine similarity. Each member must closely match the others, which avoids loose chains of unrelated tabs but can leave related pages ungrouped. Only image-file extensions have a fixed category rule. There are no site-specific category rules, model downloads, or server requests for local preview.
 
-The popup independently remembers regrouping, ignoring saved categories, and new-category suggestions. Ignoring saved categories excludes saved/default AI choices without deleting them; existing Chrome group names remain context, including during regrouping. AI may receive group names, a broad purpose, and up to six diverse example titles and URL origins/paths without queries. New-topic candidates are proposed only for unmatched tabs and validated by Jev.
+The popup independently remembers regrouping, ignoring saved categories, and new-category suggestions. Ignoring saved categories excludes saved/default AI choices without deleting them; existing Chrome group names remain context, including during regrouping. AI may receive group names, a broad purpose, and up to six diverse example titles and URL origins/paths without queries. Uncertain AI decisions stay unassigned; they do not fall back to lexical grouping. With OpenRouter, GPT-4.1 proposes names for unmatched tabs and Jev checks their membership. These groups appear in the preview without changing saved categories. TypeSafe connects directly to Jev and retains Jev-only suggestions. Review either result before applying. Semantic accuracy and full-tab coverage are still being improved.
 
 **Use existing group names** is on by default: turn it off and enable regrouping for a full reset, independently of **Ignore saved categories**; no existing-group metadata or examples are sent when it is off, though eligible tabs’ titles and URLs still go to AI.
 
@@ -73,7 +73,7 @@ Local preview stays entirely in your browser.
 
 For AI preview, choose **OpenRouter** or **TypeSafe** in **Settings → AI connection** and add that provider’s API key.
 
-- OpenRouter uses the **Decisions API**
+- OpenRouter uses **Jev 1.13** for classification and **GPT-4.1** when new-group suggestions are enabled; naming uses additional API calls.
 - TypeSafe uses **Jev 1.13**
 - API keys are stored in Chrome **session storage** and cleared when the browser closes
 - There is **no automatic provider fallback**
@@ -109,8 +109,4 @@ Plain JavaScript, native Chrome APIs, no runtime dependencies, and no remote cod
 
 ### Explicit grouping preferences
 
-Google Search result tabs (`google.com` / `google.co.kr`, `/search`) use **Google search**; Toss Invest uses **Investment**. These explicit preferences take priority in Quick and AI preview, even when existing names or saved AI categories are ignored. They do not classify Google Docs, Gmail, or a page merely mentioning a company. Matching existing groups are reused in the same window; ambiguous duplicate names are left unassigned instead of creating a third group.
-
 Image-file URL paths (`.png`, `.jpg`, `.webp`, `.gif`, `.avif`, `.svg` and other common image extensions) use **Images** before topic inference. Query strings and fragments do not determine the extension. A new group still requires two tabs; a single image can join an existing Images group.
-
-Ashby job listings and Nebius careers pages use **Job**, or reuse a matching existing recruiting group. General product pages are excluded; these known hiring pages need no AI request.

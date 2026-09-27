@@ -29,6 +29,7 @@ export class TabfoldBackend {
     this.chrome = chromeApi;
     this.memory = {};
     this.mutations = Promise.resolve();
+    this.previewGeneration = 0;
   }
 
   async read(key, area = 'session') {
@@ -48,6 +49,7 @@ export class TabfoldBackend {
   }
 
   async remove(key, area = 'session') {
+    if (key === PREVIEW_KEY) this.previewGeneration += 1;
     const storage = this.chrome?.storage?.[area];
     if (!storage) {
       delete this.memory[`${area}:${key}`];
@@ -57,8 +59,10 @@ export class TabfoldBackend {
   }
 
   async preview(request) {
+    const generation = ++this.previewGeneration;
     const tabs = await this.chrome.tabs.query({});
-    const existingGroups = await this.chrome.tabGroups.query({});
+    const privateWindows = new Set(tabs.filter(tab=>tab.incognito).map(tab=>tab.windowId));
+    const existingGroups = (await this.chrome.tabGroups.query({})).filter(group=>!privateWindows.has(group.windowId));
     const availableGroups = existingGroups.map(group=>({...group,tabs:tabs.filter(tab=>tab.groupId===group.id && tab.windowId===group.windowId)}));
     const tabOrder=validateTabOrder(await this.read('tabfoldTabOrder','local'));
     const groupingMode=validateGroupingMode(await this.read('tabfoldGroupingMode','local'));
@@ -85,9 +89,15 @@ export class TabfoldBackend {
     }
     const plan = classifications ? buildPreview(tabs, {...request,tabOrder,existingGroups,groupingMode}, classifications) : initial;
     plan.preferences=preferences;
-    await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(tab=>isEligible(tab,{regroup})).map(({id,title,url,windowId,index,lastAccessed,groupId})=>({id,title,url,windowId,index,lastAccessed,groupId})), categories: await this.categories() });
-    const undo = await this.read(UNDO_KEY);
-    return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
+    // Serialize only the short commit with settings mutations, never the AI request.
+    return this.mutate(async () => {
+      const categories = await this.categories();
+      const undo = await this.read(UNDO_KEY);
+      if (generation !== this.previewGeneration) return message(false, t(STALE));
+      await this.write(PREVIEW_KEY, { plan, suggestions: classifications?.suggestions || [], tabs: tabs.filter(tab=>isEligible(tab,{regroup})).map(({id,title,url,windowId,index,lastAccessed,groupId})=>({id,title,url,windowId,index,lastAccessed,groupId})), categories });
+      if (generation !== this.previewGeneration) return message(false, t(STALE));
+      return { ok: true, plan, undoAvailable: Boolean(undo?.groups?.length), keyConfigured: Boolean(key), suggestions: classifications?.suggestions || [], suggestionError: classifications?.suggestionError || '', otherCount: classifications?.otherCount || 0 };
+    });
   }
 
   async preferences() {
@@ -269,10 +279,12 @@ export class TabfoldBackend {
           continue;
         }
         const groupId = await this.chrome.tabs.group({ tabIds: group.tabIds, createProperties: { windowId: group.windowId } });
-        const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: safeTitle(group.title), color: validGroupColor(group.color), collapsed:Boolean(collapse) };
+        const created = { groupId, tabIds: group.tabIds, windowId: group.windowId, title: '', color: 'grey', collapsed:false };
         undo.groups.push(created);
         await this.write(UNDO_KEY, undo);
-        await this.chrome.tabGroups.update(groupId, { title: created.title, color: created.color, collapsed: Boolean(collapse) });
+        const updated = await this.chrome.tabGroups.update(groupId, { title: safeTitle(group.title), color: validGroupColor(group.color), collapsed: Boolean(collapse) });
+        Object.assign(created,{title:updated.title,color:updated.color,collapsed:updated.collapsed});
+        await this.write(UNDO_KEY, undo);
         if(plan.tabOrder && plan.tabOrder!=='current') await this.orderGroup(groupId,group);
       }
       return message(true, t('Organized tabs into {count} groups.', { count: groups.length }), { undoAvailable: true });

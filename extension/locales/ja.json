@@ -172,5 +172,20 @@
   "Ignore saved categories": "保存済みカテゴリを無視",
   "Skip saved AI categories without deleting them.": "保存済みの AI カテゴリを削除せずに分類対象から外します。",
   "Use existing group names": "既存のグループ名を使う",
-  "Use existing group names when classifying tabs, even when regrouping.": "再グループ化する場合も、既存のグループ名をタブの分類に使用します。"
+  "Use existing group names when classifying tabs, even when regrouping.": "再グループ化する場合も、既存のグループ名をタブの分類に使用します。",
+  "Duplicates and recovery": "重複タブと復元",
+  "Window {number}": "ウィンドウ {number}",
+  "Tabs stay in their original windows.": "タブは元のウィンドウに残ります。",
+  "Preview first. Apply when ready.": "プレビューを確認してから適用します。",
+  "No changes proposed. Enable Regroup to reconsider existing group members.": "変更の提案はありません。既存グループも再分類するには再グループ化を有効にしてください。",
+  "Quick preview ready. Run AI preview again to update AI results.": "クイックプレビューです。AIの結果を更新するにはAIプレビューを再実行してください。",
+  "Set up AI": "AIを設定",
+  "Add an API key in Settings": "設定でAPIキーを追加してください",
+  "No tabs in this scope.": "この範囲にタブはありません。",
+  "No eligible tabs. Pinned, playing, incognito and internal tabs stay untouched.": "分類できるタブはありません。固定・再生中・シークレット・ブラウザ内部のタブは変更されません。",
+  "New group names: GPT-4.1 via OpenRouter.": "新しいグループ名：OpenRouter 経由の GPT-4.1。",
+  "OpenRouter uses Jev for classification and GPT-4.1 for new group names. Additional API calls may apply.": "OpenRouter は分類に Jev、新しいグループ名の生成に GPT-4.1 を使います。追加の API 呼び出しが発生する場合があります。",
+  "New OpenRouter groups appear in the preview without changing saved categories. TypeSafe uses Jev-only suggestions.": "OpenRouter の新しいグループは保存済みカテゴリを変更せず、プレビューに表示されます。TypeSafe の提案は Jev のみを使います。",
+  "AI preview sends tab titles, URL origins/paths and category criteria to the selected provider. OpenRouter uses TypeSafe Jev and, for new group names, OpenAI GPT-4.1. Keys stay separate and session-only. API charges may apply.": "AI プレビューはタブのタイトル、URL のオリジン・パス、カテゴリの基準を選択したプロバイダーに送信します。OpenRouter は TypeSafe Jev を使い、新しいグループ名には OpenAI GPT-4.1 を使います。キーはプロバイダーごとに分け、セッション中だけ保存します。API 料金が発生する場合があります。",
+  "Apply groups ({count} tabs)": "グループを適用（{count} タブ）"
 }

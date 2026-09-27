@@ -19,7 +19,7 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 ## Por qué Tabfold
 
 - **Primero, una vista previa** — consulta los grupos propuestos antes de que Tabfold modifique tus pestañas.
-- **Funciona sin IA** — TF-IDF y similitud coseno agrupan localmente los términos de títulos y URL, sin clave API.
+- **Funciona sin IA** — agrupa títulos de forma conservadora con TF-IDF y similitud coseno, sin clave API.
 - **IA cuando la necesites** — usa Jev a través de OpenRouter o TypeSafe para una clasificación más inteligente.
 - **Conserva tu contexto** — las pestañas permanecen en sus ventanas originales; los grupos se pliegan para reducir el desorden.
 - **Protección por defecto** — protege las pestañas fijadas, con audio, de incógnito, internas y ya agrupadas.
@@ -39,9 +39,9 @@ Los grupos son visibles antes de ejecutar la IA. El modo conservar añade pesta�
 
 Las pestañas fijadas, con audio, de incógnito e internas siguen protegidas. Solo se aplican grupos propuestos; los nuevos necesitan dos pestañas y las pestañas sueltas permanecen donde están. Deshacer restaura los grupos originales cuando es posible, sin garantizar el orden exacto.
 
-La vista rápida usa reglas ligeras según el propósito de la categoría (Media/SNS para YouTube y JobRecruit para ofertas de empleo), después TF-IDF y similitud coseno local para las demás pestañas. Es un método léxico, sin embeddings ni modelos neuronales preentrenados, descargas de modelos o solicitudes al servidor. El módulo JavaScript también funciona en Node.js.
+La vista rápida agrupa títulos de forma conservadora con TF-IDF, similitud coseno y enlace completo (complete-link). No usa embeddings ni redes neuronales preentrenadas, no descarga modelos ni contacta con servidores. La única regla fija clasifica los archivos de imagen como **Images** según su extensión; no hay categorías impuestas por sitio o tema.
 
-La ventana recuerda por separado la reagrupación, ignorar categorías guardadas y las sugerencias. Ignorar categorías excluye las opciones de IA guardadas/predeterminadas sin borrarlas; los nombres de grupos de Chrome siguen siendo contexto, incluso al reagrupar. La IA puede recibir nombres, un propósito general y hasta seis ejemplos variados de títulos y orígenes/rutas de URL sin consultas. Solo las pestañas sin coincidencia generan candidatos a temas nuevos, validados por Jev.
+La ventana permite configurar por separado la reagrupación, las categorías guardadas, los nombres de grupos existentes y las sugerencias. Si la IA no tiene suficiente certeza, la pestaña queda sin clasificar, sin recurrir a un método léxico. Al usar nombres existentes, pueden enviarse nombres, descripciones, títulos de ejemplo y URL sin parámetros de consulta. Las sugerencias nuevas son experimentales: no se garantiza su exactitud y deben revisarse antes de aceptarlas o aplicarlas.
 
 **Usar nombres de grupos existentes** está activado por defecto: desactívalo y activa la reagrupación para empezar sin su contexto, independientemente de **Ignorar categorías guardadas**; no se enviarán metadatos ni ejemplos de grupos existentes, aunque los títulos y URL de las pestañas elegibles seguirán enviándose a la IA.
 
@@ -73,7 +73,9 @@ La vista previa local se procesa íntegramente en tu navegador.
 
 Para usar la vista previa con IA, elige **OpenRouter** o **TypeSafe** en **Configuración → Conexión de IA** y añade la clave de API de ese proveedor.
 
-- OpenRouter utiliza la **Decisions API**
+Con las **sugerencias de nuevos grupos** activadas, OpenRouter usa GPT-4.1 para generar nombres y criterios, y Jev para clasificar las pestañas. Los grupos pertenecen a esa vista previa y no modifican las categorías guardadas. Puede haber llamadas y cargos adicionales. La conexión directa con TypeSafe utiliza solo Jev y no cambia automáticamente a OpenRouter.
+
+- OpenRouter usa Jev para clasificar y GPT-4.1 para crear nombres de grupos. Puede requerir llamadas adicionales a la API.
 - TypeSafe utiliza **Jev 1.13**
 - Las claves de API se guardan en el **almacenamiento de sesión** de Chrome y se borran al cerrar el navegador
 - **No se cambia automáticamente a otro proveedor**
