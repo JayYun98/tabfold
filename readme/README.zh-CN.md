@@ -16,9 +16,7 @@ Chrome Manifest V3 · 本地优先 · Jev 1.13 · 无运行时依赖
 
 </div>
 
-[![观看 25 秒演示](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ 观看 25 秒演示](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev 帮助按上下文对标签页分组。先预览，再应用：各窗口内分别整理，不合并窗口。
 
@@ -32,8 +30,6 @@ Jev 帮助按上下文对标签页分组。先预览，再应用：各窗口内�
 - **保留工作上下文** — 标签页留在原来的窗口中，只需折叠分组即可减少杂乱。
 - **默认保护** — 保护固定、正在播放声音、无痕、内部页面及已分组的标签页。
 - **轻松恢复** — 撤销上一次分组，并恢复清理重复标签页时移除的网址。
-
-<img src="../docs/assets/popup-en.png" alt="Tabfold 弹出窗口预览" width="100%" />
 
 ## 使用方法
 

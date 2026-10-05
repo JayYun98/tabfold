@@ -16,9 +16,7 @@ Chrome Manifest V3 · Priorité au local · Jev 1.13 · Aucune dépendance à l�
 
 </div>
 
-[![Voir la démo de 25 secondes](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ Voir la démo de 25 secondes](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev aide à regrouper les onglets par contexte. Prévisualisez, puis appliquez : chaque fenêtre est organisée sur place, sans fusionner les fenêtres.
 
@@ -32,8 +30,6 @@ Jev aide à regrouper les onglets par contexte. Prévisualisez, puis appliquez :
 - **Préserve votre contexte** — les onglets restent dans leur fenêtre d’origine ; les groupes se replient simplement pour libérer de l’espace.
 - **Protection par défaut** — les onglets épinglés, audibles, privés, internes et déjà groupés sont protégés.
 - **Récupération facile** — annulez le dernier regroupement et restaurez les URL supprimées lors du nettoyage des doublons.
-
-<img src="../docs/assets/popup-en.png" alt="Aperçu de la fenêtre Tabfold" width="100%" />
 
 ## Fonctionnement
 

@@ -16,9 +16,7 @@ Chrome Manifest V3 · ローカル優先 · Jev 1.13 · 実行時の依存関係
 
 </div>
 
-[![25秒のデモを見る](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ 25秒のデモを見る](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev が文脈に応じたタブの分類を支援します。プレビューを確認して適用すると、ウィンドウを統合せず、それぞれの中で整理します。
 
@@ -32,8 +30,6 @@ Jev が文脈に応じたタブの分類を支援します。プレビューを�
 - **作業の流れを維持** — タブは元のウィンドウに残し、グループを折りたたんで見やすくします。
 - **標準で保護** — 固定タブ、音声再生中のタブ、シークレットタブ、内部ページ、グループ化済みのタブを保護します。
 - **簡単に復元** — 最後のグループ化を元に戻し、重複整理で削除した URL を復元できます。
-
-<img src="../docs/assets/popup-en.png" alt="Tabfold ポップアップのプレビュー" width="100%" />
 
 ## 使い方
 

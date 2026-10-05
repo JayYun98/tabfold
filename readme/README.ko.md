@@ -16,9 +16,7 @@ Chrome Manifest V3 · 로컬 우선 · Jev 1.13 · 런타임 의존성 없음
 
 </div>
 
-[![25초 데모 보기](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ 25초 데모 보기](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev로 맥락에 따라 탭을 분류하고, 미리보기에서 확인한 뒤 적용합니다. 창을 합치지 않고 각 창 안에서 정리합니다.
 
@@ -32,8 +30,6 @@ Jev로 맥락에 따라 탭을 분류하고, 미리보기에서 확인한 뒤 �
 - **작업 맥락 유지** — 탭은 원래 창에 남고, 그룹만 접어 화면을 정돈합니다.
 - **기본으로 보호** — 고정 탭, 소리 재생 중인 탭, 시크릿 탭, 내부 페이지, 기존 그룹의 탭을 보호합니다.
 - **간편한 복구** — 마지막 그룹 정리를 되돌리고 중복 정리로 제거한 URL을 복원합니다.
-
-<img src="../docs/assets/popup-en.png" alt="Tabfold 팝업 미리보기" width="100%" />
 
 ## 사용 방법
 

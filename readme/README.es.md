@@ -16,9 +16,7 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 
 </div>
 
-[![Ver la demo de 25 segundos](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ Ver la demo de 25 segundos](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev ayuda a agrupar las pestañas por contexto. Revisa la vista previa y aplica: cada ventana se organiza sin fusionarse con las demás.
 
@@ -32,8 +30,6 @@ Jev ayuda a agrupar las pestañas por contexto. Revisa la vista previa y aplica:
 - **Conserva tu contexto** — las pestañas permanecen en sus ventanas originales; los grupos se pliegan para reducir el desorden.
 - **Protección por defecto** — protege las pestañas fijadas, con audio, de incógnito, internas y ya agrupadas.
 - **Recuperación sencilla** — deshaz la última agrupación y recupera las URL eliminadas al limpiar duplicados.
-
-<img src="../docs/assets/popup-en.png" alt="Vista previa del panel de Tabfold" width="100%" />
 
 ## Cómo funciona
 

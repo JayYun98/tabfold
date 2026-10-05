@@ -16,9 +16,7 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 </div>
 
-[![Watch the 25-second demo](docs/assets/tabfold-demo.jpg)](docs/assets/tabfold-demo.mp4)
-
-**[▶ Watch the 25-second demo](docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev helps cluster tabs by context. Preview, then apply: each window is organized in place, without merging windows.
 
@@ -32,8 +30,6 @@ Jev helps cluster tabs by context. Preview, then apply: each window is organized
 - **Keeps your context** — tabs stay in their original windows; groups simply collapse to reduce clutter.
 - **Safe by default** — pinned, audible, incognito, internal, and already-grouped tabs are protected.
 - **Easy to recover** — undo the last grouping and recover URLs removed by duplicate cleanup.
-
-<img src="docs/assets/popup-en.png" alt="Tabfold popup preview" width="100%" />
 
 ## How it works
 

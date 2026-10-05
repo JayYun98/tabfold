@@ -16,9 +16,7 @@ Chrome Manifest V3 · 本機優先 · Jev 1.13 · 無執行階段相依套件
 
 </div>
 
-[![觀看 25 秒示範](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
-
-**[▶ 觀看 25 秒示範](../docs/assets/tabfold-demo.mp4)**
+https://github.com/user-attachments/assets/d1485909-6730-4a3a-91ae-d74b688c3df4
 
 Jev 協助依脈絡將分頁分群。先預覽，再套用：各視窗內分別整理，不合併視窗。
 
@@ -32,8 +30,6 @@ Jev 協助依脈絡將分頁分群。先預覽，再套用：各視窗內分別�
 - **保留工作脈絡** — 分頁留在原本的視窗中，只收合群組以減少雜亂。
 - **預設保護分頁** — 已固定、正在播放音訊、無痕、瀏覽器內部及已分組的分頁都受到保護。
 - **輕鬆復原** — 復原上一次分組，並還原清理重複分頁時移除的網址。
-
-<img src="../docs/assets/popup-en.png" alt="Tabfold 彈出視窗預覽" width="100%" />
 
 ## 使用方式
 
