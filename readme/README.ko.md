@@ -16,6 +16,14 @@ Chrome Manifest V3 · 로컬 우선 · Jev 1.13 · 런타임 의존성 없음
 
 </div>
 
+[![25초 데모 보기](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ 25초 데모 보기](../docs/assets/tabfold-demo.mp4)**
+
+Jev로 맥락에 따라 탭을 분류하고, 미리보기에서 확인한 뒤 적용합니다. 창을 합치지 않고 각 창 안에서 정리합니다.
+
+*영어 내레이션 · 실제 화면 녹화가 아닌 연출된 데모입니다.*
+
 ## Tabfold를 쓰는 이유
 
 - **미리보기부터** — 탭을 변경하기 전에 제안된 그룹을 확인합니다.

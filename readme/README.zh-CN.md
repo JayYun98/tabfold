@@ -16,6 +16,14 @@ Chrome Manifest V3 · 本地优先 · Jev 1.13 · 无运行时依赖
 
 </div>
 
+[![观看 25 秒演示](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ 观看 25 秒演示](../docs/assets/tabfold-demo.mp4)**
+
+Jev 帮助按上下文对标签页分组。先预览，再应用：各窗口内分别整理，不合并窗口。
+
+*英语旁白 · 示意演示，非实际屏幕录制。*
+
 ## 为什么选择 Tabfold
 
 - **预览优先** — 在修改标签页之前，先查看建议的分组。

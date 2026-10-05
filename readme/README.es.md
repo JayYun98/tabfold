@@ -16,6 +16,14 @@ Chrome Manifest V3 · Prioridad local · Jev 1.13 · Sin dependencias en tiempo 
 
 </div>
 
+[![Ver la demo de 25 segundos](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ Ver la demo de 25 segundos](../docs/assets/tabfold-demo.mp4)**
+
+Jev ayuda a agrupar las pestañas por contexto. Revisa la vista previa y aplica: cada ventana se organiza sin fusionarse con las demás.
+
+*Narración en inglés · Demo ilustrativa, no una grabación real de pantalla.*
+
 ## Por qué Tabfold
 
 - **Primero, una vista previa** — consulta los grupos propuestos antes de que Tabfold modifique tus pestañas.

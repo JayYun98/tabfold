@@ -16,6 +16,14 @@ Chrome Manifest V3 · 本機優先 · Jev 1.13 · 無執行階段相依套件
 
 </div>
 
+[![觀看 25 秒示範](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ 觀看 25 秒示範](../docs/assets/tabfold-demo.mp4)**
+
+Jev 協助依脈絡將分頁分群。先預覽，再套用：各視窗內分別整理，不合併視窗。
+
+*英語旁白 · 示意展示，並非實際螢幕錄影。*
+
 ## 為什麼選擇 Tabfold
 
 - **先預覽** — Tabfold 變更分頁前，先查看建議的群組。

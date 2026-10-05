@@ -16,6 +16,14 @@ Chrome Manifest V3 · Priorité au local · Jev 1.13 · Aucune dépendance à l�
 
 </div>
 
+[![Voir la démo de 25 secondes](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ Voir la démo de 25 secondes](../docs/assets/tabfold-demo.mp4)**
+
+Jev aide à regrouper les onglets par contexte. Prévisualisez, puis appliquez : chaque fenêtre est organisée sur place, sans fusionner les fenêtres.
+
+*Narration en anglais · Démo illustrative, et non un enregistrement réel.*
+
 ## Pourquoi Tabfold
 
 - **L’aperçu d’abord** — consultez les groupes proposés avant que Tabfold ne touche à vos onglets.

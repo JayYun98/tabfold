@@ -16,6 +16,14 @@ Chrome Manifest V3 · Önce yerel işlem · Jev 1.13 · Çalışma zamanı bağ�
 
 </div>
 
+[![25 saniyelik demoyu izleyin](../docs/assets/tabfold-demo.jpg)](../docs/assets/tabfold-demo.mp4)
+
+**[▶ 25 saniyelik demoyu izleyin](../docs/assets/tabfold-demo.mp4)**
+
+Jev, sekmeleri bağlama göre gruplamaya yardımcı olur. Önizleyin ve uygulayın: pencereler birleştirilmeden her pencere kendi içinde düzenlenir.
+
+*İngilizce seslendirme · Gerçek ekran kaydı değil, temsili demodur.*
+
 ## Neden Tabfold?
 
 - **Önce önizleme** — Tabfold sekmelerinize dokunmadan önerilen grupları görün.

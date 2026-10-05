@@ -16,6 +16,14 @@ Chrome Manifest V3 · Local-first · Jev 1.13 · No runtime dependencies
 
 </div>
 
+[![Watch the 25-second demo](docs/assets/tabfold-demo.jpg)](docs/assets/tabfold-demo.mp4)
+
+**[▶ Watch the 25-second demo](docs/assets/tabfold-demo.mp4)**
+
+Jev helps cluster tabs by context. Preview, then apply: each window is organized in place, without merging windows.
+
+*English narration · Illustrative demo, not a live screen recording.*
+
 ## Why Tabfold
 
 - **Preview first** — see the proposed groups before Tabfold touches your tabs.
